@@ -306,96 +306,15 @@ updateMake() {
 }
 
 buildInstallAutoconf() {
-    echo
-    echo "Building autoconf..."
-    echo
-    
-    if ! ls -d autoconf-*/ &> /dev/null; then
-        tar zxvf autoconf-*.tar.gz
-    fi
-    
-    cd autoconf-*
-    
-    if ! autoconf --version &> /dev/null; then
-    
-        ./configure --host=x86_64-w64-mingw32 --disable-shared --prefix=/mingw
-
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-
-        if ! autoconf --version; then
-            echo "Build Failed!"
-            exit 0;
-        fi       
-    else
-        echo "Already Installed."
-    fi
-    
-    cd ..
-    
-    echo
+    buildInstallGeneric "autoconf-*" "" "autoconf" "autoconf --version"
 }
 
 buildInstallAutoMake() {
-    echo
-    echo "Building automake..."
-    echo
-    
-    if ! ls -d automake-*/ &> /dev/null; then
-        tar zxvf automake-*.tar.gz
-    fi
-    
-    cd automake-*
-    
-    if ! automake --version &> /dev/null; then
-    
-        ./configure --host=x86_64-w64-mingw32 --disable-shared --prefix=/mingw
-
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-
-        if ! automake --version; then
-            echo "Build Failed!"
-            exit 0;
-        fi      
-    else
-        echo "Already Installed."
-    fi
-    
-    cd ..
-    
-    echo
+    buildInstallGeneric "automake-*" "" "automake" "automake --version"
 }
 
 buildInstallLibtool() {
-    echo
-    echo "Building libtool..."
-    echo
-    
-    if ! libtool --version &> /dev/null; then
-        if ! ls -d libtool-*/ &> /dev/null; then
-            tar zxvf libtool-*.tar.gz
-        fi
-        
-        cd libtool-*
-        
-        #./configure --host=x86_64-w64-mingw32 --disable-shared --prefix=/mingw
-        ./configure --host=x86_64-w64-mingw32 --disable-shared --prefix=/mingw
-
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-
-        if ! libtool --version; then
-            echo "Build Failed!"
-            exit 0;
-        fi
-        
-        cd ..
-    else
-        echo "Already Installed."
-    fi
-    
-    echo
+    buildInstallGeneric "libtool-*" "" "libtool" "libtool --version"
 }
 
 buildInstallZlib() {
@@ -889,19 +808,21 @@ ad_decompress() {
             
         if [ ${_decompFile: -4} == ".tgz" ]; then
             tar xzvf $_decompFile
-        elif [ ${_decompFile: -7} == ".tar.gz" ]; then
+        elif [ ${_decompFile: -3} == ".gz" ]; then
             gzip -d $_decompFile
-        elif [ ${_decompFile: -7} == ".tar.xz" ]; then
+        elif [ ${_decompFile: -3} == ".xz" ]; then
             xz -d $_decompFile     
-        elif [ ${_decompFile: -8} == ".tar.bz2" ]; then
+        elif [ ${_decompFile: -4} == ".bz2" ]; then
             bzip2 -d $_decompFile
         elif [ ${_decompFile: -3} == ".7z" ]; then
             7za x $_decompFile 
         elif [ ${_decompFile: -4} == ".zip" ]; then
             unzip $_decompFile 
         fi
-            
-        _decompFile=`find "$_project" ! -name . -prune -type f`
+        
+        _decompFile=`find $_project ! -name . -prune -type f`
+        
+        echo "_decompFile=$_decompFile"
         
         if [ -e $_decompFile ]; then
             tar xvf $_decompFile

@@ -142,7 +142,7 @@ copy setuptools\get-dependencies.sh msys\home\developer
 ECHO "Build dependencies..."
 ECHO
 
-msys\bin\bash -l -c "cd /home/developer;./get-dependencies.sh"
+msys\bin\mintty msys/bin/bash -l -c "cd /home/developer;./get-dependencies.sh 2>&1 | tee build.log"
 
 ECHO.
 ECHO "Setup Complete."
