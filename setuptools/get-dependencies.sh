@@ -25,6 +25,7 @@ export AD_ICU_VERSION=50_1
 export AD_ZLIB_VERSION=1.2.7
 export AD_EXPAT_VERSION=2.1.0
 export AD_LIBICONV=1.14
+export AD_POLAR_VERSION=1.2.3
 export AD_LIBXML2_VERSION=2.9.0
 export AD_LIBCURL_VERSION=7.28.1
 
@@ -180,6 +181,10 @@ download () {
 
     if ! ( [ -e "icu4c-$AD_ICU_VERSION-src.tar" ] || [ -e "icu4c-$AD_ICU_VERSION-src.tgz" ] );then
         wget http://download.icu-project.org/files/icu4c/50.1/icu4c-$AD_ICU_VERSION-src.tgz 
+    fi
+    
+    if [ ! -e "polarssl-$AD_POLAR_VERSION-gpl.tgz" ];then
+        wget --no-check-certificate https://polarssl.org/download/polarssl-$AD_POLAR_VERSION-gpl.tgz
     fi
 
     if ! ( [ -e "libxml2-$AD_LIBXML2_VERSION.tar" ] || [ -e "libxml2-$AD_LIBXML2_VERSION.tar.gz" ] );then
@@ -531,37 +536,42 @@ buildInstallCairomm() {
     buildInstallGeneric "cairomm-*" "" "libcairomm-1.0.a"
 }
 
-buildInstallLibXML2() {
+buildInstallPolarSSL() {
+    local _project="polarssl-*"
+    local _additionFlags=""
+    local _binCheck="polarssl_selftest.exe"
+    local _exeToTest=""
+    
     echo
-    echo "Installing libxml2..."
+    echo "Building $_project..."
     echo
     
-    if ! xmllint --version &> /dev/null; then
-        if ! ls -d libxml2-*/ &> /dev/null; then
-            tar xzvf libxml2-$AD_LIBXML2_VERSION.tar.gz
-        fi
+    ad_preCleanEnv
+    
+    export "CFLAGS=$CFLAGS -I/mingw/include -DWINDOWS -DZLIB"
+    
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        ad_decompress "$_project"
         
-        export "CFLAGS=-I/mingw/include"
-        export "LDFLAGS=-L/mingw/lib"
-        export "CRYPTO=POLARSSL"
-
-        cd libxml2-*
-
-        ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32 --with-icu --prefix=/mingw
-
-        make clean
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        make install-strip || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
-        
+        cd $_project
+        sed -e 's/DESTDIR=\/usr\/local/DESTDIR=\/mingw/g' Makefile>Makefile2
+        mv Makefile2 Makefile
         cd ..
         
-        if ! xmllint --version; then
-           echo "Build Failed!"
-           exit 0;
-        fi        
+        ad_configure "$_project" "$_additionFlags"
+        ad_make "$_project"
     else
-        echo "Already Installed."        
+        echo "Already Installed."
     fi
+    
+    ad_run_test "$_exeToTest"
+    
+    echo
+}
+
+buildInstallLibXML2() {
+    buildInstallGeneric "libxml2-*" "--with-icu" "xmllint" "" "xmllint --version"
 }
 
 buildInstallCurl() {
@@ -620,9 +630,7 @@ buildInstallICU() {
     echo "Installing ICU..."
     echo
     
-    
-    if [ ! icuinfo &> /dev/null ]; then
-    
+    if [ ! -e /mingw/bin/icuinfo ]; then
         if ! ls -d icu*/ &> /dev/null; then
             tar xzvf icu4c-*-src.tgz
         fi
@@ -651,14 +659,14 @@ buildInstallICU() {
         
         cd ..
         cd ..
-        
-        if ! icuinfo; then
-            echo "Build Failed!"
-            exit 0;
-        fi  
     else
         echo "Already Installed."
     fi  
+    
+    if ! icuinfo; then
+        echo "ICU Test Failed!"
+        exit 0;
+    fi      
     
     echo
 }
@@ -767,13 +775,11 @@ buildInstallMapnik() {
 }
 
 ad_preCleanEnv() {
-    export "CFLAGS="
-    export "LDFLAGS="
-    export "CPPFLAGS="
-    
+    export "CC=gcc"
     export "CFLAGS=-I/mingw/include"
     export "LDFLAGS=-L/mingw/lib"
-    export "CPPFLAGS=-I/mingw/include"    
+    export "CPPFLAGS=-I/mingw/include" 
+    export "CRYPTO=POLARSSL"
 }
 
 ad_decompress() {
@@ -864,8 +870,9 @@ ad_build() {
 }
 
 ad_exec_script() {
-    local _project=$1
-    local _postBuildCommand=$2
+    echo "ENTER..."
+    local _project="$1"
+    local _postBuildCommand="$2"
     
     cd $_project
         
@@ -916,7 +923,7 @@ buildInstallGeneric() {
             ad_make "$_project"
         fi
         
-.       ad_exec_script "$_project" "$_postBuildCommand"
+        ad_exec_script "$_project" "$_postBuildCommand"
     else
         echo "Already Installed."
     fi
@@ -948,8 +955,9 @@ buildInstallExpat
 buildInstallICU
 buildInstallSQLite
 buildInstallFreeType
-buildInstallFontConfig
+buildInstallPolarSSL
 buildInstallLibXML2
+buildInstallFontConfig
 buildInstallCurl
 buildInstallPostgres
 buildInstallLibproj

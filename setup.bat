@@ -126,13 +126,13 @@ rem ECHO.
 rem don't do this, it's not needed
 rem copy C:\Windows\System32\gdi32.dll mingw64\lib /y
 rem copy C:\Windows\System32\msimg32.dll mingw64\lib /y
-rem copy C:\Windows\System32\ws2_32.dll mingw64\lib /y
+copy C:\Windows\System32\ws2_32.dll mingw64\lib /y
 rem copy C:\Windows\System32\crypt32.dll mingw64\lib /y
 rem copy C:\Windows\System32\Wldap32.dll mingw64\lib /y
 
 rem move mingw64\lib\gdi32.dll mingw64\lib\libgdi32.dll
 rem move mingw64\lib\msimg32.dll mingw64\lib\libmsimg32
-rem move mingw64\lib\ws2_32.dll mingw64\lib\libws2_32.dll
+move mingw64\lib\ws2_32.dll mingw64\lib\libws2_32.dll
 rem move mingw64\lib\crypt32.dll mingw64\lib\libcrypt32.dll
 rem move mingw64\lib\Wldap32.dll mingw64\lib\libwldap32.dll
 
