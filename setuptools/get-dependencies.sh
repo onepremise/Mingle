@@ -71,7 +71,7 @@ download () {
     fi
     
     if [ ! -e "7za$AD_SEVENZIP.zip" ];then
-        wget http://sourceforge.net/projects/AD_SEVENZIP/files/7-Zip/9.20/7za920.zip/download?use_mirror=voxel
+        wget http://sourceforge.net/projects/sevenzip/files/7-Zip/$AD_SEVENZIPPATH/7za$AD_SEVENZIP.zip/download
     fi
     
     #if [ ! -e "make-$MAKE.zip" ];then
