@@ -144,6 +144,10 @@ ECHO
 
 msys\bin\mintty msys/bin/bash -l -c "cd /home/developer;./get-dependencies.sh 2>&1 | tee build.log"
 
+IF EXIST msys\home\developer\build.log (
+    COPY /Y msys\home\developer\build.log .
+)
+
 ECHO.
 ECHO "Setup Complete."
 ECHO.

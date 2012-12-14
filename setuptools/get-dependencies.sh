@@ -306,15 +306,15 @@ updateMake() {
 }
 
 buildInstallAutoconf() {
-    buildInstallGeneric "autoconf-*" "" "autoconf" "autoconf --version"
+    buildInstallGeneric "autoconf-*" "" "autoconf" "" "autoconf --version"
 }
 
 buildInstallAutoMake() {
-    buildInstallGeneric "automake-*" "" "automake" "automake --version"
+    buildInstallGeneric "automake-*" "" "automake" "" "automake --version"
 }
 
 buildInstallLibtool() {
-    buildInstallGeneric "libtool-*" "" "libtool" "libtool --version"
+    buildInstallGeneric "libtool-*" "" "libtool" "" "libtool --version"
 }
 
 buildInstallZlib() {
@@ -364,7 +364,6 @@ buildInstallBzip2() {
         make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
 
         cp -f bzip2 /mingw/bin
-        cp -f bcat /mingw/bin
         cp -f bzip2recover /mingw/bin
 
         cd ..
@@ -452,33 +451,7 @@ buildInstallPThreads() {
 }
 
 buildInstallPkgconfig() {
-    echo
-    echo "Building pkgconfig..."
-    echo
-    
-    if [ ! pkg-config --version &> /dev/null ]; then
-        if ! ls -d pkg-config-*/ &> /dev/null; then
-            tar xzvf  pkg-config-*.tar.gz
-        fi
-
-        cd pkg-config-*
-        
-        ./configure --with-internal-glib --host=x86_64-w64-mingw32 --prefix=/mingw
-
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        
-        if ! pkg-config --version; then
-             echo "Build Failed!"
-            exit 0;
-        fi 
-        
-        cd ..
-    else
-        echo "Already Installed."        
-    fi
-    
-    echo
+    buildInstallGeneric "pkg-config-*" "--with-internal-glib" "pkg-config" "" "pkg-config --version"
 }
 
 installLibJPEG () {
@@ -496,6 +469,11 @@ installLibJPEG () {
 
     if [ ! -e "$DOSPATH/uninstall_1.2.1.exe" ]; then
         cmd /c "libjpeg-turbo-1.2.1-gcc64.exe /S /D=$DOSPATH"
+        
+        if [ ! -e "$DOSPATH/uninstall_1.2.1.exe" ]; then
+            echo "Install failed, aborting"
+            exit
+        fi
     else
         echo "libjpeg-turbo already installed."
     fi
@@ -534,7 +512,7 @@ installLibPNG() {
 }
 
 installLibTiff() {
-    buildInstallGeneric "tiff-*" "" "tiffinfo" "tiffinfo"
+    buildInstallGeneric "tiff-*" "" "tiffinfo" "" "tiffinfo"
 }
 
 buildInstallSigc() {
@@ -923,7 +901,7 @@ buildInstallGeneric() {
     echo "Building $_project..."
     echo
     
-    $ad_preCleanEnv
+    ad_preCleanEnv
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -938,7 +916,7 @@ buildInstallGeneric() {
             ad_make "$_project"
         fi
         
-.       ad_exec_script "$_project" $_postBuildCommand
+.       ad_exec_script "$_project" "$_postBuildCommand"
     else
         echo "Already Installed."
     fi
@@ -969,8 +947,8 @@ installLibTiff
 buildInstallExpat
 buildInstallICU
 buildInstallSQLite
-buildInstallFontConfig
 buildInstallFreeType
+buildInstallFontConfig
 buildInstallLibXML2
 buildInstallCurl
 buildInstallPostgres
