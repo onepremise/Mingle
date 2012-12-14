@@ -1,0 +1,164 @@
+# Copyright 2003 Christopher Currie
+# Copyright 2006 Dave Abrahams 
+# Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
+# Copyright 2005-2007 Mat Marcus
+# Copyright 2005-2007 Adobe Systems Incorporated
+# Copyright 2007-2010 Rene Rivera
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+
+#  Please see http://article.gmane.org/gmane.comp.lib.boost.build/3389/
+#  for explanation why it's a separate toolset.
+
+import "class" : new ;
+import feature : feature ;
+import toolset : flags ;
+import type ;
+import common ;
+import generators ;
+import path : basename ;
+import version ;
+import property-set ;
+import regex ;
+import errors ;
+
+#############################################################################
+
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+    .debug-configuration = true ;
+}
+
+feature.extend toolset : mingw ;
+import gcc ;
+toolset.inherit-generators mingw : gcc : gcc.mingw.link gcc.mingw.link.dll ;
+toolset.inherit-flags mingw : gcc ;
+toolset.inherit-rules mingw : gcc ;
+
+generators.override mingw.prebuilt : builtin.prebuilt ;
+generators.override mingw.searched-lib-generator : searched-lib-generator ;
+
+# Override generators.
+generators.override mingw.compile.c.pch          : pch.default-c-pch-generator   ;
+generators.override mingw.compile.c++.pch        : pch.default-cpp-pch-generator ;
+
+generators.register-c-compiler gcc.compile.c++.preprocess : CPP               : PREPROCESSED_CPP : <toolset>mingw ;
+generators.register-c-compiler gcc.compile.c.preprocess   : C                 : PREPROCESSED_C   : <toolset>mingw ;
+generators.register-c-compiler gcc.compile.c++            : CPP               : OBJ              : <toolset>mingw ;
+generators.register-c-compiler gcc.compile.c              : C                 : OBJ              : <toolset>mingw ;
+generators.register-c-compiler gcc.compile.asm            : ASM               : OBJ              : <toolset>mingw ;
+generators.register-fortran-compiler gcc.compile.fortran  : FORTRAN FORTRAN90 : OBJ              : <toolset>mingw ;
+
+generators.override mingw.compile.c++.preprocess : gcc.compile.c++.preprocess ;
+generators.override mingw.compile.c.preprocess   : gcc.compile.c.preprocess   ;
+generators.override mingw.compile.c++            : gcc.compile.c++ ;
+generators.override mingw.compile.c              : gcc.compile.c   ;
+generators.override mingw.compile.asm            : gcc.compile.asm ;
+generators.override mingw.compile.fortran        : gcc.compile.fortran   ;
+
+# Initializes the mingw toolset for the given version. If necessary, command may
+# be used to specify where the compiler is located. The parameter 'options' is a
+# space-delimited list of options, each one specified as
+# <option-name>option-value. Valid option names are: cxxflags, linkflags and
+# linker-type. Accepted linker-type values are aix, darwin, gnu, hpux, osf or
+# sun and the default value will be selected based on the current OS.
+rule init ( version ? : command * : options * : requirement * )
+{
+    #1): use user-provided command
+    local tool-command = ;
+    if $(command)
+    {
+       tool-command  =  [ common.get-invocation-command-nodefault gcc : g++ : $(command) ] ;
+       if ! $(tool-command)
+       {
+           errors.error "toolset gcc initialization:" :
+                        "provided command '$(command)' not found" :
+                        "initialized from" [ errors.nearest-user-location ] ;
+       }
+    }
+    #2): enforce user-provided version
+    else if $(version)
+    {
+        tool-command  =  [ common.get-invocation-command-nodefault gcc : "g++-$(version[1])" ] ;
+        
+        #2.1) fallback: check whether "g++" reports the requested version
+        if ! $(tool-command)
+        {
+            tool-command = [ common.get-invocation-command-nodefault gcc : g++ ] ;
+            if $(tool-command)
+            {
+                local tool-command-string = $(tool-command:J=" ") ;
+                local tool-version = [ MATCH "^([0-9.]+)" : [ SHELL "$(tool-command-string) -dumpversion" ] ] ;
+                if $(tool-version) != $(version)
+                {
+                    # Permit a match betwen two-digit version specified by the user
+                    # (e.g. 4.4) and 3-digit version reported by gcc.
+                    # Since only two digits are present in binary name anyway,
+                    # insisting that user specify 3-digit version when
+                    # configuring Boost.Build while it's not required on 
+                    # command like would be strange.
+                    local stripped = [ MATCH "^([0-9]+\.[0-9]+).*" : $(tool-version) ] ;
+                    if $(stripped) != $(version)
+                    {                                            
+                        errors.error "toolset gcc initialization:" :
+                          "version '$(version)' requested but 'g++-$(version)' not found and version '$(tool-version)' of default '$(tool-command)' does not match" :
+                            "initialized from" [ errors.nearest-user-location ] ;
+                        tool-command = ;
+                    }
+                    # Use full 3-digit version to be compatible with the 'using gcc ;' case
+                    version = $(tool-version) ;
+                }
+            }
+            else
+            {
+                errors.error "toolset gcc initialization:" :
+                             "version '$(version)' requested but neither 'g++-$(version)' nor default 'g++' found" :
+                             "initialized from" [ errors.nearest-user-location ] ;
+            }
+        }
+    }
+    #3) default: no command and no version specified, try using default command "g++"
+    else
+    {
+        tool-command = [ common.get-invocation-command-nodefault gcc : g++ ] ;
+        if ! $(tool-command)
+        {
+            errors.error "toolset gcc initialization:" :
+                         "no command provided, default command 'g++' not found" :
+                         "initialized from" [ errors.nearest-user-location ] ;
+        }
+    }
+    
+    # Information about the gcc command...
+    #   The command.
+    local command = $(tool-command) ;
+    
+    # The version as reported by the compiler
+    local real-version ;
+    
+    # The flavor of compiler.
+    local flavor = [ feature.get-values <flavor> : $(options) ] ;
+    
+    flavor ?= mingw ;
+    
+    # - Autodetect the version if not given.
+    if $(command)
+    {
+        # - The 'command' variable can have multiple elements. When calling
+        #   the SHELL builtin we need a single string.
+        local command-string = $(command:J=" ") ;
+        real-version = [ MATCH "^([0-9.]+)"
+            : [ SHELL "$(command-string) -dumpversion" ] ] ;
+        version ?= $(real-version) ;
+    }
+    
+    # - Define the condition for this toolset instance.
+    local condition =
+        [ common.check-init-parameters mingw $(requirement) : version $(version) : flavor $(flavor) ] ;
+
+    # - Set the toolset generic common options.
+    common.handle-options mingw : $(condition) : $(command) : $(options) ;
+
+    # - Set the link flags common with the GCC toolset.
+    gcc.init-link-flags mingw gnu $(condition) ;
+}
