@@ -26,6 +26,7 @@ export AD_ZLIB_VERSION=1.2.7
 export AD_EXPAT_VERSION=2.1.0
 export AD_LIBICONV=1.14
 export AD_POLAR_VERSION=1.2.3
+export AD_OPENSSL_VERSION=1.0.1c
 export AD_LIBXML2_VERSION=2.9.0
 export AD_LIBCURL_VERSION=7.28.1
 
@@ -51,6 +52,7 @@ export AD_TIFF_VERSION=4.0.3
 
 export AD_PROJ_VERSION=4.8.0
 export AD_PROJ_GRIDS_VERSION=1.6RC1
+export AD_GEOTIFF_VERSION=1.4.0
 export AD_GDAL_VERSION=1.9.2
 export AD_GEOS_VERSION=3.3.6
 
@@ -182,6 +184,10 @@ download () {
     if [ ! -e "polarssl-$AD_POLAR_VERSION-gpl.tgz" ];then
         wget --no-check-certificate https://polarssl.org/download/polarssl-$AD_POLAR_VERSION-gpl.tgz
     fi
+    
+    if ! ( [ -e "openssl-$AD_OPENSSL_VERSION.tar" ] || [ -e "openssl-$AD_OPENSSL_VERSION.tar.gz" ] );then
+        http://www.openssl.org/source/openssl-$AD_OPENSSL_VERSION.tar.gz
+    fi
 
     if ! ( [ -e "libxml2-$AD_LIBXML2_VERSION.tar" ] || [ -e "libxml2-$AD_LIBXML2_VERSION.tar.gz" ] );then
         wget ftp://xmlsoft.org/libxml2/libxml2-$AD_LIBXML2_VERSION.tar.gz 
@@ -205,6 +211,10 @@ download () {
 
     if ! ( [ -e "proj-$AD_PROJ_VERSION.tar" ] || [ -e "proj-$AD_PROJ_VERSION.tar.gz" ] );then
         wget http://download.osgeo.org/proj/proj-$AD_PROJ_VERSION.tar.gz
+    fi
+    
+    if ! ( [ -e "libgeotiff-$AD_GEOTIFF_VERSION.tar" ] || [ -e "libgeotiff-$AD_GEOTIFF_VERSION.tar.gz" ] );then
+        wget ftp://ftp.remotesensing.org/pub/geotiff/libgeotiff/libgeotiff-$AD_GEOTIFF_VERSION.tar.gz
     fi
 
     if [ ! -e "proj-datumgrid-$AD_PROJ_GRIDS_VERSION.zip" ];then
@@ -535,6 +545,7 @@ buildInstallCairomm() {
 buildInstallPolarSSL() {
     local _project="polarssl-*"
     local _additionFlags=""
+    #local _binCheck="xxx"
     local _binCheck="polarssl_selftest.exe"
     local _exeToTest=""
     
@@ -544,6 +555,7 @@ buildInstallPolarSSL() {
     
     ad_preCleanEnv
     
+    export "CC=gcc"
     export "LDFLAGS=$LDFLAGS-L/mingw/win64bitlibs"
     export "CFLAGS=$CFLAGS -I/mingw/include -DWINDOWS -DZLIB"
     
@@ -556,7 +568,6 @@ buildInstallPolarSSL() {
         mv Makefile2 Makefile
         cd ..
         
-        ad_configure "$_project" "$_additionFlags"
         ad_make "$_project"
     else
         echo "Already Installed."
@@ -567,12 +578,44 @@ buildInstallPolarSSL() {
     echo
 }
 
+buildInstallLOpenSSL() {
+    local _project="openssl-*"
+    local _additionFlags=""
+    local _binCheck="libssl.a"
+    local _exeToTest="openssl version"
+    
+    echo
+    echo "Building $_project..."
+    echo
+    
+    ad_preCleanEnv
+    
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        ad_decompress "$_project"
+        
+        local _dir=$(ad_getDirFromWC $_project)
+        cd $_dir
+        ./Configure mingw64 shared no-asm no-idea no-mdc2 no-rc5 --prefix=/mingw
+        cd ..
+        
+        ad_make "$_project"
+    else
+        echo "Already Installed."
+    fi
+    
+    ad_run_test "$_exeToTest"
+    
+    echo    
+}
+
 buildInstallLibXML2() {
     buildInstallGeneric "libxml2-*" "--enable-shared --enable-static --with-icu" "xmllint" "" "xmllint --version"
 }
 
 buildInstallCurl() {
-    buildInstallGeneric "curl-*" "--with-polarssl" "libcurl.a" "" "curl --version"
+    #buildInstallGeneric "curl-*" "--with-polarssl" "libcurl.a" "" "curl --version"
+    buildInstallGeneric "curl-*" "" "libcurl.a" "" "curl --version"
 }
 
 buildInstallAPR() {
@@ -750,6 +793,10 @@ buildInstallProjDatumgrid() {
     echo    
 }
 
+buildInstallLibGeotiff() {
+    buildInstallGeneric "libgeotiff-*" "" "libgeotiff.a" "" "geotifcp"
+}
+
 buildInstallLibgeos() {
     buildInstallGeneric "geos-*" "" "libgeos.a" "" ""
 }
@@ -776,24 +823,27 @@ buildInstallPython() {
             mv cpython* python-latest
         fi
         
+        cd $_project
+        
+        if [ ! -e py3k-20121004-MINGW.patch ]; then
+            #http://bugs.python.org/issue3871
+            wget http://bugs.python.org/file27474/py3k-20121004-MINGW.patch
+            #wget http://bugs.python.org/file26572/python-py3k-20120729-MINGW.patch
+        fi
+        
+        ad_patch "py3k-20121004-MINGW.patch"
+        #ad_patch python-py3k-20120729-MINGW.patch
+        
+        autoconf
+        autoheader
+        
+        cd ..          
+        
         export "CFLAGS=$CFLAGS -I./PC -DMS_WIN64 -D__MINGW32__"
         
         echo "Using flags: $CFLAGS"
         
-        ad_configure "$_project" "--with-universal-archs=64-bit"
-        
-        cd $_project
-        
-        #if [ ! -e py3k-20121004-MINGW.patch ]; then
-            #http://bugs.python.org/issue3871
-            #wget http://bugs.python.org/file27474/py3k-20121004-MINGW.patch
-            wget http://bugs.python.org/file26572/python-py3k-20120729-MINGW.patch
-        #fi
-        
-        #ad_patch "py3k-20121004-MINGW.patch"
-        ad_patch python-py3k-20120729-MINGW.patch
-        
-        cd ..        
+        ad_configure "$_project" "--with-universal-archs=64-bit"      
 
         ad_make $_project
     else
@@ -819,8 +869,17 @@ buildInstallMapnik() {
     buildInstallGeneric "mapnik-*" "" "xxx" "" ""
 }
 
+ad_getDirFromWC() {
+    local _project=$1
+    echo `find . -maxdepth 1 -name "$_project" -prune -type d`
+}
+
+ad_getArchiveFromWC() {
+    local _project=$1
+    echo `find . -maxdepth 1 -name "$_project" -prune -type f`
+}
+
 ad_preCleanEnv() {
-    export "CC=gcc"
     export "CFLAGS=-I/mingw/include"
     export "LDFLAGS=-L/mingw/lib"
     export "CPPFLAGS=-I/mingw/include" 
@@ -828,12 +887,15 @@ ad_preCleanEnv() {
 }
 
 ad_decompress() {
-    local _project=$1
+    local _project="$1"
+    local _projectDir=$(ad_getDirFromWC $_project)
+    
+    echo "_projectDir=$_projectDir"
 
-    if ! ls -d $_project/ &> /dev/null; then
-        local _decompFile=`find $_project ! -name . -prune -type f`
+    if [ -z $_projectDir ]; then
+        local _decompFile=$(ad_getArchiveFromWC $_project)
             
-        echo Decompressing `ls $_decompFile`...
+        echo "Decompressing $_decompFile"...
             
         if [ ${_decompFile: -4} == ".tgz" ]; then
             tar xzvf $_decompFile
@@ -849,11 +911,11 @@ ad_decompress() {
             unzip $_decompFile 
         fi
         
-        _decompFile=`find $_project ! -name . -prune -type f`
+        _decompFile=$(ad_getArchiveFromWC $_project)
         
         echo "_decompFile=$_decompFile"
         
-        if [ -e $_decompFile ]; then
+        if [ -e "$_decompFile" ]; then
             tar xvf $_decompFile
         fi
     fi
@@ -868,7 +930,8 @@ ad_configure() {
     local _project=$1
     local _additionFlags=$2
     
-    cd $_project
+    local _projectDir=$(ad_getDirFromWC $_project)
+    cd $_projectDir
         
     if [ -e "configure" ]; then
         echo
@@ -883,7 +946,8 @@ ad_configure() {
 ad_make() {
     local _project=$1
     
-    cd $_project
+    local _projectDir=$(ad_getDirFromWC $_project)
+    cd $_projectDir
     
     make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
@@ -894,7 +958,8 @@ ad_make() {
 ad_boost_jam() {
     local _project=$1
     
-    cd $_project
+    local _projectDir=$(ad_getDirFromWC $_project)
+    cd $_projectDir
     
     #this is needed for boost https://svn.boost.org/trac/boost/ticket/6350
     cp /home/developer/mingw.jam tools/build/v2/tools
@@ -907,7 +972,8 @@ ad_boost_jam() {
 ad_build() {
     local _project=$1
     
-    cd $_project
+    local _projectDir=$(ad_getDirFromWC $_project)
+    cd $_projectDir
     
     ./build.sh  || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
@@ -919,7 +985,8 @@ ad_exec_script() {
     local _project="$1"
     local _postBuildCommand="$2"
     
-    cd $_project
+    local _projectDir=$(ad_getDirFromWC $_project)
+    cd $_projectDir
         
     if [ ! -z "$_postBuildCommand" ]; then
         echo "Executing post command: '$_postBuildCommand'"
@@ -1001,12 +1068,14 @@ buildInstallICU
 buildInstallSQLite
 buildInstallFreeType
 buildInstallPolarSSL
+buildInstallLOpenSSL
 buildInstallLibXML2
 buildInstallFontConfig
 buildInstallCurl
 buildInstallPostgres
 buildInstallLibproj
 buildInstallProjDatumgrid
+buildInstallLibGeotiff
 buildInstallSigc
 buildInstallPixman
 buildInstallCairo
