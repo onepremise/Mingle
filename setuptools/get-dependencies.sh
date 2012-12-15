@@ -875,7 +875,7 @@ ad_getDirFromWC() {
 }
 
 ad_getArchiveFromWC() {
-    local _project=$1
+    local _project="$1"
     echo `find . -maxdepth 1 -name "$_project" -prune -type f`
 }
 
@@ -888,7 +888,7 @@ ad_preCleanEnv() {
 
 ad_decompress() {
     local _project="$1"
-    local _projectDir=$(ad_getDirFromWC $_project)
+    local _projectDir=$(ad_getDirFromWC "$_project")
     
     echo "_projectDir=$_projectDir"
 
@@ -993,7 +993,7 @@ ad_exec_script() {
         `$_postBuildCommand`
     fi
         
-    cd .
+    cd ..
 }
 
 ad_run_test() {
