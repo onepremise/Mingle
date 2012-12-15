@@ -143,10 +143,6 @@ download () {
         wget ftp://ftp.remotesensing.org/pub/libtiff/tiff-$AD_TIFF_VERSION.tar.gz
     fi
     
-    if ! ( [ -e "libxml2-$AD_LIBXML2_VERSION.tar" ] || [ -e "libxml2-$AD_LIBXML2_VERSION.tar.gz" ] );then
-        wget ftp://xmlsoft.org/libxml2/libxml2-$AD_LIBXML2_VERSION.tar.gz
-    fi
-    
     if ! ( [ -e "curl-$AD_LIBCURL_VERSION.tar" ] || [ -e "curl-$AD_LIBCURL_VERSION.tar.bz2" ] );then
         wget http://curl.haxx.se/download/curl-$AD_LIBCURL_VERSION.tar.bz2
     fi
@@ -548,6 +544,7 @@ buildInstallPolarSSL() {
     
     ad_preCleanEnv
     
+    export "LDFLAGS=$LDFLAGS-L/mingw/win64bitlibs"
     export "CFLAGS=$CFLAGS -I/mingw/include -DWINDOWS -DZLIB"
     
     echo "Checking for binary $_binCheck..."
@@ -571,11 +568,11 @@ buildInstallPolarSSL() {
 }
 
 buildInstallLibXML2() {
-    buildInstallGeneric "libxml2-*" "--with-icu" "xmllint" "" "xmllint --version"
+    buildInstallGeneric "libxml2-*" "--enable-shared --enable-static --with-icu" "xmllint" "" "xmllint --version"
 }
 
 buildInstallCurl() {
-    buildInstallGeneric "curl-*" "" "libcurl.a" "" "curl --version"
+    buildInstallGeneric "curl-*" "--with-polarssl" "libcurl.a" "" "curl --version"
 }
 
 buildInstallAPR() {
@@ -591,7 +588,37 @@ buildInstallGit() {
 }
 
 buildInstallFontConfig() {
-    buildInstallGeneric "fontconfig-*" "--enable-libxml2 --disable-docs" "fc-list" "" "fc-list --version"
+    local _project="fontconfig-*"
+    local _additionFlags="--enable-libxml2 --disable-docs"
+    local _binCheck="fc-list"
+    local _exeToTest="fc-list"
+    
+    echo
+    echo "Building $_project..."
+    echo
+    
+    ad_preCleanEnv
+    
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        ad_decompress "$_project"
+        
+        cd $_project
+        
+        mkdir -p /mingw/share/fontconfig/conf.avail        
+        cp -rf conf.d/*.conf /mingw/share/fontconfig/conf.avail
+        
+        cd ..
+        
+        ad_configure "$_project" "$_additionFlags"
+        ad_make "$_project"
+    else
+        echo "Already Installed."
+    fi
+    
+    ad_run_test "$_exeToTest"
+    
+    echo    
 }
 
 buildInstallFreeType() {
@@ -625,6 +652,19 @@ buildInstallSQLite() {
     buildInstallGeneric "sqlite-*" "" "libsqlite3.a"
 }
 
+ad_rename() {
+    local _wildcard="$1"
+    local _regex="$2"
+    
+    find . -regex "$_wildcard" | while read line; do
+        A=`basename ${line} | sed '$_regex'`;
+        B=`dirname ${line}`;
+        
+        echo mv ${line} "${B}/${A}";
+        mv ${line} "${B}/${A}";
+    done
+}
+
 buildInstallICU() {
     echo
     echo "Installing ICU..."
@@ -654,8 +694,13 @@ buildInstallICU() {
 
         make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
         make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-
+        
         cp -f /mingw/lib/icu*.dll /mingw/bin
+        
+        ad_rename "./icu.*.dll" "s/^icu/libicu/g"
+        
+        cp /mingw/lib/libicuin.dll /mingw/lib/libicui18n.dll
+        cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll
         
         cd ..
         cd ..
@@ -663,7 +708,7 @@ buildInstallICU() {
         echo "Already Installed."
     fi  
     
-    if ! icuinfo; then
+    if ! icu-config --cflags; then
         echo "ICU Test Failed!"
         exit 0;
     fi      
@@ -827,9 +872,9 @@ ad_configure() {
         
     if [ -e "configure" ]; then
         echo
-        echo "executing: ./configure --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags"
+        echo "executing: ./configure --target=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags"
         echo
-        ./configure --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
+        ./configure --target=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
     fi
         
     cd ..

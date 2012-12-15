@@ -120,27 +120,39 @@ if not exist "mingw64\bin\ml64.exe" (
     copy "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\*.*" mingw64\bin\
 )
 
-rem ECHO "Copy 64bit system libraries..."
-rem ECHO.
+ECHO.
+ECHO "Create windows 64bit library directory..."
+ECHO.
 
-rem don't do this, it's not needed
-rem copy C:\Windows\System32\gdi32.dll mingw64\lib /y
-rem copy C:\Windows\System32\msimg32.dll mingw64\lib /y
-copy C:\Windows\System32\ws2_32.dll mingw64\lib /y
-rem copy C:\Windows\System32\crypt32.dll mingw64\lib /y
-rem copy C:\Windows\System32\Wldap32.dll mingw64\lib /y
+IF NOT EXIST mingw64\win64bitlibs (
+    mkdir mingw64\win64bitlibs
+)
 
-rem move mingw64\lib\gdi32.dll mingw64\lib\libgdi32.dll
-rem move mingw64\lib\msimg32.dll mingw64\lib\libmsimg32
-move mingw64\lib\ws2_32.dll mingw64\lib\libws2_32.dll
-rem move mingw64\lib\crypt32.dll mingw64\lib\libcrypt32.dll
-rem move mingw64\lib\Wldap32.dll mingw64\lib\libwldap32.dll
+ECHO.
+ECHO "Copy 64bit system libraries..."
+ECHO.
+
+copy C:\Windows\System32\gdi32.dll mingw64\win64bitlibs /y
+copy C:\Windows\System32\msimg32.dll mingw64\win64bitlibs /y
+copy C:\Windows\System32\ws2_32.dll mingw64\win64bitlibs /y
+copy C:\Windows\System32\crypt32.dll mingw64\win64bitlibs /y
+copy C:\Windows\System32\Wldap32.dll mingw64\win64bitlibs /y
+
+move mingw64\win64bitlibs\gdi32.dll mingw64\win64bitlibs\libgdi32.dll
+move mingw64\win64bitlibs\msimg32.dll mingw64\win64bitlibs\libmsimg32
+move mingw64\win64bitlibs\ws2_32.dll mingw64\win64bitlibs\libws2_32.dll
+move mingw64\win64bitlibs\crypt32.dll mingw64\win64bitlibs\libcrypt32.dll
+move mingw64\win64bitlibs\Wldap32.dll mingw64\win64bitlibs\libwldap32.dll
+
+ECHO.
+ECHO "Copy build scripts and configs..."
+ECHO.
 
 copy setuptools\mingw.jam msys\home\developer
 copy setuptools\get-dependencies.sh msys\home\developer
 
 ECHO "Build dependencies..."
-ECHO
+ECHO.
 
 msys\bin\mintty msys/bin/bash -l -c "cd /home/developer;./get-dependencies.sh 2>&1 | tee build.log"
 
