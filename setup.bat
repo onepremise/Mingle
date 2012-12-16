@@ -55,6 +55,13 @@ ECHO.
 if not exist "msys" setuptools\unzip packages\MSYS-20111123.zip
 if not exist "mingw64" setuptools\7za x packages\x86_64-w64-mingw32-gcc-4.7.2-release-win64_rubenvb.7z
 
+IF EXIST "mingw64\bin\lib" (
+ECHO Not sure why these python libraries exist in bin. We will remove and reinstall later after we build Python. Otherwise, this will interfere with the msvc lib command.
+DEL /s /Q mingw64\bin\lib
+RMDIR /S /Q mingw64\bin\lib
+)
+
+
 ECHO "Creating shortcut..."
 ECHO.
 
