@@ -699,12 +699,14 @@ ad_rename() {
     local _wildcard="$1"
     local _regex="$2"
     
+    echo "Renaming _wildcard=$1, _regex=$2 "
+    
     find . -regex "$_wildcard" | while read line; do
-        A=`basename ${line} | sed '$_regex'`;
-        B=`dirname ${line}`;
+        A=`basename ${line} | sed $_regex`
+        B=`dirname ${line}`
         
-        echo mv ${line} "${B}/${A}";
-        mv ${line} "${B}/${A}";
+        echo mv ${line} "${B}/${A}"
+        mv ${line} "${B}/${A}"
     done
 }
 
@@ -713,7 +715,7 @@ buildInstallICU() {
     echo "Installing ICU..."
     echo
     
-    if [ ! -e /mingw/bin/icuinfo ]; then
+    if [ ! -e /mingw/lib/libicui18n.dll ]; then
         if ! ls -d icu*/ &> /dev/null; then
             tar xzvf icu4c-*-src.tgz
         fi
@@ -738,12 +740,15 @@ buildInstallICU() {
         make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
         make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
         
-        cp -f /mingw/lib/icu*.dll /mingw/bin
+        #cp -f /mingw/lib/icu*.dll /mingw/bin
         
+        local _origPath=`pwd`
+        cd /mingw/lib
         ad_rename "./icu.*.dll" "s/^icu/libicu/g"
+        cd "$_origPath"
         
-        cp /mingw/lib/libicuin.dll /mingw/lib/libicui18n.dll
-        cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll
+        cp /mingw/lib/libicuin.dll /mingw/lib/libicui18n.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
+        cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
         
         cd ..
         cd ..
