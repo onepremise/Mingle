@@ -556,8 +556,8 @@ buildInstallPolarSSL() {
     ad_preCleanEnv
     
     export "CC=gcc"
-    export "LDFLAGS=$LDFLAGS-L/mingw/win64bitlibs"
-    export "CFLAGS=$CFLAGS -I/mingw/include -DWINDOWS -DZLIB"
+    export "LDFLAGS=$LDFLAGS -lws2_32 -L/mingw/win64bitlibs"
+    export "CFLAGS=$CFLAGS -I/mingw/include -DZLIB"
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
