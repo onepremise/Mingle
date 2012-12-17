@@ -190,7 +190,7 @@ download () {
     fi
     
     if ! ( [ -e "openssl-$AD_OPENSSL_VERSION.tar" ] || [ -e "openssl-$AD_OPENSSL_VERSION.tar.gz" ] );then
-        http://www.openssl.org/source/openssl-$AD_OPENSSL_VERSION.tar.gz
+        wget http://www.openssl.org/source/openssl-$AD_OPENSSL_VERSION.tar.gz
     fi
 
     if ! ( [ -e "libxml2-$AD_LIBXML2_VERSION.tar" ] || [ -e "libxml2-$AD_LIBXML2_VERSION.tar.gz" ] );then
