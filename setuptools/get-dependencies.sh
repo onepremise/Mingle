@@ -1089,8 +1089,8 @@ buildInstallGeneric() {
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         local _projectDir=$(ad_getDirFromWC $_project)
         
-        #ad_decompress "$_project"
-        #ad_configure "$_project" "$_additionFlags"
+        ad_decompress "$_project"
+        ad_configure "$_project" "$_additionFlags"
 
         if [ -e $_projectDir/bootstrap.sh ]; then
             ad_boost_jam "$_project"
