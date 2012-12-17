@@ -11,10 +11,10 @@
 #  12-11-12             Initial Coding                  JAH
 #
 #=============================================================
-#!/bin/sh
 
 export AD_AUTOCONF=2.68
 export AD_AUTOMAKE=1.12.5
+export AD_GLIBC=2.16.0
 export AD_ZLIB=1.2.7
 export AD_BZIP=1.0.6
 export AD_SEVENZIPPATH=9.20
@@ -88,6 +88,10 @@ download () {
     if ! ( [ -e "automake-$AD_AUTOMAKE.tar" ] || [ -e "automake-$AD_AUTOMAKE.tar.gz" ] );then
         wget http://ftp.gnu.org/gnu/automake/automake-$AD_AUTOMAKE.tar.gz
     fi
+    
+    #if ! ( [ -e "glibc-$AD_GLIBC.tar" ] || [ -e "glibc-$AD_GLIBC.tar.xz" ] );then
+    #    wget http://ftp.gnu.org/gnu/libc/glibc-$AD_GLIBC.tar.xz
+    #fi
     
     if ! ( [ -e "libtool-2.4.2.tar" ] || [ -e "libtool-2.4.2.tar.gz" ] );then
         wget http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz
@@ -326,6 +330,10 @@ buildInstallAutoMake() {
 
 buildInstallLibtool() {
     buildInstallGeneric "libtool-*" "" "libtool" "" "libtool --version"
+}
+
+buildInstallGLibC() {
+    buildInstallGeneric "glibc-*" "" "xxx" "" ""
 }
 
 buildInstallZlib() {
@@ -695,21 +703,6 @@ buildInstallSQLite() {
     buildInstallGeneric "sqlite-*" "" "libsqlite3.a"
 }
 
-ad_rename() {
-    local _wildcard="$1"
-    local _regex="$2"
-    
-    echo "Renaming _wildcard=$1, _regex=$2 "
-    
-    find . -regex "$_wildcard" | while read line; do
-        A=`basename ${line} | sed $_regex`
-        B=`dirname ${line}`
-        
-        echo mv ${line} "${B}/${A}"
-        mv ${line} "${B}/${A}"
-    done
-}
-
 buildInstallICU() {
     echo
     echo "Installing ICU..."
@@ -766,6 +759,10 @@ buildInstallICU() {
 
 buildInstallPostgres() {
     buildInstallGeneric "postgresql-*" "" "postgres" "" "postgres --version"
+    
+    if [ -e /mingw/lib/libpq.dll ]; then
+        cp -rf /mingw/lib/libpq.dll /mingw/bin
+    fi
 }
 
 buildInstallExpat() {
@@ -799,7 +796,9 @@ buildInstallProjDatumgrid() {
 }
 
 buildInstallLibGeotiff() {
-    buildInstallGeneric "libgeotiff-*" "" "libgeotiff.a" "" "geotifcp"
+    buildInstallGeneric "libgeotiff-*" "--enable-shared --enable-incode-epsg" "libgeotiff.dll.a" "" "geotifcp"
+    
+    buildInstallGeneric "libgeotiff-*" "--enable-static --enable-incode-epsg" "libgeotiff.a" "" "geotifcp"
 }
 
 buildInstallLibgeos() {
@@ -884,6 +883,53 @@ ad_getArchiveFromWC() {
     echo `find . -maxdepth 1 -name "$_project" -prune -type f`
 }
 
+ad_rename() {
+    local _wildcard="$1"
+    local _regex="$2"
+    
+    echo "Renaming _wildcard=$1, _regex=$2 "
+    
+    find . -regex "$_wildcard" | while read line; do
+        A=`basename ${line} | sed $_regex`
+        B=`dirname ${line}`
+        
+        echo mv ${line} "${B}/${A}"
+        mv ${line} "${B}/${A}"
+    done
+}
+
+ad_fix_shared_lib() {  
+    local _origPath=`pwd`
+    cd /mingw/lib
+    
+    local _libraryName=`ls $1*.a|head -1|sed -e 's/dll\.a//' -e 's/\.a//'`
+    
+    echo "Parsed library name: $_libraryName"    
+    
+    if [ ! -e "$_libraryName".dll.a ] && [ -e "$_libraryName".a ]; then
+        cp -f "$_libraryName".a "$_libraryName".dll.a
+    fi
+    
+    #ad_rename "./icu.*.dll" "s/^icu/libicu/g"
+
+    if [ -e "$_libraryName.la" ]; then
+        echo "Updating $_libraryName.la..."
+        
+        sed -e "s/dlname='.*/dlname='$_libraryName.dll.a'/g" $_libraryName.la>$_libraryName-2
+        mv $_libraryName-2 $_libraryName.la
+
+        sed -e "s/\(library_names='\).*/\1$_libraryName.dll.a'/g" $_libraryName.la>$_libraryName-2
+        mv $_libraryName-2 $_libraryName.la
+
+        sed -e "s/\(old_library='\).*/\1$_libraryName.a'/g" $_libraryName.la>$_libraryName-2
+        mv $_libraryName-2 $_libraryName.la
+    else
+        echo "$_libraryName.la doesn't exist!. Generating..."
+    fi
+    
+    cd "$_origPath"
+}
+
 ad_preCleanEnv() {
     export "CFLAGS=-I/mingw/include"
     export "LDFLAGS=-L/mingw/lib"
@@ -894,8 +940,6 @@ ad_preCleanEnv() {
 ad_decompress() {
     local _project="$1"
     local _projectDir=$(ad_getDirFromWC "$_project")
-    
-    echo "_projectDir=$_projectDir"
 
     if [ -z $_projectDir ]; then
         local _decompFile=$(ad_getArchiveFromWC $_project)
@@ -968,8 +1012,10 @@ ad_boost_jam() {
     
     #this is needed for boost https://svn.boost.org/trac/boost/ticket/6350
     cp /home/developer/mingw.jam tools/build/v2/tools
+    
    ./bootstrap.sh --with-icu --prefix=/mingw --with-toolset=mingw|| { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
-    bjam --prefix=/mingw toolset=mingw address-model=64 variant=debug,release link=static,shared threading=multi install
+   
+    bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 variant=debug,release link=static,shared threading=multi install
     
     cd ..
 }
@@ -986,7 +1032,6 @@ ad_build() {
 }
 
 ad_exec_script() {
-    echo "ENTER..."
     local _project="$1"
     local _postBuildCommand="$2"
     
@@ -1014,6 +1059,19 @@ ad_run_test() {
     fi    
 }
 
+ad_getShortLibName() {
+    local _project="$1"
+    local _shortProjectName=`echo $_project|sed s/-.*//g`
+    
+    local _sub=`echo ${_project[@]:0:3}`
+    
+    if [ "$_sub" != "lib" ]; then
+        _shortProjectName="lib$_shortProjectName"
+    fi
+    
+    echo $_shortProjectName
+}
+
 buildInstallGeneric() {
     local _project="$1"
     local _additionFlags="$2"
@@ -1029,15 +1087,29 @@ buildInstallGeneric() {
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
-        ad_decompress "$_project"
-        ad_configure "$_project" "$_additionFlags"
+        local _projectDir=$(ad_getDirFromWC $_project)
+        
+        #ad_decompress "$_project"
+        #ad_configure "$_project" "$_additionFlags"
 
-        if [ -e bootstrap.sh ]; then
+        if [ -e $_projectDir/bootstrap.sh ]; then
             ad_boost_jam "$_project"
-        elif [ -e build.sh ]; then
+        elif [ -e $_projectDir/build.sh ]; then
             ad_build "$_project"
         else
             ad_make "$_project"
+        fi
+        
+        local _result=`echo "$_additionFlags"|grep "\-\-enable\-shared"`
+        
+        if [ ! -z "$_result" ]; then
+            echo "Shared Library Enabled."
+            
+            local _shortProjectName=$(ad_getShortLibName $_project)
+            
+            echo "Short Name: $_shortProjectName"
+            
+            ad_fix_shared_lib "$_shortProjectName"
         fi
         
         ad_exec_script "$_project" "$_postBuildCommand"
@@ -1062,6 +1134,7 @@ buildInstallAutoconf
 buildInstallAutoMake
 buildInstallLibtool
 buildInstallPkgconfig
+#buildInstallGLibC
 buildInstallZlib
 buildInstallBzip2
 buildInstallLibiconv
