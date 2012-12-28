@@ -12,7 +12,8 @@
 #
 #=============================================================
 
-export AD_AUTOCONF=2.68
+export AD_MFOUR=1.4.16
+export AD_AUTOCONF=2.69
 export AD_AUTOMAKE=1.12.5
 export AD_GLIBC=2.16.0
 export AD_ZLIB=1.2.7
@@ -80,6 +81,10 @@ download () {
     #if [ ! -e "make-$MAKE.zip" ];then
     #  wget http://sourceforge.net/projects/mingw-w64/files/External%20binary%20packages%20%28Win64%20hosted%29/make/make-$MAKE.zip/download
     #fi
+    
+    if ! ( [ -e "m4-$AD_MFOUR.tar" ] || [ -e "m4-$AD_MFOUR.tar.xz" ] );then
+        wget http://ftp.gnu.org/gnu/m4/m4-$AD_MFOUR.tar.xz
+    fi
     
     if ! ( [ -e "autoconf-$AD_AUTOCONF.tar" ] || [ -e "autoconf-$AD_AUTOCONF.tar.gz" ] );then
         wget http://ftp.gnu.org/gnu/autoconf/autoconf-$AD_AUTOCONF.tar.gz
@@ -320,7 +325,12 @@ updateMake() {
     cp -rf make-$MAKE/bin_ix86 /bin
 }
 
+buildInstallM4() {
+    buildInstallGeneric "m4-*" "" "m4" "" "m4 --version"
+}
+
 buildInstallAutoconf() {
+    export "M4=/bin/m4"
     buildInstallGeneric "autoconf-*" "" "autoconf" "" "autoconf --version"
 }
 
@@ -384,6 +394,8 @@ buildInstallBzip2() {
 
         cp -f bzip2 /mingw/bin
         cp -f bzip2recover /mingw/bin
+        cp -f libbz2.a /mingw/lib
+        cp -f bzlib.h /mingw/include
 
         cd ..
     else
@@ -830,24 +842,62 @@ buildInstallPython() {
         cd $_project
         
         if [ ! -e py3k-20121004-MINGW.patch ]; then
+            #http://bugs.python.org/issue3754
+            #http://bugs.python.org/issue4709
+            
             #http://bugs.python.org/issue3871
-            wget http://bugs.python.org/file27474/py3k-20121004-MINGW.patch
-            #wget http://bugs.python.org/file26572/python-py3k-20120729-MINGW.patch
+            #wget http://bugs.python.org/file27474/py3k-20121004-MINGW.patch
+            
+            #my update
+            cp /home/developer/patches/python/3.0.0/py3k-20121227-MINGW.patch .
         fi
         
-        ad_patch "py3k-20121004-MINGW.patch"
-        #ad_patch python-py3k-20120729-MINGW.patch
+        ad_patch "py3k-20121227-MINGW.patch"
         
-        autoconf
-        autoheader
+        echo "Executing autoconf..."
         
+        autoconf || { stat=$?; echo "autoconf failed, aborting" >&2; exit $stat; }
+        
+        echo "Executing autoheader..."
+        
+        autoheader || { stat=$?; echo "autoheader failed, aborting" >&2; exit $stat; }
+
+		echo "Isolating dependencies..."
+
+        if [ ! -e dependencies ]; then
+		    mkdir dependencies
+            mkdir dependencies/include
+            mkdir dependencies/lib
+        fi
+
+		cp -f /mingw/lib/libexpat.* dependencies/lib
+        cp -f /mingw/include/expat* dependencies/include
+
+		cp -f /mingw/lib/libz.* dependencies/lib
+        cp -f /mingw/include/z* dependencies/include
+
+		cp -f /mingw/lib/libsqlite* dependencies/lib
+        cp -f /mingw/include/sqlite* dependencies/include
+
+		cp -f /mingw/lib/libbz* dependencies/lib
+        cp -f /mingw/include/bz* dependencies/include
+
+		cp -f /mingw/lib/libcrypto* dependencies/lib
+		cp -f /mingw/lib/libssl* dependencies/lib
+        cp -rf /mingw/include/openssl* dependencies/include
+        
+        echo "# Edit this file for local setup changes">Modules/Setup.local
+        echo "_socket socketmodule.c">>Modules/Setup.local
+		echo "_ssl _ssl.c -DUSE_SSL -lssl -lcrypto -lws2_32">>Modules/Setup.local
+
         cd ..          
         
-        export "CFLAGS=$CFLAGS -I./PC -DMS_WIN64 -D__MINGW32__"
+        export "CFLAGS=$CFLAGS -IPC -DMS_WIN64 -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
+		export "LDFLAGS=$LDFLAGS -Ldependencies/lib"
         
         echo "Using flags: $CFLAGS"
-        
-        ad_configure "$_project" "--with-universal-archs=64-bit"      
+               
+        ad_configure "$_project" "--with-universal-archs=64-bit --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"      
 
         ad_make $_project
     else
@@ -915,7 +965,7 @@ ad_fix_shared_lib() {
     if [ -e "$_libraryName.la" ]; then
         echo "Updating $_libraryName.la..."
         
-        sed -e "s/dlname='.*/dlname='$_libraryName.dll.a'/g" $_libraryName.la>$_libraryName-2
+        sed -e "s/dlname='.*/dlname='../bin/$_libraryName.dll'/g" $_libraryName.la>$_libraryName-2
         mv $_libraryName-2 $_libraryName.la
 
         sed -e "s/\(library_names='\).*/\1$_libraryName.dll.a'/g" $_libraryName.la>$_libraryName-2
@@ -962,8 +1012,6 @@ ad_decompress() {
         
         _decompFile=$(ad_getArchiveFromWC $_project)
         
-        echo "_decompFile=$_decompFile"
-        
         if [ -e "$_decompFile" ]; then
             tar xvf $_decompFile
         fi
@@ -972,7 +1020,7 @@ ad_decompress() {
 
 ad_patch() {
     local _patchFile=$1
-    patch -t -p1 < $_patchFile
+    patch --ignore-whitespace -f -p1 < $_patchFile
 }
 
 ad_configure() {
@@ -1130,10 +1178,13 @@ download
 updateFindCommand
 install7Zip
 buildInstallPThreads
+#Keep the msys M4 for now due to build issues it causes with autoconf
+#buildInstallM4
 buildInstallAutoconf
 buildInstallAutoMake
 buildInstallLibtool
 buildInstallPkgconfig
+#Not ready for mingw64
 #buildInstallGLibC
 buildInstallZlib
 buildInstallBzip2

@@ -139,11 +139,11 @@ ECHO.
 ECHO "Copy 64bit system libraries..."
 ECHO.
 
-copy C:\Windows\System32\gdi32.dll mingw64\win64bitlibs /y
-copy C:\Windows\System32\msimg32.dll mingw64\win64bitlibs /y
-copy C:\Windows\System32\ws2_32.dll mingw64\win64bitlibs /y
-copy C:\Windows\System32\crypt32.dll mingw64\win64bitlibs /y
-copy C:\Windows\System32\Wldap32.dll mingw64\win64bitlibs /y
+COPY C:\Windows\System32\gdi32.dll mingw64\win64bitlibs /y
+COPY C:\Windows\System32\msimg32.dll mingw64\win64bitlibs /y
+COPY C:\Windows\System32\ws2_32.dll mingw64\win64bitlibs /y
+COPY C:\Windows\System32\crypt32.dll mingw64\win64bitlibs /y
+COPY C:\Windows\System32\Wldap32.dll mingw64\win64bitlibs /y
 
 move mingw64\win64bitlibs\gdi32.dll mingw64\win64bitlibs\libgdi32.dll
 move mingw64\win64bitlibs\msimg32.dll mingw64\win64bitlibs\libmsimg32
@@ -155,8 +155,11 @@ ECHO.
 ECHO "Copy build scripts and configs..."
 ECHO.
 
-copy setuptools\mingw.jam msys\home\developer
-copy setuptools\get-dependencies.sh msys\home\developer
+COPY setuptools\mingw.jam msys\home\developer
+COPY setuptools\get-dependencies.sh msys\home\developer
+
+IF NOT EXIST "msys\home\developer\patches" MKDIR msys\home\developer\patches
+XCOPY /S /Y patches msys\home\developer\patches
 
 ECHO "Build dependencies..."
 ECHO.
