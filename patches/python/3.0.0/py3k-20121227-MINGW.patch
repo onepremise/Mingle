@@ -2166,10 +2166,10 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Objects/exceptions.c
  /* The following constants were added to errno.h in VS2010 but have
     preferred WSA equivalents. */
  #undef EADDRINUSE
-diff -r f98ab0d3a591 -r 14c3c8828b00 PC/getpathp.c
---- a/PC/getpathp.c	Thu Dec 27 23:52:36 2012 +0200
-+++ b/PC/getpathp.c	Thu Dec 27 17:35:12 2012 -0500
-@@ -470,6 +470,74 @@
+diff -r da161499d0c0 -r 80cd626ac9f0 PC/getpathp.c
+--- a/PC/getpathp.c	Mon Dec 17 20:46:29 2012 +0100
++++ b/PC/getpathp.c	Tue Dec 18 21:47:22 2012 -0500
+@@ -470,6 +470,87 @@
      return result;
  }
  
@@ -2241,10 +2241,23 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/getpathp.c
 +	}
 +}
 +
++void get_mingw_libdynload_path(wchar_t *destination, int size)
++{
++	wchar_t mingw_lib_path[MAXPATHLEN+1]={0};
++	wchar_t mingw_dynload_path[MAXPATHLEN+1]={0};
++
++	get_mingw_python_path(mingw_lib_path, sizeof(mingw_lib_path));
++
++	if (wcslen(mingw_lib_path)>=0) {
++		wcsncat(destination, mingw_lib_path, size);
++		wcsncat(destination, L"/lib-dynload", size);
++	}
++}
++
  static void
  calculate_path(void)
  {
-@@ -569,6 +637,15 @@
+@@ -569,6 +650,18 @@
      }
  
      skiphome = pythonhome==NULL ? 0 : 1;
@@ -2255,12 +2268,15 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/getpathp.c
 +
 +	wchar_t mingw_python_path[MAXPATHLEN+1]={0};
 +	get_mingw_python_path(mingw_python_path, sizeof(mingw_python_path));
++
++	wchar_t mingw_dynload_path[MAXPATHLEN+1]={0};
++	get_mingw_libdynload_path(mingw_dynload_path, sizeof(mingw_dynload_path));
 +#  endif
 +
  #ifdef Py_ENABLE_SHARED
      machinepath = getpythonregpath(HKEY_LOCAL_MACHINE, skiphome);
      userpath = getpythonregpath(HKEY_CURRENT_USER, skiphome);
-@@ -576,7 +653,8 @@
+@@ -576,7 +669,8 @@
      /* We only use the default relative PYTHONPATH if we havent
         anything better to use! */
      skipdefault = envpath!=NULL || pythonhome!=NULL || \
@@ -2270,7 +2286,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/getpathp.c
  #endif
  
      /* We need to construct a path from the following parts.
-@@ -604,19 +682,31 @@
+@@ -604,19 +698,33 @@
      }
      else
          bufsz = 0;
@@ -2286,10 +2302,12 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/getpathp.c
      bufsz += wcslen(zip_path) + 1;
 +
 +#  ifdef __MINGW32__
-+    if (mingw_lib_path)
++    if (wcslen(mingw_lib_path)>=0)
 +        bufsz += wcslen(mingw_lib_path) + 1;
-+    if (mingw_python_path)
++    if (wcslen(mingw_python_path)>=0)
 +        bufsz += wcslen(mingw_python_path) + 1;
++    if (wcslen(mingw_dynload_path)>=0)
++    	bufsz += wcslen(mingw_dynload_path) + 1;
 +#  endif
 +
  #endif
@@ -2302,7 +2320,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/getpathp.c
      if (buf == NULL) {
          /* We can't exit, so print a warning and limp along */
          fprintf(stderr, "Can't malloc dynamic PYTHONPATH.\n");
-@@ -660,6 +750,24 @@
+@@ -660,6 +768,30 @@
          *buf++ = DELIM;
          free(machinepath);
      }
@@ -2317,6 +2335,12 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/getpathp.c
 +
 +		if (wcslen(mingw_python_path)>0) {
 +			wcscpy(buf, mingw_python_path);
++			buf = wcschr(buf, L'\0');
++			*buf++ = DELIM;
++		}
++
++		if (wcslen(mingw_dynload_path)>0) {
++			wcscpy(buf, mingw_dynload_path);
 +			buf = wcschr(buf, L'\0');
 +			*buf++ = DELIM;
 +		}

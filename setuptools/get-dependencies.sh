@@ -631,6 +631,8 @@ buildInstallLOpenSSL() {
 
 buildInstallLibXML2() {
     buildInstallGeneric "libxml2-*" "--enable-shared --enable-static --with-icu" "xmllint" "" "xmllint --version"
+
+    cp -f /ming/lib
 }
 
 buildInstallCurl() {
@@ -823,8 +825,9 @@ buildInstallGDAL() {
 
 buildInstallPython() {
     local _project="Python-*"
-    local _binCheck="python"
-    
+    local _binCheck="python33"
+    local _exeToTest="python33 --version"
+
     echo
     echo "Building $_project..."
     echo
@@ -904,7 +907,7 @@ buildInstallPython() {
         echo "Already Installed."
     fi
     
-    _exeToTest "python --version"
+	ad_run_test "$_exeToTest"
 }
 
 buildInstallBoostJam() {
@@ -916,7 +919,7 @@ buildInstallBoost() {
 }
 
 buildInstallPyCairo() {
-    buildInstallGeneric "pycairo-*" "" "xxx" "" ""
+    buildInstallGeneric "py2cairo-*" "" "xxx" "" ""
 }
 
 buildInstallMapnik() {
@@ -1214,10 +1217,14 @@ buildInstallGDAL
 buildInstallBoostJam
 buildInstallBoost
 buildInstallPython
-buildInstallPyCairo
-buildInstallMapnik
-buildInstallAPR
-buildInstallSVN
-buildInstallGit
+#buildInstallPyCairo
+#buildInstallMapnik
+#buildInstallAPR
+#buildInstallSVN
+#buildInstallGit
+
+echo
+echo "Finished Building Modules."
+echo
 
 cd ..

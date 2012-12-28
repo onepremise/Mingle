@@ -14,3 +14,9 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> sqlite3.sqlite_version
 '3.7.15'
 >>>
+>>> con=sqlite3.connect(':memory:')
+>>> with con:
+...     cur = con.cursor()
+...     cur.execute("CREATE TABLE Friends(Id INTEGER PRIMARY KEY, Name TEXT);")
+...
+<sqlite3.Cursor object at 0x0000000002A35EA0>
