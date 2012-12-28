@@ -747,13 +747,15 @@ buildInstallICU() {
         make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
         make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
         
-        #cp -f /mingw/lib/icu*.dll /mingw/bin
+        cp -f /mingw/lib/icu*.dll /mingw/bin
         
         local _origPath=`pwd`
         cd /mingw/lib
         ad_rename "./icu.*.dll" "s/^icu/libicu/g"
         cd "$_origPath"
         
+        cp /mingw/lib/libicuuc50.dll /mingw/bin/icuuc50.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
+        cp /mingw/lib/libicudt50.dll /mingw/bin/icudt50.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
         cp /mingw/lib/libicuin.dll /mingw/lib/libicui18n.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
         cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
         
