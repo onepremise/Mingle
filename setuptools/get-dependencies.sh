@@ -1143,9 +1143,9 @@ buildInstallGeneric() {
         ad_decompress "$_project"
         ad_configure "$_project" "$_additionFlags"
 
-        if [ -e $_projectDir/bootstrap.sh ]; then
+        if [ -e "$_projectDir/bootstrap.sh" ]; then
             ad_boost_jam "$_project"
-        elif [ -e $_projectDir/build.sh ]; then
+        elif [ -e "$_projectDir/build.sh" ]; then
             ad_build "$_project"
         else
             ad_make "$_project"
