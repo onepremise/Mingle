@@ -831,7 +831,7 @@ buildInstallPython() {
     local _exeToTest="python33 --version"
 
     echo
-    echo "Building $_project..."
+echo "Building $_project..."
     echo
     
     $ad_preCleanEnv
@@ -970,7 +970,7 @@ ad_fix_shared_lib() {
     if [ -e "$_libraryName.la" ]; then
         echo "Updating $_libraryName.la..."
         
-        sed -e "s/dlname='.*/dlname='../bin/$_libraryName.dll'/g" $_libraryName.la>$_libraryName-2
+        sed -e "s/dlname='.*/dlname='..\/bin\/$_libraryName.dll'/g" $_libraryName.la>$_libraryName-2
         mv $_libraryName-2 $_libraryName.la
 
         sed -e "s/\(library_names='\).*/\1$_libraryName.dll.a'/g" $_libraryName.la>$_libraryName-2
