@@ -63,6 +63,7 @@ export AD_CAIROMM_VERSION=1.10.0
 export AD_PYCAIRO_VERSION=1.10.0
 
 export AD_PYTHON_VERSION=3.3.0
+export AD_WAF_VERSION=1.7.8
 export AD_POSTGRES_VERSION=9.2.2
 
 export AD_MAPNIK_VERSION=2.1.0
@@ -234,6 +235,10 @@ download () {
     #if ! ( [ -e "python-latest.tar" ] || [ -e "python-latest.tar.bz2" ] );then
         wget http://www.python.org/ftp/python/$AD_PYTHON_VERSION/Python-$AD_PYTHON_VERSION.tgz
         #wget http://hg.python.org/cpython/archive/tip.tar.bz2 -O python-latest.tar.bz2
+    fi
+    
+    if ! ( [ -e "waf-$AD_WAF_VERSION.tar" ] || [ -e "waf-$AD_WAF_VERSION.tar.bz2" ] );then
+        wget http://waf.googlecode.com/files/waf-$AD_WAF_VERSION.tar.bz2
     fi
     
     if ! ( [ -e "py2cairo-$AD_PYCAIRO_VERSION.tar" ] || [ -e "py2cairo-$AD_PYCAIRO_VERSION.tar.bz2" ] );then
@@ -903,11 +908,17 @@ echo "Building $_project..."
         ad_configure "$_project" "--with-universal-archs=64-bit --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"      
 
         ad_make $_project
+        
+        ln -s /mingw/bin/python33 /mingw/bin/python
     else
         echo "Already Installed."
     fi
     
 	ad_run_test "$_exeToTest"
+}
+
+buildInstallWAF() {
+    buildInstallGeneric "waf-*" "" "waf" "" ""
 }
 
 buildInstallBoostJam() {
@@ -919,7 +930,38 @@ buildInstallBoost() {
 }
 
 buildInstallPyCairo() {
-    buildInstallGeneric "py2cairo-*" "" "xxx" "" ""
+    local _project="py2cairo-*"
+    local _additionFlags=""
+    local _binCheck="xxx"
+    local _exeToTest=""
+    
+    echo
+    echo "Building $_project..."
+    echo
+    
+    ad_preCleanEnv
+    
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        ad_decompress "$_project"
+        
+        cd $_project
+        
+        ./waf configure --target=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw
+        ./waf build
+        ./waf install
+        
+        cd ..
+        #from distutils.sysconfig import get_config_var
+        #from distutils.sysconfig import get_python_lib
+        #breaks waf: print(repr(get_config_var('LIBDEST') or ''))
+    else
+        echo "Already Installed."
+    fi
+    
+    ad_run_test "$_exeToTest"
+    
+    echo      
 }
 
 buildInstallMapnik() {
@@ -1217,7 +1259,8 @@ buildInstallGDAL
 buildInstallBoostJam
 buildInstallBoost
 buildInstallPython
-#buildInstallPyCairo
+buildInstallWAF
+buildInstallPyCairo
 #buildInstallMapnik
 #buildInstallAPR
 #buildInstallSVN
