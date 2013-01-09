@@ -282,9 +282,9 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Include/pythonrun.h
  #endif
  
  /* In their own files */
-diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/ctypes/test/test_as_parameter.py
---- a/Lib/ctypes/test/test_as_parameter.py	Thu Dec 27 23:52:36 2012 +0200
-+++ b/Lib/ctypes/test/test_as_parameter.py	Thu Dec 27 17:35:12 2012 -0500
+diff -r da161499d0c0 -r 7b0db7469f0a Lib/ctypes/test/test_as_parameter.py
+--- a/Lib/ctypes/test/test_as_parameter.py	Mon Dec 17 20:46:29 2012 +0100
++++ b/Lib/ctypes/test/test_as_parameter.py	Tue Dec 18 21:47:22 2012 -0500
 @@ -1,6 +1,7 @@
  import unittest
  from ctypes import *
@@ -293,7 +293,18 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/ctypes/test/test_as_parameter.py
  
  dll = CDLL(_ctypes_test.__file__)
  
-@@ -171,6 +172,10 @@
+@@ -161,6 +162,10 @@
+         expected = 203, 101, 102
+         self.assertEqual(got, expected)
+ 
++    # This is known cdecl incompatibility between GCC
++    # and MSVC. It is addressed in GCC issue #36834.
++    # Python libffi detect it and complain.
++    @unittest.skipIf(sys.platform == "win32" and sys.version.upper().find("GCC") >= 0, 'XFAIL GCC(mingw)')
+     def test_struct_return_2H(self):
+         class S2H(Structure):
+             _fields_ = [("x", c_short),
+@@ -171,6 +176,10 @@
          s2h = dll.ret_2h_func(self.wrap(inp))
          self.assertEqual((s2h.x, s2h.y), (99*2, 88*3))
  
@@ -304,9 +315,9 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/ctypes/test/test_as_parameter.py
      def test_struct_return_8H(self):
          class S8I(Structure):
              _fields_ = [("a", c_int),
-diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/ctypes/test/test_functions.py
---- a/Lib/ctypes/test/test_functions.py	Thu Dec 27 23:52:36 2012 +0200
-+++ b/Lib/ctypes/test/test_functions.py	Thu Dec 27 17:35:12 2012 -0500
+diff -r da161499d0c0 -r 7b0db7469f0a Lib/ctypes/test/test_functions.py
+--- a/Lib/ctypes/test/test_functions.py	Mon Dec 17 20:46:29 2012 +0100
++++ b/Lib/ctypes/test/test_functions.py	Tue Dec 18 21:47:22 2012 -0500
 @@ -359,6 +359,10 @@
              s2h = windll.s_ret_2h_func(S2H(99, 88))
              self.assertEqual((s2h.x, s2h.y), (99*2, 88*3))
@@ -314,7 +325,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/ctypes/test/test_functions.py
 +    # This is known cdecl incompatibility between GCC
 +    # and MSVC. It is addressed in GCC issue #36834.
 +    # Python libffi detect it and complain.
-+    @unittest.skipIf(sys.platform == "win32" and sys.version.find("GCC") >= 0, 'XFAIL GCC(mingw)')
++    @unittest.skipIf(sys.platform == "win32" and sys.version.upper().find("GCC") >= 0, 'XFAIL GCC(mingw)')
      def test_struct_return_8H(self):
          class S8I(Structure):
              _fields_ = [("a", c_int),
@@ -469,9 +480,9 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/distutils/command/install.py
              self.change_roots('libbase', 'lib', 'purelib', 'platlib',
                                'scripts', 'data', 'headers')
  
-diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/distutils/cygwinccompiler.py
---- a/Lib/distutils/cygwinccompiler.py	Thu Dec 27 23:52:36 2012 +0200
-+++ b/Lib/distutils/cygwinccompiler.py	Thu Dec 27 17:35:12 2012 -0500
+diff -r da161499d0c0 -r 7b0db7469f0a Lib/distutils/cygwinccompiler.py
+--- a/Lib/distutils/cygwinccompiler.py	Mon Dec 17 20:46:29 2012 +0100
++++ b/Lib/distutils/cygwinccompiler.py	Tue Dec 18 21:47:22 2012 -0500
 @@ -63,6 +63,18 @@
      """Include the appropriate MSVC runtime library if Python was built
      with MSVC 7.0 or later.
@@ -600,7 +611,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/distutils/cygwinccompiler.py
          # -mdll -static
 -        if self.ld_version >= "2.13":
 +        if self.ld_version >= "4.7":
-+            shared_option = "-pthread -share -W1"
++            shared_option = "-share -W1"
 +        elif self.ld_version >= "2.13":
              shared_option = "-shared"
          else:
@@ -611,7 +622,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/distutils/cygwinccompiler.py
 -        if self.gcc_version <= "2.91.57":
 +        if self.gcc_version >= "4.7":
 +            entry_point = ''
-+            compiler_options = '-pthread -c -Wno-unused-result -mms-bitfields -fwrapv -O3 -Wall -Wstrict-prototypes'
++            compiler_options = '-c -Wno-unused-result -fwrapv -O3 -Wall'
 +        elif self.gcc_version <= "2.91.57":
              entry_point = '--entry _DllMain@12'
          else:
@@ -844,20 +855,45 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/distutils/tests/test_cygwinccompiler.py
  
          # MSVC 7.0
          sys.version = ('2.5.1 (r251:54863, Apr 18 2007, 08:51:08) '
-diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/distutils/unixccompiler.py
---- a/Lib/distutils/unixccompiler.py	Thu Dec 27 23:52:36 2012 +0200
-+++ b/Lib/distutils/unixccompiler.py	Thu Dec 27 17:35:12 2012 -0500
-@@ -155,6 +155,9 @@
+diff -r da161499d0c0 -r 7b0db7469f0a Lib/distutils/unixccompiler.py
+--- a/Lib/distutils/unixccompiler.py	Mon Dec 17 20:46:29 2012 +0100
++++ b/Lib/distutils/unixccompiler.py	Tue Dec 18 21:47:22 2012 -0500
+@@ -155,6 +155,17 @@
  
          lib_opts = gen_lib_options(self, library_dirs, runtime_library_dirs,
                                     libraries)
-+                                   
++
++        tmp_opts=[]
++        
++        for opt in lib_opts:
++            if opt not in ["-L/mingw/lib"]:
++                tmp_opts.append(opt)
++        
++        lib_opts=tmp_opts
++                              
 +        lib_opts.append('-L.')
 +
          if not isinstance(output_dir, (str, type(None))):
              raise TypeError("'output_dir' must be a string or None")
          if output_dir is not None:
-@@ -238,9 +241,13 @@
+@@ -191,6 +202,16 @@
+                 if sys.platform == 'darwin':
+                     linker = _osx_support.compiler_fixup(linker, ld_args)
+ 
++
++                tmp_opts=[]
++        
++                for opt in linker:
++                    if opt not in ["-L/mingw/lib"]:
++                        tmp_opts.append(opt)
++        
++                linker=tmp_opts
++
++                print('linker=%s' % str(linker))
+                 self.spawn(linker + ld_args)
+             except DistutilsExecError as msg:
+                 raise LinkError(msg)
+@@ -238,9 +259,13 @@
                  # -Wl whenever gcc was used in the past it is probably
                  # safest to keep doing so.
                  if sysconfig.get_config_var("GNULD") == "yes":
@@ -887,48 +923,6 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Lib/sysconfig.py
  
  def _subst_vars(s, local_vars):
      try:
-@@ -390,29 +394,7 @@
-     if _PYTHON_BUILD:
-         vars['LDSHARED'] = vars['BLDSHARED']
- 
--    # There's a chicken-and-egg situation on OS X with regards to the
--    # _sysconfigdata module after the changes introduced by #15298:
--    # get_config_vars() is called by get_platform() as part of the
--    # `make pybuilddir.txt` target -- which is a precursor to the
--    # _sysconfigdata.py module being constructed.  Unfortunately,
--    # get_config_vars() eventually calls _init_posix(), which attempts
--    # to import _sysconfigdata, which we won't have built yet.  In order
--    # for _init_posix() to work, if we're on Darwin, just mock up the
--    # _sysconfigdata module manually and populate it with the build vars.
--    # This is more than sufficient for ensuring the subsequent call to
--    # get_platform() succeeds.
--    name = '_sysconfigdata'
--    if 'darwin' in sys.platform:
--        import imp
--        module = imp.new_module(name)
--        module.build_time_vars = vars
--        sys.modules[name] = module
--
--    pybuilddir = 'build/lib.%s-%s' % (get_platform(), sys.version[:3])
--    if hasattr(sys, "gettotalrefcount"):
--        pybuilddir += '-pydebug'
--    os.makedirs(pybuilddir, exist_ok=True)
--    destfile = os.path.join(pybuilddir, name + '.py')
-+    destfile = os.path.join(os.path.dirname(__file__), '_sysconfigdata.py')
- 
-     with open(destfile, 'w', encoding='utf8') as f:
-         f.write('# system configuration generated and used by'
-@@ -420,10 +402,6 @@
-         f.write('build_time_vars = ')
-         pprint.pprint(vars, stream=f)
- 
--    # Create file used for sys.path fixup -- see Modules/getpath.c
--    with open('pybuilddir.txt', 'w', encoding='ascii') as f:
--        f.write(pybuilddir)
--
- def _init_posix(vars):
-     """Initialize the module as appropriate for POSIX systems."""
-     # _sysconfigdata is generated at build time, see _generate_posix_vars()
 @@ -480,7 +458,8 @@
  def get_config_h_filename():
      """Return the path of pyconfig.h."""
@@ -1127,7 +1121,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Makefile.pre.in
  
  # Default target
  all:		build_all
--build_all: $(BUILDPYTHON) $(SYSCONFIGDATA) oldsharedmods sharedmods gdbhooks Modules/_testembed
+-build_all:	$(BUILDPYTHON) $(SYSCONFIGDATA) oldsharedmods sharedmods gdbhooks Modules/_testembed
 +
 +build_all:	$(BUILDPYTHON) $(SYSCONFIGDATA) oldsharedmods sharedmods gdbhooks _testembed$(EXE)
  
@@ -1790,34 +1784,21 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/mathmodule.c
  /*
     sin(pi*x), giving accurate results for all finite x (especially x
     integral or close to an integer).  This is here for use in the
-diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/posixmodule.c
---- a/Modules/posixmodule.c	Thu Dec 27 23:52:36 2012 +0200
-+++ b/Modules/posixmodule.c	Thu Dec 27 17:35:12 2012 -0500
-@@ -175,6 +175,23 @@
+diff -r da161499d0c0 -r 7b0db7469f0a Modules/posixmodule.c
+--- a/Modules/posixmodule.c	Mon Dec 17 20:46:29 2012 +0100
++++ b/Modules/posixmodule.c	Tue Dec 18 21:47:22 2012 -0500
+@@ -175,6 +175,10 @@
  #define HAVE_CWAIT      1
  #define HAVE_FSYNC      1
  #define fsync _commit
 +#elif defined(__MINGW32__)	/* GCC (mingw special) compiler */
-+/*#define HAVE_GETCWD	1 - detected by configure*/
-+#define HAVE_SPAWNV	1
-+#define HAVE_EXECV	1
-+#define HAVE_PIPE	1
-+#define HAVE_POPEN	1
-+#define HAVE_SYSTEM	1
-+#define HAVE_CWAIT	1
-+#define HAVE_FSYNC	1
-+#undef HAVE_FTRUNCATE	/* mingw implement it as _chsize. undef to be compatible */
-+#undef HAVE_TRUNCATE	/* mingw-w64 implement it. undef to be compatible */
-+#define fsync _commit
-+#include <windows.h>
-+#include <winioctl.h>
 +#ifndef _MAX_ENV
 +#define _MAX_ENV	32767
 +#endif
  #else
  #if defined(PYOS_OS2) && defined(PYCC_GCC) || defined(__VMS)
  /* Everything needed is defined in PC/os2emx/pyconfig.h or vms/pyconfig.h */
-@@ -302,7 +319,7 @@
+@@ -302,7 +306,7 @@
  #endif
  #endif
  
@@ -1826,7 +1807,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/posixmodule.c
  #ifdef HAVE_DIRECT_H
  #include <direct.h>
  #endif
-@@ -894,6 +911,15 @@
+@@ -894,6 +891,15 @@
     http://msdn.microsoft.com/en-us/library/ms791514.aspx as the required
     include doesn't seem to be present in the Windows SDK (at least as included
     with Visual Studio Express). */
@@ -1842,7 +1823,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/posixmodule.c
  typedef struct _REPARSE_DATA_BUFFER {
      ULONG ReparseTag;
      USHORT ReparseDataLength;
-@@ -924,7 +950,10 @@
+@@ -924,7 +930,10 @@
  
  #define REPARSE_DATA_BUFFER_HEADER_SIZE  FIELD_OFFSET(REPARSE_DATA_BUFFER,\
                                                        GenericReparseBuffer)
@@ -1853,7 +1834,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/posixmodule.c
  
  static int
  win32_get_reparse_tag(HANDLE reparse_point_handle, ULONG *reparse_tag)
-@@ -957,7 +986,7 @@
+@@ -957,7 +966,7 @@
  */
  #include <crt_externs.h>
  static char **environ;
@@ -1862,7 +1843,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/posixmodule.c
  extern char **environ;
  #endif /* !_MSC_VER */
  
-@@ -1278,7 +1307,7 @@
+@@ -1278,7 +1287,7 @@
  static PyObject*
  win32_1str(PyObject* args, char* func,
             char* format, BOOL (__stdcall *funcA)(LPCSTR),
@@ -1871,7 +1852,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/posixmodule.c
  {
      PyObject *uni;
      const char *ansi;
-@@ -1405,7 +1434,7 @@
+@@ -1405,7 +1414,7 @@
      int st_ctime_nsec;
  };
  
@@ -1880,7 +1861,29 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/posixmodule.c
  
  static void
  FILE_TIME_to_time_t_nsec(FILETIME *in_ptr, time_t *time_out, int* nsec_out)
-@@ -3704,7 +3733,6 @@
+@@ -3406,12 +3415,17 @@
+             Py_BEGIN_ALLOW_THREADS
+             result = FindNextFileW(hFindFile, &wFileData);
+             Py_END_ALLOW_THREADS
++            long dw = GetLastError();
+             /* FindNextFile sets error to ERROR_NO_MORE_FILES if
+                it got to the end of the directory. */
+-            if (!result && GetLastError() != ERROR_NO_MORE_FILES) {
+-                Py_DECREF(list);
+-                list = win32_error_unicode("FindNextFileW", wnamebuf);
+-                goto exit;
++            if (!result && (dw != ERROR_NO_MORE_FILES)) {
++				if (dw == ERROR_SUCCESS) {
++					goto exit;
++			    } else {
++                   	Py_DECREF(list);
++                   	list = win32_error_unicode("FindNextFileW", wnamebuf);
++                  	goto exit;
++				}
+             }
+         } while (result == TRUE);
+ 
+@@ -3704,7 +3718,6 @@
  } /* end of posix__getfullpathname */
  
  
@@ -1888,7 +1891,33 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/posixmodule.c
  /* A helper function for samepath on windows */
  static PyObject *
  posix__getfinalpathname(PyObject *self, PyObject *args)
-@@ -11637,7 +11665,7 @@
+@@ -7116,12 +7129,12 @@
+     if (!check_CreateSymbolicLink()) {
+         PyErr_SetString(PyExc_NotImplementedError,
+             "CreateSymbolicLink functions not found");
+-		return NULL;
+-	}
++	     return NULL;
++    }
+     if (!win32_can_symlink) {
+         PyErr_SetString(PyExc_OSError, "symbolic link privilege not held");
+-		return NULL;
+-	}
++		return NULL;
++	}
+ #endif
+ 
+     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&O&|i$O&:symlink",
+@@ -7197,7 +7210,7 @@
+     DWORD n_bytes_returned;
+     DWORD io_result;
+     PyObject *po, *result;
+-	int dir_fd;
++    int dir_fd;
+     HANDLE reparse_point_handle;
+ 
+     char target_buffer[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
+@@ -11637,7 +11650,7 @@
  }
  
  
@@ -1896,7 +1925,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/posixmodule.c
 +#if (defined(_MSC_VER) || defined (__MINGW32__) || defined(__WATCOMC__) || defined(__BORLANDC__)) && !defined(__QNX__)
  #define INITFUNC PyInit_nt
  #define MODNAME "nt"
- 
+  
 diff -r f98ab0d3a591 -r 14c3c8828b00 Modules/python.c
 --- a/Modules/python.c	Thu Dec 27 23:52:36 2012 +0200
 +++ b/Modules/python.c	Thu Dec 27 17:35:12 2012 -0500
@@ -2437,9 +2466,9 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/msvcrtmodule.c
      if (_ungetch(ch) == EOF)
          return PyErr_SetFromErrno(PyExc_IOError);
      Py_INCREF(Py_None);
-diff -r f98ab0d3a591 -r 14c3c8828b00 PC/pyconfig.h
---- a/PC/pyconfig.h	Thu Dec 27 23:52:36 2012 +0200
-+++ b/PC/pyconfig.h	Thu Dec 27 17:35:12 2012 -0500
+diff -r da161499d0c0 -r 7b0db7469f0a PC/pyconfig.h
+--- a/PC/pyconfig.h	Mon Dec 17 20:46:29 2012 +0100
++++ b/PC/pyconfig.h	Tue Dec 18 21:47:22 2012 -0500
 @@ -30,6 +30,11 @@
  
  */
@@ -2452,7 +2481,15 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/pyconfig.h
  #ifdef _WIN32_WCE
  #define MS_WINCE
  #endif
-@@ -266,6 +271,10 @@
+@@ -82,7 +87,6 @@
+ #ifndef PYTHONPATH
+ #	define PYTHONPATH L".\\DLLs;.\\lib"
+ #endif
+-#define NT_THREADS
+ #define WITH_THREAD
+ #ifndef NETSCAPE_PI
+ #define USE_SOCKET
+@@ -266,6 +270,10 @@
     bug that requires structure imports.  More recent versions of the
     compiler don't exhibit this bug.
  */
@@ -2463,7 +2500,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/pyconfig.h
  #if (__GNUC__==2) && (__GNUC_MINOR__<=91)
  #warning "Please use an up-to-date version of gcc! (>2.91 recommended)"
  #endif
-@@ -276,6 +285,20 @@
+@@ -276,6 +284,20 @@
  #define PY_LLONG_MIN LLONG_MIN
  #define PY_LLONG_MAX LLONG_MAX
  #define PY_ULLONG_MAX ULLONG_MAX
@@ -2484,7 +2521,42 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/pyconfig.h
  #endif /* GNUC */
  
  /* ------------------------------------------------------------------------*/
-@@ -473,6 +496,7 @@
+@@ -433,6 +455,34 @@
+ #endif
+ #endif
+ 
++#if defined(__MINGW32__)
++
++#define HAVE_SPAWNV	1
++#define HAVE_EXECV	1
++#define HAVE_PIPE	1
++#define HAVE_POPEN	1
++#define HAVE_SYSTEM	1
++#define HAVE_CWAIT	1
++#define HAVE_FSYNC	1
++#define HAVE_FTRUNCATE	/* mingw implement it as _chsize. undef to be compatible */
++#define HAVE_TRUNCATE	/* mingw-w64 implement it. undef to be compatible */
++#define fsync _commit
++//#include <windows.h>
++//#include <winioctl.h>
++#ifndef _MAX_ENV
++#define _MAX_ENV	32767
++#endif
++
++#undef HAVE_PTHREAD_H
++#undef _POSIX_THREADS
++#define NT_THREADS
++
++#define HAVE_ERRNO_H 1
++#define HAVE_FCNTL_H 1
++#define HAVE_PROCESS_H 1
++#define HAVE_SIGNAL_H 1
++
++#endif
+ /* Fairly standard from here! */
+ 
+ /* Define to 1 if you have the `copysign' function. */
+@@ -473,6 +523,7 @@
  
  /* Define to `int' if <sys/types.h> doesn't define.  */
  /* #undef gid_t */
@@ -2492,7 +2564,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/pyconfig.h
  
  /* Define if your struct tm has tm_zone.  */
  /* #undef HAVE_TM_ZONE */
-@@ -523,6 +547,7 @@
+@@ -523,6 +574,7 @@
  
  /* Define to `int' if <sys/types.h> doesn't define.  */
  /* #undef uid_t */
@@ -2500,7 +2572,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/pyconfig.h
  
  /* Define if the closedir function returns void instead of int.  */
  /* #undef VOID_CLOSEDIR */
-@@ -696,7 +721,7 @@
+@@ -696,7 +748,7 @@
  #endif
  
  /* Define if you have the <sys/time.h> header file.  */
@@ -2509,7 +2581,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 PC/pyconfig.h
  
  /* Define if you have the <sys/times.h> header file.  */
  /* #define HAVE_SYS_TIMES_H 1 */
-@@ -710,13 +735,13 @@
+@@ -710,13 +762,13 @@
  /* #define HAVE_SYS_UN_H 1 */
  
  /* Define if you have the <sys/utime.h> header file.  */
@@ -6087,10 +6159,29 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 pyconfig.h.in
  /* Define to the address where bug reports for this package should be sent. */
  #undef PACKAGE_BUGREPORT
  
-diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
---- a/setup.py	Thu Dec 27 23:52:36 2012 +0200
-+++ b/setup.py	Thu Dec 27 17:35:12 2012 -0500
-@@ -191,7 +191,7 @@
+diff -r da161499d0c0 -r 7b0db7469f0a setup.py
+--- a/setup.py	Mon Dec 17 20:46:29 2012 +0100
++++ b/setup.py	Tue Dec 18 21:47:22 2012 -0500
+@@ -4,6 +4,7 @@
+ import sys, os, imp, re, optparse
+ from glob import glob
+ import sysconfig
++import subprocess
+ 
+ from distutils import log
+ from distutils import text_file
+@@ -33,6 +34,10 @@
+ # This global variable is used to hold the list of modules to be disabled.
+ disabled_module_list = []
+ 
++# File which contains the directory for shared mods (for sys.path fixup
++# when running from the build dir, see Modules/getpath.c)
++_BUILDDIR_COOKIE = "pybuilddir.txt"
++
+ def add_dir_to_list(dirlist, dir):
+     """Add the directory 'dir' to the list 'dirlist' (after any relative
+     directories) if:
+@@ -191,7 +196,7 @@
          # with Modules/.
          srcdir = sysconfig.get_config_var('srcdir')
          if not srcdir:
@@ -6099,7 +6190,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              raise ValueError("No source directory; cannot proceed.")
          srcdir = os.path.abspath(srcdir)
          moddirlist = [os.path.join(srcdir, 'Modules')]
-@@ -245,8 +245,38 @@
+@@ -245,8 +250,48 @@
          # compilers
          if compiler is not None:
              (ccshared,cflags) = sysconfig.get_config_vars('CCSHARED','CFLAGS')
@@ -6137,10 +6228,28 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
 +                    self.compiler.libraries.append(lib[2:])
 +                else:
 +                    self.compiler.libraries.append(lib)
++
++        # Not only do we write the builddir cookie, but we manually install
++        # the shared modules directory if it isn't already in sys.path.
++        # Otherwise trying to import the extensions after building them
++        # will fail.
++        with open(_BUILDDIR_COOKIE, "wb") as f:
++            f.write(self.build_lib.encode('utf-8', 'surrogateescape'))
++        abs_build_lib = os.path.join(os.getcwd(), self.build_lib)
++        if abs_build_lib not in sys.path:
++            sys.path.append(abs_build_lib)
  
          build_ext.build_extensions(self)
  
-@@ -318,6 +348,10 @@
+@@ -292,6 +337,7 @@
+                           (ext.name, sys.exc_info()[1]))
+             self.failed.append(ext.name)
+             return
++
+         # Workaround for Mac OS X: The Carbon-based modules cannot be
+         # reliably imported into a command-line Python
+         if 'Carbon' in ext.extra_link_args:
+@@ -318,6 +364,10 @@
              self.announce('WARNING: skipping import check for Cygwin-based "%s"'
                  % ext.name)
              return
@@ -6151,7 +6260,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
          ext_filename = os.path.join(
              self.build_lib,
              self.get_ext_filename(self.get_ext_fullname(ext.name)))
-@@ -441,6 +475,9 @@
+@@ -441,6 +491,9 @@
              os.unlink(tmpfile)
  
      def detect_modules(self):
@@ -6161,7 +6270,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
          # Ensure that /usr/local is always used, but the local build
          # directories (i.e. '.' and 'Include') must be first.  See issue
          # 10520.
-@@ -492,6 +529,11 @@
+@@ -492,6 +545,11 @@
              # (PYTHONFRAMEWORK is set) to avoid # linking problems when
              # building a framework with different architectures than
              # the one that is currently installed (issue #7473)
@@ -6173,7 +6282,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              add_dir_to_list(self.compiler.library_dirs,
                              sysconfig.get_config_var("LIBDIR"))
              add_dir_to_list(self.compiler.include_dirs,
-@@ -526,7 +568,7 @@
+@@ -526,7 +581,7 @@
          if host_platform == 'hp-ux11':
              lib_dirs += ['/usr/lib/hpux64', '/usr/lib/hpux32']
  
@@ -6182,7 +6291,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              # This should work on any unixy platform ;-)
              # If the user has bothered specifying additional -I and -L flags
              # in OPT and LDFLAGS we might as well use them here.
-@@ -534,6 +576,7 @@
+@@ -534,6 +589,7 @@
              # NOTE: using shlex.split would technically be more correct, but
              # also gives a bootstrap problem. Let's hope nobody uses
              # directories with whitespace in the name to store libraries.
@@ -6190,7 +6299,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              cflags, ldflags = sysconfig.get_config_vars(
                      'CFLAGS', 'LDFLAGS')
              for item in cflags.split():
-@@ -546,7 +589,7 @@
+@@ -546,7 +602,7 @@
  
          # Check for MacOS X, which doesn't need libm.a at all
          math_libs = ['m']
@@ -6199,7 +6308,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              math_libs = []
  
          # XXX Omitted modules: gl, pure, dl, SGI-specific modules
-@@ -570,6 +613,7 @@
+@@ -570,6 +626,7 @@
          # time libraries: librt may be needed for clock_gettime()
          time_libs = []
          lib = sysconfig.get_config_var('TIMEMODULE_LIB')
@@ -6207,7 +6316,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
          if lib:
              time_libs.append(lib)
  
-@@ -604,24 +648,35 @@
+@@ -604,24 +661,35 @@
          # supported...)
  
          # fcntl(2) and ioctl(2)
@@ -6258,7 +6367,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
  
          # Fred Drake's interface to the Python parser
          exts.append( Extension('parser', ['parsermodule.c']) )
-@@ -630,8 +685,11 @@
+@@ -630,8 +698,11 @@
          exts.append( Extension('mmap', ['mmapmodule.c']) )
  
          # Lance Ellinghaus's syslog module
@@ -6272,7 +6381,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
  
          #
          # Here ends the simple stuff.  From here on, modules need certain
-@@ -648,7 +706,8 @@
+@@ -648,7 +719,8 @@
          exts.append( Extension('audioop', ['audioop.c']) )
  
          # readline
@@ -6282,7 +6391,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
          readline_termcap_library = ""
          curses_library = ""
          # Cannot use os.popen here in py3k.
-@@ -656,9 +715,31 @@
+@@ -656,9 +728,31 @@
          if not os.path.exists(self.build_temp):
              os.makedirs(self.build_temp)
          # Determine if readline is already linked against curses or tinfo.
@@ -6315,7 +6424,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
                                  % (sysconfig.get_config_var('READELF'),
                                     do_readline, tmpfile))
              elif find_executable('ldd'):
-@@ -681,7 +762,9 @@
+@@ -681,7 +775,9 @@
                  os.unlink(tmpfile)
          # Issue 7384: If readline is already linked against curses,
          # use the same library for the readline and curses modules.
@@ -6326,7 +6435,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              curses_library = readline_termcap_library
          elif self.compiler.find_library_file(lib_dirs, 'ncursesw'):
              curses_library = 'ncursesw'
-@@ -730,20 +813,31 @@
+@@ -730,20 +826,31 @@
  
          # crypt module.
  
@@ -6363,7 +6472,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
                                 depends = ['socketmodule.h']) )
          # Detect SSL support for the socket module (via _ssl)
          search_for_ssl_incs_in = [
-@@ -765,10 +859,13 @@
+@@ -765,10 +872,13 @@
  
          if (ssl_incs is not None and
              ssl_libs is not None):
@@ -6378,7 +6487,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
                                     depends = ['socketmodule.h']), )
          else:
              missing.append('_ssl')
-@@ -805,15 +902,18 @@
+@@ -805,15 +915,18 @@
              if have_usable_openssl:
                  # The _hashlib module wraps optimized implementations
                  # of hash functions from the OpenSSL library.
@@ -6398,7 +6507,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
  
          # We always compile these even when OpenSSL is available (issue #14693).
          # It's harmless and the object code is tiny (40-50 KB per module,
-@@ -846,6 +946,30 @@
+@@ -846,6 +959,30 @@
          min_db_ver = (3, 3)
          db_setup_debug = False   # verbose debug prints from this script?
  
@@ -6429,7 +6538,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
          def allow_db_ver(db_ver):
              """Returns a boolean if the given BerkeleyDB version is acceptable.
  
-@@ -1104,6 +1228,7 @@
+@@ -1104,6 +1241,7 @@
                  '_sqlite/util.c', ]
  
              sqlite_defines = []
@@ -6437,7 +6546,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              if host_platform != "win32":
                  sqlite_defines.append(('MODULE_NAME', '"sqlite3"'))
              else:
-@@ -1217,7 +1342,8 @@
+@@ -1217,7 +1355,8 @@
                  missing.append('_dbm')
  
          # Anthony Baxter's gdbm module.  GNU dbm(3) will require -lgdbm:
@@ -6447,7 +6556,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              self.compiler.find_library_file(lib_dirs, 'gdbm')):
              exts.append( Extension('_gdbm', ['_gdbmmodule.c'],
                                     libraries = ['gdbm'] ) )
-@@ -1225,7 +1351,7 @@
+@@ -1225,7 +1364,7 @@
              missing.append('_gdbm')
  
          # Unix-only modules
@@ -6456,7 +6565,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              # Steen Lumholt's termios module
              exts.append( Extension('termios', ['termios.c']) )
              # Jeremy Hylton's rlimit interface
-@@ -1439,7 +1565,7 @@
+@@ -1439,7 +1578,7 @@
          self.detect_ctypes(inc_dirs, lib_dirs)
  
          # Richard Oudkerk's multiprocessing module
@@ -6465,7 +6574,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              macros = dict()
              libraries = ['ws2_32']
  
-@@ -1467,9 +1593,11 @@
+@@ -1467,9 +1606,11 @@
  
          else:                                   # Linux and other unices
              macros = dict()
@@ -6479,7 +6588,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              multiprocessing_srcs = [ '_multiprocessing/multiprocessing.c',
                                       '_multiprocessing/semaphore.c',
                                     ]
-@@ -1482,7 +1610,9 @@
+@@ -1482,7 +1623,9 @@
                  multiprocessing_srcs.append('_multiprocessing/semaphore.c')
  
          if sysconfig.get_config_var('WITH_THREAD'):
@@ -6489,7 +6598,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
                                      define_macros=list(macros.items()),
                                      include_dirs=["Modules/_multiprocessing"]))
          else:
-@@ -1665,6 +1795,9 @@
+@@ -1665,6 +1808,9 @@
          if host_platform == 'sunos5':
              include_dirs.append('/usr/openwin/include')
              added_lib_dirs.append('/usr/openwin/lib')
@@ -6499,7 +6608,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
          elif os.path.exists('/usr/X11R6/include'):
              include_dirs.append('/usr/X11R6/include')
              added_lib_dirs.append('/usr/X11R6/lib64')
-@@ -1679,6 +1812,7 @@
+@@ -1679,6 +1825,7 @@
  
          # If Cygwin, then verify that X is installed before proceeding
          if host_platform == 'cygwin':
@@ -6507,7 +6616,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              x11_inc = find_file('X11/Xlib.h', [], include_dirs)
              if x11_inc is None:
                  return
-@@ -1700,8 +1834,8 @@
+@@ -1700,8 +1847,8 @@
          if host_platform in ['aix3', 'aix4']:
              libs.append('ld')
  
@@ -6518,11 +6627,20 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
              libs.append('X11')
  
          ext = Extension('_tkinter', ['_tkinter.c', 'tkappinit.c'],
-@@ -1756,6 +1890,38 @@
+@@ -1755,12 +1902,53 @@
+         ext.sources.extend(sources)
          return True
  
++    def mingw_posix_path(self, winPath):
++        winPath = winPath.replace('\\','/')
++        p = subprocess.Popen(['pwd'], cwd=winPath, stdout=subprocess.PIPE)
++        output, err = p.communicate()
++        results=str(output).replace('\\n','')
++        results=results[1:].strip("'")
++        return results
++
      def configure_ctypes(self, ext):
-+        if host_platform in ['mingw', 'win32']:
++        if host_platform in ['win32'] and sys.version.upper().find('GCC') == 0:
 +            # win32 platform use own sources and includes
 +            # from Modules/_ctypes/libffi_msvc/
 +            srcdir = sysconfig.get_config_var('srcdir')
@@ -6557,7 +6675,56 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
          if not self.use_system_libffi:
              if host_platform == 'darwin':
                  return self.configure_ctypes_darwin(ext)
-@@ -1806,6 +1972,11 @@
+-
++            extra_cflags = ''
+             srcdir = sysconfig.get_config_var('srcdir')
++            
+             ffi_builddir = os.path.join(self.build_temp, 'libffi')
+             ffi_srcdir = os.path.abspath(os.path.join(srcdir, 'Modules',
+                                          '_ctypes', 'libffi'))
+
+@@ -1771,25 +1959,33 @@
+             config_sources = [os.path.join(ffi_srcdir, fname)
+                               for fname in os.listdir(ffi_srcdir)
+                               if os.path.isfile(os.path.join(ffi_srcdir, fname))]
++
+             if self.force or newer_group(config_sources,
+                                          ffi_configfile):
+                 from distutils.dir_util import mkpath
+                 mkpath(ffi_builddir)
++
+                 config_args = [arg for arg in sysconfig.get_config_var("CONFIG_ARGS").split()
+                                if (('--host=' in arg) or ('--build=' in arg))]
++                
++                if host_platform in ['mingw', 'win32']:
++                    srcdir=self.mingw_posix_path(ffi_srcdir)
++                    extra_cflags='-DFFI_BUILDING -DHAVE_CONFIG_H -DDLL_EXPORT -DPIC'
++
++                config_args += ["--srcdir={0}".format(srcdir)]
+ 
+                 # Pass empty CFLAGS because we'll just append the resulting
+                 # CFLAGS to Python's; -g or -O2 is to be avoided.
+-                cmd = "cd %s && env CFLAGS='' '%s/configure' %s" \
+-                      % (ffi_builddir, ffi_srcdir, " ".join(config_args))
++                cmd = "cd %s && env CFLAGS='%s' '%s/configure' %s" \
++                      % (ffi_builddir, extra_cflags, ffi_srcdir, " ".join(config_args))
+ 
+                 res = os.system(cmd)
+                 if res or not os.path.exists(ffi_configfile):
+                     print("Failed to configure _ctypes module")
+                     return False
+-
+             fficonfig = {}
+             with open(ffi_configfile) as f:
+                 exec(f.read(), globals(), fficonfig)
+@@ -1800,12 +1993,18 @@
+             include_dirs = [os.path.join(ffi_builddir, 'include'),
+                             ffi_builddir,
+                             os.path.join(ffi_srcdir, 'src')]
++
+             extra_compile_args = fficonfig['ffi_cflags'].split()
+ 
+             ext.sources.extend(os.path.join(ffi_srcdir, f) for f in
                                 fficonfig['ffi_sources'])
              ext.include_dirs.extend(include_dirs)
              ext.extra_compile_args.extend(extra_compile_args)
@@ -6569,7 +6736,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
          return True
  
      def detect_ctypes(self, inc_dirs, lib_dirs):
-@@ -1849,7 +2020,12 @@
+@@ -1849,7 +2048,12 @@
                          libraries=[],
                          sources=sources,
                          depends=depends)
@@ -6582,7 +6749,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
                               sources=['_ctypes/_ctypes_test.c'])
          self.extensions.extend([ext, ext_test])
  
-@@ -2063,8 +2239,9 @@
+@@ -2063,8 +2266,9 @@
  class PyBuildScripts(build_scripts):
      def copy_scripts(self):
          outfiles, updated_files = build_scripts.copy_scripts(self)
@@ -6594,7 +6761,7 @@ diff -r f98ab0d3a591 -r 14c3c8828b00 setup.py
          newoutfiles = []
          newupdated_files = []
          for filename in outfiles:
-@@ -2073,6 +2250,8 @@
+@@ -2073,6 +2277,8 @@
              else:
                  newfilename = filename + minoronly
              log.info('renaming {} to {}'.format(filename, newfilename))
@@ -6625,4 +6792,4414 @@ diff -r 14c3c8828b00 -r e98307248f60 Lib/plat-generic/regen
 +    REGENHEADER=/usr/include/netinet/in.h
 +fi
 +python$EXE ../../Tools/scripts/h2py.py -i '(u_long)' $REGENHEADER
-
+diff -r da161499d0c0 -r 7b0db7469f0a Modules/_ctypes/callproc.c
+--- a/Modules/_ctypes/callproc.c	Mon Dec 17 20:46:29 2012 +0100
++++ b/Modules/_ctypes/callproc.c	Tue Dec 18 21:47:22 2012 -0500
+@@ -795,7 +795,10 @@
+ #ifndef DONT_USE_SEH
+     __try {
+ #endif
++
++# ifndef __MINGW32__
+         delta =
++# endif
+ #endif
+                 ffi_call(&cif, (void *)pProc, resmem, avalues);
+ #ifdef MS_WIN32
+@@ -822,6 +825,8 @@
+     if ((flags & FUNCFLAG_PYTHONAPI) == 0)
+         Py_BLOCK_THREADS
+ #endif
++
++#ifndef __MINGW32__
+ #ifdef MS_WIN32
+ #ifndef DONT_USE_SEH
+     if (dwExceptionCode) {
+@@ -859,6 +864,7 @@
+     }
+ #endif
+ #endif
++#endif
+     if ((flags & FUNCFLAG_PYTHONAPI) && PyErr_Occurred())
+         return -1;
+     return 0;
+diff -r da161499d0c0 -r 7b0db7469f0a Modules/_ctypes/libffi/fficonfig.py.in
+--- a/Modules/_ctypes/libffi/fficonfig.py.in	Mon Dec 17 20:46:29 2012 +0100
++++ b/Modules/_ctypes/libffi/fficonfig.py.in	Tue Dec 18 21:47:22 2012 -0500
+@@ -1,7 +1,6 @@
+ ffi_sources = """
+ src/prep_cif.c
+ src/closures.c
+-src/dlmalloc.c
+ """.split()
+ 
+ ffi_platforms = {
+@@ -10,6 +9,7 @@
+     'X86': ['src/x86/ffi.c', 'src/x86/sysv.S'],
+     'X86_FREEBSD': ['src/x86/ffi.c', 'src/x86/freebsd.S'],
+     'X86_WIN32': ['src/x86/ffi.c', 'src/x86/win32.S'],
++    'X86_WIN64': ['src/x86/ffi.c', 'src/x86/win64.S'],
+     'SPARC': ['src/sparc/ffi.c', 'src/sparc/v8.S', 'src/sparc/v9.S'],
+     'ALPHA': ['src/alpha/ffi.c', 'src/alpha/osf.S'],
+     'IA64': ['src/ia64/ffi.c', 'src/ia64/unix.S'],
+@@ -30,6 +30,11 @@
+     'PA_HPUX': ['src/pa/hpux32.S', 'src/pa/ffi.c'],
+ }
+ 
++ffi_target = '@TARGET@'
++
++if ffi_target not in ['X86_WIN32', 'X86_WIN64']:
++    ffi_sources += 'src/dlmalloc.c'
++
+ ffi_sources += ffi_platforms['@TARGET@']
+ 
+ ffi_cflags = '@CFLAGS@'
+diff -r da161499d0c0 -r 7b0db7469f0a Python/graminit.c
+--- a/Python/graminit.c	Mon Dec 17 20:46:29 2012 +0100
++++ b/Python/graminit.c	Tue Dec 18 21:47:22 2012 -0500
+@@ -1,2162 +1,2162 @@
+-/* Generated by Parser/pgen */
+-
+-#include "pgenheaders.h"
+-#include "grammar.h"
+-PyAPI_DATA(grammar) _PyParser_Grammar;
+-static arc arcs_0_0[3] = {
+-    {2, 1},
+-    {3, 1},
+-    {4, 2},
+-};
+-static arc arcs_0_1[1] = {
+-    {0, 1},
+-};
+-static arc arcs_0_2[1] = {
+-    {2, 1},
+-};
+-static state states_0[3] = {
+-    {3, arcs_0_0},
+-    {1, arcs_0_1},
+-    {1, arcs_0_2},
+-};
+-static arc arcs_1_0[3] = {
+-    {2, 0},
+-    {6, 0},
+-    {7, 1},
+-};
+-static arc arcs_1_1[1] = {
+-    {0, 1},
+-};
+-static state states_1[2] = {
+-    {3, arcs_1_0},
+-    {1, arcs_1_1},
+-};
+-static arc arcs_2_0[1] = {
+-    {9, 1},
+-};
+-static arc arcs_2_1[2] = {
+-    {2, 1},
+-    {7, 2},
+-};
+-static arc arcs_2_2[1] = {
+-    {0, 2},
+-};
+-static state states_2[3] = {
+-    {1, arcs_2_0},
+-    {2, arcs_2_1},
+-    {1, arcs_2_2},
+-};
+-static arc arcs_3_0[1] = {
+-    {11, 1},
+-};
+-static arc arcs_3_1[1] = {
+-    {12, 2},
+-};
+-static arc arcs_3_2[2] = {
+-    {13, 3},
+-    {2, 4},
+-};
+-static arc arcs_3_3[2] = {
+-    {14, 5},
+-    {15, 6},
+-};
+-static arc arcs_3_4[1] = {
+-    {0, 4},
+-};
+-static arc arcs_3_5[1] = {
+-    {15, 6},
+-};
+-static arc arcs_3_6[1] = {
+-    {2, 4},
+-};
+-static state states_3[7] = {
+-    {1, arcs_3_0},
+-    {1, arcs_3_1},
+-    {2, arcs_3_2},
+-    {2, arcs_3_3},
+-    {1, arcs_3_4},
+-    {1, arcs_3_5},
+-    {1, arcs_3_6},
+-};
+-static arc arcs_4_0[1] = {
+-    {10, 1},
+-};
+-static arc arcs_4_1[2] = {
+-    {10, 1},
+-    {0, 1},
+-};
+-static state states_4[2] = {
+-    {1, arcs_4_0},
+-    {2, arcs_4_1},
+-};
+-static arc arcs_5_0[1] = {
+-    {16, 1},
+-};
+-static arc arcs_5_1[2] = {
+-    {18, 2},
+-    {19, 2},
+-};
+-static arc arcs_5_2[1] = {
+-    {0, 2},
+-};
+-static state states_5[3] = {
+-    {1, arcs_5_0},
+-    {2, arcs_5_1},
+-    {1, arcs_5_2},
+-};
+-static arc arcs_6_0[1] = {
+-    {20, 1},
+-};
+-static arc arcs_6_1[1] = {
+-    {21, 2},
+-};
+-static arc arcs_6_2[1] = {
+-    {22, 3},
+-};
+-static arc arcs_6_3[2] = {
+-    {23, 4},
+-    {25, 5},
+-};
+-static arc arcs_6_4[1] = {
+-    {24, 6},
+-};
+-static arc arcs_6_5[1] = {
+-    {26, 7},
+-};
+-static arc arcs_6_6[1] = {
+-    {25, 5},
+-};
+-static arc arcs_6_7[1] = {
+-    {0, 7},
+-};
+-static state states_6[8] = {
+-    {1, arcs_6_0},
+-    {1, arcs_6_1},
+-    {1, arcs_6_2},
+-    {2, arcs_6_3},
+-    {1, arcs_6_4},
+-    {1, arcs_6_5},
+-    {1, arcs_6_6},
+-    {1, arcs_6_7},
+-};
+-static arc arcs_7_0[1] = {
+-    {13, 1},
+-};
+-static arc arcs_7_1[2] = {
+-    {27, 2},
+-    {15, 3},
+-};
+-static arc arcs_7_2[1] = {
+-    {15, 3},
+-};
+-static arc arcs_7_3[1] = {
+-    {0, 3},
+-};
+-static state states_7[4] = {
+-    {1, arcs_7_0},
+-    {2, arcs_7_1},
+-    {1, arcs_7_2},
+-    {1, arcs_7_3},
+-};
+-static arc arcs_8_0[3] = {
+-    {28, 1},
+-    {31, 2},
+-    {32, 3},
+-};
+-static arc arcs_8_1[3] = {
+-    {29, 4},
+-    {30, 5},
+-    {0, 1},
+-};
+-static arc arcs_8_2[3] = {
+-    {28, 6},
+-    {30, 7},
+-    {0, 2},
+-};
+-static arc arcs_8_3[1] = {
+-    {28, 8},
+-};
+-static arc arcs_8_4[1] = {
+-    {24, 9},
+-};
+-static arc arcs_8_5[4] = {
+-    {28, 10},
+-    {31, 11},
+-    {32, 3},
+-    {0, 5},
+-};
+-static arc arcs_8_6[2] = {
+-    {30, 7},
+-    {0, 6},
+-};
+-static arc arcs_8_7[2] = {
+-    {28, 12},
+-    {32, 3},
+-};
+-static arc arcs_8_8[1] = {
+-    {0, 8},
+-};
+-static arc arcs_8_9[2] = {
+-    {30, 5},
+-    {0, 9},
+-};
+-static arc arcs_8_10[3] = {
+-    {30, 5},
+-    {29, 4},
+-    {0, 10},
+-};
+-static arc arcs_8_11[3] = {
+-    {28, 13},
+-    {30, 14},
+-    {0, 11},
+-};
+-static arc arcs_8_12[3] = {
+-    {30, 7},
+-    {29, 15},
+-    {0, 12},
+-};
+-static arc arcs_8_13[2] = {
+-    {30, 14},
+-    {0, 13},
+-};
+-static arc arcs_8_14[2] = {
+-    {28, 16},
+-    {32, 3},
+-};
+-static arc arcs_8_15[1] = {
+-    {24, 6},
+-};
+-static arc arcs_8_16[3] = {
+-    {30, 14},
+-    {29, 17},
+-    {0, 16},
+-};
+-static arc arcs_8_17[1] = {
+-    {24, 13},
+-};
+-static state states_8[18] = {
+-    {3, arcs_8_0},
+-    {3, arcs_8_1},
+-    {3, arcs_8_2},
+-    {1, arcs_8_3},
+-    {1, arcs_8_4},
+-    {4, arcs_8_5},
+-    {2, arcs_8_6},
+-    {2, arcs_8_7},
+-    {1, arcs_8_8},
+-    {2, arcs_8_9},
+-    {3, arcs_8_10},
+-    {3, arcs_8_11},
+-    {3, arcs_8_12},
+-    {2, arcs_8_13},
+-    {2, arcs_8_14},
+-    {1, arcs_8_15},
+-    {3, arcs_8_16},
+-    {1, arcs_8_17},
+-};
+-static arc arcs_9_0[1] = {
+-    {21, 1},
+-};
+-static arc arcs_9_1[2] = {
+-    {25, 2},
+-    {0, 1},
+-};
+-static arc arcs_9_2[1] = {
+-    {24, 3},
+-};
+-static arc arcs_9_3[1] = {
+-    {0, 3},
+-};
+-static state states_9[4] = {
+-    {1, arcs_9_0},
+-    {2, arcs_9_1},
+-    {1, arcs_9_2},
+-    {1, arcs_9_3},
+-};
+-static arc arcs_10_0[3] = {
+-    {34, 1},
+-    {31, 2},
+-    {32, 3},
+-};
+-static arc arcs_10_1[3] = {
+-    {29, 4},
+-    {30, 5},
+-    {0, 1},
+-};
+-static arc arcs_10_2[3] = {
+-    {34, 6},
+-    {30, 7},
+-    {0, 2},
+-};
+-static arc arcs_10_3[1] = {
+-    {34, 8},
+-};
+-static arc arcs_10_4[1] = {
+-    {24, 9},
+-};
+-static arc arcs_10_5[4] = {
+-    {34, 10},
+-    {31, 11},
+-    {32, 3},
+-    {0, 5},
+-};
+-static arc arcs_10_6[2] = {
+-    {30, 7},
+-    {0, 6},
+-};
+-static arc arcs_10_7[2] = {
+-    {34, 12},
+-    {32, 3},
+-};
+-static arc arcs_10_8[1] = {
+-    {0, 8},
+-};
+-static arc arcs_10_9[2] = {
+-    {30, 5},
+-    {0, 9},
+-};
+-static arc arcs_10_10[3] = {
+-    {30, 5},
+-    {29, 4},
+-    {0, 10},
+-};
+-static arc arcs_10_11[3] = {
+-    {34, 13},
+-    {30, 14},
+-    {0, 11},
+-};
+-static arc arcs_10_12[3] = {
+-    {30, 7},
+-    {29, 15},
+-    {0, 12},
+-};
+-static arc arcs_10_13[2] = {
+-    {30, 14},
+-    {0, 13},
+-};
+-static arc arcs_10_14[2] = {
+-    {34, 16},
+-    {32, 3},
+-};
+-static arc arcs_10_15[1] = {
+-    {24, 6},
+-};
+-static arc arcs_10_16[3] = {
+-    {30, 14},
+-    {29, 17},
+-    {0, 16},
+-};
+-static arc arcs_10_17[1] = {
+-    {24, 13},
+-};
+-static state states_10[18] = {
+-    {3, arcs_10_0},
+-    {3, arcs_10_1},
+-    {3, arcs_10_2},
+-    {1, arcs_10_3},
+-    {1, arcs_10_4},
+-    {4, arcs_10_5},
+-    {2, arcs_10_6},
+-    {2, arcs_10_7},
+-    {1, arcs_10_8},
+-    {2, arcs_10_9},
+-    {3, arcs_10_10},
+-    {3, arcs_10_11},
+-    {3, arcs_10_12},
+-    {2, arcs_10_13},
+-    {2, arcs_10_14},
+-    {1, arcs_10_15},
+-    {3, arcs_10_16},
+-    {1, arcs_10_17},
+-};
+-static arc arcs_11_0[1] = {
+-    {21, 1},
+-};
+-static arc arcs_11_1[1] = {
+-    {0, 1},
+-};
+-static state states_11[2] = {
+-    {1, arcs_11_0},
+-    {1, arcs_11_1},
+-};
+-static arc arcs_12_0[2] = {
+-    {3, 1},
+-    {4, 1},
+-};
+-static arc arcs_12_1[1] = {
+-    {0, 1},
+-};
+-static state states_12[2] = {
+-    {2, arcs_12_0},
+-    {1, arcs_12_1},
+-};
+-static arc arcs_13_0[1] = {
+-    {35, 1},
+-};
+-static arc arcs_13_1[2] = {
+-    {36, 2},
+-    {2, 3},
+-};
+-static arc arcs_13_2[2] = {
+-    {35, 1},
+-    {2, 3},
+-};
+-static arc arcs_13_3[1] = {
+-    {0, 3},
+-};
+-static state states_13[4] = {
+-    {1, arcs_13_0},
+-    {2, arcs_13_1},
+-    {2, arcs_13_2},
+-    {1, arcs_13_3},
+-};
+-static arc arcs_14_0[8] = {
+-    {37, 1},
+-    {38, 1},
+-    {39, 1},
+-    {40, 1},
+-    {41, 1},
+-    {42, 1},
+-    {43, 1},
+-    {44, 1},
+-};
+-static arc arcs_14_1[1] = {
+-    {0, 1},
+-};
+-static state states_14[2] = {
+-    {8, arcs_14_0},
+-    {1, arcs_14_1},
+-};
+-static arc arcs_15_0[1] = {
+-    {45, 1},
+-};
+-static arc arcs_15_1[3] = {
+-    {46, 2},
+-    {29, 3},
+-    {0, 1},
+-};
+-static arc arcs_15_2[2] = {
+-    {47, 4},
+-    {9, 4},
+-};
+-static arc arcs_15_3[2] = {
+-    {47, 5},
+-    {45, 5},
+-};
+-static arc arcs_15_4[1] = {
+-    {0, 4},
+-};
+-static arc arcs_15_5[2] = {
+-    {29, 3},
+-    {0, 5},
+-};
+-static state states_15[6] = {
+-    {1, arcs_15_0},
+-    {3, arcs_15_1},
+-    {2, arcs_15_2},
+-    {2, arcs_15_3},
+-    {1, arcs_15_4},
+-    {2, arcs_15_5},
+-};
+-static arc arcs_16_0[2] = {
+-    {24, 1},
+-    {48, 1},
+-};
+-static arc arcs_16_1[2] = {
+-    {30, 2},
+-    {0, 1},
+-};
+-static arc arcs_16_2[3] = {
+-    {24, 1},
+-    {48, 1},
+-    {0, 2},
+-};
+-static state states_16[3] = {
+-    {2, arcs_16_0},
+-    {2, arcs_16_1},
+-    {3, arcs_16_2},
+-};
+-static arc arcs_17_0[12] = {
+-    {49, 1},
+-    {50, 1},
+-    {51, 1},
+-    {52, 1},
+-    {53, 1},
+-    {54, 1},
+-    {55, 1},
+-    {56, 1},
+-    {57, 1},
+-    {58, 1},
+-    {59, 1},
+-    {60, 1},
+-};
+-static arc arcs_17_1[1] = {
+-    {0, 1},
+-};
+-static state states_17[2] = {
+-    {12, arcs_17_0},
+-    {1, arcs_17_1},
+-};
+-static arc arcs_18_0[1] = {
+-    {61, 1},
+-};
+-static arc arcs_18_1[1] = {
+-    {62, 2},
+-};
+-static arc arcs_18_2[1] = {
+-    {0, 2},
+-};
+-static state states_18[3] = {
+-    {1, arcs_18_0},
+-    {1, arcs_18_1},
+-    {1, arcs_18_2},
+-};
+-static arc arcs_19_0[1] = {
+-    {63, 1},
+-};
+-static arc arcs_19_1[1] = {
+-    {0, 1},
+-};
+-static state states_19[2] = {
+-    {1, arcs_19_0},
+-    {1, arcs_19_1},
+-};
+-static arc arcs_20_0[5] = {
+-    {64, 1},
+-    {65, 1},
+-    {66, 1},
+-    {67, 1},
+-    {68, 1},
+-};
+-static arc arcs_20_1[1] = {
+-    {0, 1},
+-};
+-static state states_20[2] = {
+-    {5, arcs_20_0},
+-    {1, arcs_20_1},
+-};
+-static arc arcs_21_0[1] = {
+-    {69, 1},
+-};
+-static arc arcs_21_1[1] = {
+-    {0, 1},
+-};
+-static state states_21[2] = {
+-    {1, arcs_21_0},
+-    {1, arcs_21_1},
+-};
+-static arc arcs_22_0[1] = {
+-    {70, 1},
+-};
+-static arc arcs_22_1[1] = {
+-    {0, 1},
+-};
+-static state states_22[2] = {
+-    {1, arcs_22_0},
+-    {1, arcs_22_1},
+-};
+-static arc arcs_23_0[1] = {
+-    {71, 1},
+-};
+-static arc arcs_23_1[2] = {
+-    {9, 2},
+-    {0, 1},
+-};
+-static arc arcs_23_2[1] = {
+-    {0, 2},
+-};
+-static state states_23[3] = {
+-    {1, arcs_23_0},
+-    {2, arcs_23_1},
+-    {1, arcs_23_2},
+-};
+-static arc arcs_24_0[1] = {
+-    {47, 1},
+-};
+-static arc arcs_24_1[1] = {
+-    {0, 1},
+-};
+-static state states_24[2] = {
+-    {1, arcs_24_0},
+-    {1, arcs_24_1},
+-};
+-static arc arcs_25_0[1] = {
+-    {72, 1},
+-};
+-static arc arcs_25_1[2] = {
+-    {24, 2},
+-    {0, 1},
+-};
+-static arc arcs_25_2[2] = {
+-    {73, 3},
+-    {0, 2},
+-};
+-static arc arcs_25_3[1] = {
+-    {24, 4},
+-};
+-static arc arcs_25_4[1] = {
+-    {0, 4},
+-};
+-static state states_25[5] = {
+-    {1, arcs_25_0},
+-    {2, arcs_25_1},
+-    {2, arcs_25_2},
+-    {1, arcs_25_3},
+-    {1, arcs_25_4},
+-};
+-static arc arcs_26_0[2] = {
+-    {74, 1},
+-    {75, 1},
+-};
+-static arc arcs_26_1[1] = {
+-    {0, 1},
+-};
+-static state states_26[2] = {
+-    {2, arcs_26_0},
+-    {1, arcs_26_1},
+-};
+-static arc arcs_27_0[1] = {
+-    {76, 1},
+-};
+-static arc arcs_27_1[1] = {
+-    {77, 2},
+-};
+-static arc arcs_27_2[1] = {
+-    {0, 2},
+-};
+-static state states_27[3] = {
+-    {1, arcs_27_0},
+-    {1, arcs_27_1},
+-    {1, arcs_27_2},
+-};
+-static arc arcs_28_0[1] = {
+-    {73, 1},
+-};
+-static arc arcs_28_1[3] = {
+-    {78, 2},
+-    {79, 2},
+-    {12, 3},
+-};
+-static arc arcs_28_2[4] = {
+-    {78, 2},
+-    {79, 2},
+-    {12, 3},
+-    {76, 4},
+-};
+-static arc arcs_28_3[1] = {
+-    {76, 4},
+-};
+-static arc arcs_28_4[3] = {
+-    {31, 5},
+-    {13, 6},
+-    {80, 5},
+-};
+-static arc arcs_28_5[1] = {
+-    {0, 5},
+-};
+-static arc arcs_28_6[1] = {
+-    {80, 7},
+-};
+-static arc arcs_28_7[1] = {
+-    {15, 5},
+-};
+-static state states_28[8] = {
+-    {1, arcs_28_0},
+-    {3, arcs_28_1},
+-    {4, arcs_28_2},
+-    {1, arcs_28_3},
+-    {3, arcs_28_4},
+-    {1, arcs_28_5},
+-    {1, arcs_28_6},
+-    {1, arcs_28_7},
+-};
+-static arc arcs_29_0[1] = {
+-    {21, 1},
+-};
+-static arc arcs_29_1[2] = {
+-    {82, 2},
+-    {0, 1},
+-};
+-static arc arcs_29_2[1] = {
+-    {21, 3},
+-};
+-static arc arcs_29_3[1] = {
+-    {0, 3},
+-};
+-static state states_29[4] = {
+-    {1, arcs_29_0},
+-    {2, arcs_29_1},
+-    {1, arcs_29_2},
+-    {1, arcs_29_3},
+-};
+-static arc arcs_30_0[1] = {
+-    {12, 1},
+-};
+-static arc arcs_30_1[2] = {
+-    {82, 2},
+-    {0, 1},
+-};
+-static arc arcs_30_2[1] = {
+-    {21, 3},
+-};
+-static arc arcs_30_3[1] = {
+-    {0, 3},
+-};
+-static state states_30[4] = {
+-    {1, arcs_30_0},
+-    {2, arcs_30_1},
+-    {1, arcs_30_2},
+-    {1, arcs_30_3},
+-};
+-static arc arcs_31_0[1] = {
+-    {81, 1},
+-};
+-static arc arcs_31_1[2] = {
+-    {30, 2},
+-    {0, 1},
+-};
+-static arc arcs_31_2[2] = {
+-    {81, 1},
+-    {0, 2},
+-};
+-static state states_31[3] = {
+-    {1, arcs_31_0},
+-    {2, arcs_31_1},
+-    {2, arcs_31_2},
+-};
+-static arc arcs_32_0[1] = {
+-    {83, 1},
+-};
+-static arc arcs_32_1[2] = {
+-    {30, 0},
+-    {0, 1},
+-};
+-static state states_32[2] = {
+-    {1, arcs_32_0},
+-    {2, arcs_32_1},
+-};
+-static arc arcs_33_0[1] = {
+-    {21, 1},
+-};
+-static arc arcs_33_1[2] = {
+-    {78, 0},
+-    {0, 1},
+-};
+-static state states_33[2] = {
+-    {1, arcs_33_0},
+-    {2, arcs_33_1},
+-};
+-static arc arcs_34_0[1] = {
+-    {84, 1},
+-};
+-static arc arcs_34_1[1] = {
+-    {21, 2},
+-};
+-static arc arcs_34_2[2] = {
+-    {30, 1},
+-    {0, 2},
+-};
+-static state states_34[3] = {
+-    {1, arcs_34_0},
+-    {1, arcs_34_1},
+-    {2, arcs_34_2},
+-};
+-static arc arcs_35_0[1] = {
+-    {85, 1},
+-};
+-static arc arcs_35_1[1] = {
+-    {21, 2},
+-};
+-static arc arcs_35_2[2] = {
+-    {30, 1},
+-    {0, 2},
+-};
+-static state states_35[3] = {
+-    {1, arcs_35_0},
+-    {1, arcs_35_1},
+-    {2, arcs_35_2},
+-};
+-static arc arcs_36_0[1] = {
+-    {86, 1},
+-};
+-static arc arcs_36_1[1] = {
+-    {24, 2},
+-};
+-static arc arcs_36_2[2] = {
+-    {30, 3},
+-    {0, 2},
+-};
+-static arc arcs_36_3[1] = {
+-    {24, 4},
+-};
+-static arc arcs_36_4[1] = {
+-    {0, 4},
+-};
+-static state states_36[5] = {
+-    {1, arcs_36_0},
+-    {1, arcs_36_1},
+-    {2, arcs_36_2},
+-    {1, arcs_36_3},
+-    {1, arcs_36_4},
+-};
+-static arc arcs_37_0[8] = {
+-    {87, 1},
+-    {88, 1},
+-    {89, 1},
+-    {90, 1},
+-    {91, 1},
+-    {19, 1},
+-    {18, 1},
+-    {17, 1},
+-};
+-static arc arcs_37_1[1] = {
+-    {0, 1},
+-};
+-static state states_37[2] = {
+-    {8, arcs_37_0},
+-    {1, arcs_37_1},
+-};
+-static arc arcs_38_0[1] = {
+-    {92, 1},
+-};
+-static arc arcs_38_1[1] = {
+-    {24, 2},
+-};
+-static arc arcs_38_2[1] = {
+-    {25, 3},
+-};
+-static arc arcs_38_3[1] = {
+-    {26, 4},
+-};
+-static arc arcs_38_4[3] = {
+-    {93, 1},
+-    {94, 5},
+-    {0, 4},
+-};
+-static arc arcs_38_5[1] = {
+-    {25, 6},
+-};
+-static arc arcs_38_6[1] = {
+-    {26, 7},
+-};
+-static arc arcs_38_7[1] = {
+-    {0, 7},
+-};
+-static state states_38[8] = {
+-    {1, arcs_38_0},
+-    {1, arcs_38_1},
+-    {1, arcs_38_2},
+-    {1, arcs_38_3},
+-    {3, arcs_38_4},
+-    {1, arcs_38_5},
+-    {1, arcs_38_6},
+-    {1, arcs_38_7},
+-};
+-static arc arcs_39_0[1] = {
+-    {95, 1},
+-};
+-static arc arcs_39_1[1] = {
+-    {24, 2},
+-};
+-static arc arcs_39_2[1] = {
+-    {25, 3},
+-};
+-static arc arcs_39_3[1] = {
+-    {26, 4},
+-};
+-static arc arcs_39_4[2] = {
+-    {94, 5},
+-    {0, 4},
+-};
+-static arc arcs_39_5[1] = {
+-    {25, 6},
+-};
+-static arc arcs_39_6[1] = {
+-    {26, 7},
+-};
+-static arc arcs_39_7[1] = {
+-    {0, 7},
+-};
+-static state states_39[8] = {
+-    {1, arcs_39_0},
+-    {1, arcs_39_1},
+-    {1, arcs_39_2},
+-    {1, arcs_39_3},
+-    {2, arcs_39_4},
+-    {1, arcs_39_5},
+-    {1, arcs_39_6},
+-    {1, arcs_39_7},
+-};
+-static arc arcs_40_0[1] = {
+-    {96, 1},
+-};
+-static arc arcs_40_1[1] = {
+-    {62, 2},
+-};
+-static arc arcs_40_2[1] = {
+-    {97, 3},
+-};
+-static arc arcs_40_3[1] = {
+-    {9, 4},
+-};
+-static arc arcs_40_4[1] = {
+-    {25, 5},
+-};
+-static arc arcs_40_5[1] = {
+-    {26, 6},
+-};
+-static arc arcs_40_6[2] = {
+-    {94, 7},
+-    {0, 6},
+-};
+-static arc arcs_40_7[1] = {
+-    {25, 8},
+-};
+-static arc arcs_40_8[1] = {
+-    {26, 9},
+-};
+-static arc arcs_40_9[1] = {
+-    {0, 9},
+-};
+-static state states_40[10] = {
+-    {1, arcs_40_0},
+-    {1, arcs_40_1},
+-    {1, arcs_40_2},
+-    {1, arcs_40_3},
+-    {1, arcs_40_4},
+-    {1, arcs_40_5},
+-    {2, arcs_40_6},
+-    {1, arcs_40_7},
+-    {1, arcs_40_8},
+-    {1, arcs_40_9},
+-};
+-static arc arcs_41_0[1] = {
+-    {98, 1},
+-};
+-static arc arcs_41_1[1] = {
+-    {25, 2},
+-};
+-static arc arcs_41_2[1] = {
+-    {26, 3},
+-};
+-static arc arcs_41_3[2] = {
+-    {99, 4},
+-    {100, 5},
+-};
+-static arc arcs_41_4[1] = {
+-    {25, 6},
+-};
+-static arc arcs_41_5[1] = {
+-    {25, 7},
+-};
+-static arc arcs_41_6[1] = {
+-    {26, 8},
+-};
+-static arc arcs_41_7[1] = {
+-    {26, 9},
+-};
+-static arc arcs_41_8[4] = {
+-    {99, 4},
+-    {94, 10},
+-    {100, 5},
+-    {0, 8},
+-};
+-static arc arcs_41_9[1] = {
+-    {0, 9},
+-};
+-static arc arcs_41_10[1] = {
+-    {25, 11},
+-};
+-static arc arcs_41_11[1] = {
+-    {26, 12},
+-};
+-static arc arcs_41_12[2] = {
+-    {100, 5},
+-    {0, 12},
+-};
+-static state states_41[13] = {
+-    {1, arcs_41_0},
+-    {1, arcs_41_1},
+-    {1, arcs_41_2},
+-    {2, arcs_41_3},
+-    {1, arcs_41_4},
+-    {1, arcs_41_5},
+-    {1, arcs_41_6},
+-    {1, arcs_41_7},
+-    {4, arcs_41_8},
+-    {1, arcs_41_9},
+-    {1, arcs_41_10},
+-    {1, arcs_41_11},
+-    {2, arcs_41_12},
+-};
+-static arc arcs_42_0[1] = {
+-    {101, 1},
+-};
+-static arc arcs_42_1[1] = {
+-    {102, 2},
+-};
+-static arc arcs_42_2[2] = {
+-    {30, 1},
+-    {25, 3},
+-};
+-static arc arcs_42_3[1] = {
+-    {26, 4},
+-};
+-static arc arcs_42_4[1] = {
+-    {0, 4},
+-};
+-static state states_42[5] = {
+-    {1, arcs_42_0},
+-    {1, arcs_42_1},
+-    {2, arcs_42_2},
+-    {1, arcs_42_3},
+-    {1, arcs_42_4},
+-};
+-static arc arcs_43_0[1] = {
+-    {24, 1},
+-};
+-static arc arcs_43_1[2] = {
+-    {82, 2},
+-    {0, 1},
+-};
+-static arc arcs_43_2[1] = {
+-    {103, 3},
+-};
+-static arc arcs_43_3[1] = {
+-    {0, 3},
+-};
+-static state states_43[4] = {
+-    {1, arcs_43_0},
+-    {2, arcs_43_1},
+-    {1, arcs_43_2},
+-    {1, arcs_43_3},
+-};
+-static arc arcs_44_0[1] = {
+-    {104, 1},
+-};
+-static arc arcs_44_1[2] = {
+-    {24, 2},
+-    {0, 1},
+-};
+-static arc arcs_44_2[2] = {
+-    {82, 3},
+-    {0, 2},
+-};
+-static arc arcs_44_3[1] = {
+-    {21, 4},
+-};
+-static arc arcs_44_4[1] = {
+-    {0, 4},
+-};
+-static state states_44[5] = {
+-    {1, arcs_44_0},
+-    {2, arcs_44_1},
+-    {2, arcs_44_2},
+-    {1, arcs_44_3},
+-    {1, arcs_44_4},
+-};
+-static arc arcs_45_0[2] = {
+-    {3, 1},
+-    {2, 2},
+-};
+-static arc arcs_45_1[1] = {
+-    {0, 1},
+-};
+-static arc arcs_45_2[1] = {
+-    {105, 3},
+-};
+-static arc arcs_45_3[1] = {
+-    {6, 4},
+-};
+-static arc arcs_45_4[2] = {
+-    {6, 4},
+-    {106, 1},
+-};
+-static state states_45[5] = {
+-    {2, arcs_45_0},
+-    {1, arcs_45_1},
+-    {1, arcs_45_2},
+-    {1, arcs_45_3},
+-    {2, arcs_45_4},
+-};
+-static arc arcs_46_0[2] = {
+-    {107, 1},
+-    {108, 2},
+-};
+-static arc arcs_46_1[2] = {
+-    {92, 3},
+-    {0, 1},
+-};
+-static arc arcs_46_2[1] = {
+-    {0, 2},
+-};
+-static arc arcs_46_3[1] = {
+-    {107, 4},
+-};
+-static arc arcs_46_4[1] = {
+-    {94, 5},
+-};
+-static arc arcs_46_5[1] = {
+-    {24, 2},
+-};
+-static state states_46[6] = {
+-    {2, arcs_46_0},
+-    {2, arcs_46_1},
+-    {1, arcs_46_2},
+-    {1, arcs_46_3},
+-    {1, arcs_46_4},
+-    {1, arcs_46_5},
+-};
+-static arc arcs_47_0[2] = {
+-    {107, 1},
+-    {110, 1},
+-};
+-static arc arcs_47_1[1] = {
+-    {0, 1},
+-};
+-static state states_47[2] = {
+-    {2, arcs_47_0},
+-    {1, arcs_47_1},
+-};
+-static arc arcs_48_0[1] = {
+-    {111, 1},
+-};
+-static arc arcs_48_1[2] = {
+-    {33, 2},
+-    {25, 3},
+-};
+-static arc arcs_48_2[1] = {
+-    {25, 3},
+-};
+-static arc arcs_48_3[1] = {
+-    {24, 4},
+-};
+-static arc arcs_48_4[1] = {
+-    {0, 4},
+-};
+-static state states_48[5] = {
+-    {1, arcs_48_0},
+-    {2, arcs_48_1},
+-    {1, arcs_48_2},
+-    {1, arcs_48_3},
+-    {1, arcs_48_4},
+-};
+-static arc arcs_49_0[1] = {
+-    {111, 1},
+-};
+-static arc arcs_49_1[2] = {
+-    {33, 2},
+-    {25, 3},
+-};
+-static arc arcs_49_2[1] = {
+-    {25, 3},
+-};
+-static arc arcs_49_3[1] = {
+-    {109, 4},
+-};
+-static arc arcs_49_4[1] = {
+-    {0, 4},
+-};
+-static state states_49[5] = {
+-    {1, arcs_49_0},
+-    {2, arcs_49_1},
+-    {1, arcs_49_2},
+-    {1, arcs_49_3},
+-    {1, arcs_49_4},
+-};
+-static arc arcs_50_0[1] = {
+-    {112, 1},
+-};
+-static arc arcs_50_1[2] = {
+-    {113, 0},
+-    {0, 1},
+-};
+-static state states_50[2] = {
+-    {1, arcs_50_0},
+-    {2, arcs_50_1},
+-};
+-static arc arcs_51_0[1] = {
+-    {114, 1},
+-};
+-static arc arcs_51_1[2] = {
+-    {115, 0},
+-    {0, 1},
+-};
+-static state states_51[2] = {
+-    {1, arcs_51_0},
+-    {2, arcs_51_1},
+-};
+-static arc arcs_52_0[2] = {
+-    {116, 1},
+-    {117, 2},
+-};
+-static arc arcs_52_1[1] = {
+-    {114, 2},
+-};
+-static arc arcs_52_2[1] = {
+-    {0, 2},
+-};
+-static state states_52[3] = {
+-    {2, arcs_52_0},
+-    {1, arcs_52_1},
+-    {1, arcs_52_2},
+-};
+-static arc arcs_53_0[1] = {
+-    {103, 1},
+-};
+-static arc arcs_53_1[2] = {
+-    {118, 0},
+-    {0, 1},
+-};
+-static state states_53[2] = {
+-    {1, arcs_53_0},
+-    {2, arcs_53_1},
+-};
+-static arc arcs_54_0[10] = {
+-    {119, 1},
+-    {120, 1},
+-    {121, 1},
+-    {122, 1},
+-    {123, 1},
+-    {124, 1},
+-    {125, 1},
+-    {97, 1},
+-    {116, 2},
+-    {126, 3},
+-};
+-static arc arcs_54_1[1] = {
+-    {0, 1},
+-};
+-static arc arcs_54_2[1] = {
+-    {97, 1},
+-};
+-static arc arcs_54_3[2] = {
+-    {116, 1},
+-    {0, 3},
+-};
+-static state states_54[4] = {
+-    {10, arcs_54_0},
+-    {1, arcs_54_1},
+-    {1, arcs_54_2},
+-    {2, arcs_54_3},
+-};
+-static arc arcs_55_0[1] = {
+-    {31, 1},
+-};
+-static arc arcs_55_1[1] = {
+-    {103, 2},
+-};
+-static arc arcs_55_2[1] = {
+-    {0, 2},
+-};
+-static state states_55[3] = {
+-    {1, arcs_55_0},
+-    {1, arcs_55_1},
+-    {1, arcs_55_2},
+-};
+-static arc arcs_56_0[1] = {
+-    {127, 1},
+-};
+-static arc arcs_56_1[2] = {
+-    {128, 0},
+-    {0, 1},
+-};
+-static state states_56[2] = {
+-    {1, arcs_56_0},
+-    {2, arcs_56_1},
+-};
+-static arc arcs_57_0[1] = {
+-    {129, 1},
+-};
+-static arc arcs_57_1[2] = {
+-    {130, 0},
+-    {0, 1},
+-};
+-static state states_57[2] = {
+-    {1, arcs_57_0},
+-    {2, arcs_57_1},
+-};
+-static arc arcs_58_0[1] = {
+-    {131, 1},
+-};
+-static arc arcs_58_1[2] = {
+-    {132, 0},
+-    {0, 1},
+-};
+-static state states_58[2] = {
+-    {1, arcs_58_0},
+-    {2, arcs_58_1},
+-};
+-static arc arcs_59_0[1] = {
+-    {133, 1},
+-};
+-static arc arcs_59_1[3] = {
+-    {134, 0},
+-    {135, 0},
+-    {0, 1},
+-};
+-static state states_59[2] = {
+-    {1, arcs_59_0},
+-    {3, arcs_59_1},
+-};
+-static arc arcs_60_0[1] = {
+-    {136, 1},
+-};
+-static arc arcs_60_1[3] = {
+-    {137, 0},
+-    {138, 0},
+-    {0, 1},
+-};
+-static state states_60[2] = {
+-    {1, arcs_60_0},
+-    {3, arcs_60_1},
+-};
+-static arc arcs_61_0[1] = {
+-    {139, 1},
+-};
+-static arc arcs_61_1[5] = {
+-    {31, 0},
+-    {140, 0},
+-    {141, 0},
+-    {142, 0},
+-    {0, 1},
+-};
+-static state states_61[2] = {
+-    {1, arcs_61_0},
+-    {5, arcs_61_1},
+-};
+-static arc arcs_62_0[4] = {
+-    {137, 1},
+-    {138, 1},
+-    {143, 1},
+-    {144, 2},
+-};
+-static arc arcs_62_1[1] = {
+-    {139, 2},
+-};
+-static arc arcs_62_2[1] = {
+-    {0, 2},
+-};
+-static state states_62[3] = {
+-    {4, arcs_62_0},
+-    {1, arcs_62_1},
+-    {1, arcs_62_2},
+-};
+-static arc arcs_63_0[1] = {
+-    {145, 1},
+-};
+-static arc arcs_63_1[3] = {
+-    {146, 1},
+-    {32, 2},
+-    {0, 1},
+-};
+-static arc arcs_63_2[1] = {
+-    {139, 3},
+-};
+-static arc arcs_63_3[1] = {
+-    {0, 3},
+-};
+-static state states_63[4] = {
+-    {1, arcs_63_0},
+-    {3, arcs_63_1},
+-    {1, arcs_63_2},
+-    {1, arcs_63_3},
+-};
+-static arc arcs_64_0[10] = {
+-    {13, 1},
+-    {148, 2},
+-    {150, 3},
+-    {21, 4},
+-    {153, 4},
+-    {154, 5},
+-    {79, 4},
+-    {155, 4},
+-    {156, 4},
+-    {157, 4},
+-};
+-static arc arcs_64_1[3] = {
+-    {47, 6},
+-    {147, 6},
+-    {15, 4},
+-};
+-static arc arcs_64_2[2] = {
+-    {147, 7},
+-    {149, 4},
+-};
+-static arc arcs_64_3[2] = {
+-    {151, 8},
+-    {152, 4},
+-};
+-static arc arcs_64_4[1] = {
+-    {0, 4},
+-};
+-static arc arcs_64_5[2] = {
+-    {154, 5},
+-    {0, 5},
+-};
+-static arc arcs_64_6[1] = {
+-    {15, 4},
+-};
+-static arc arcs_64_7[1] = {
+-    {149, 4},
+-};
+-static arc arcs_64_8[1] = {
+-    {152, 4},
+-};
+-static state states_64[9] = {
+-    {10, arcs_64_0},
+-    {3, arcs_64_1},
+-    {2, arcs_64_2},
+-    {2, arcs_64_3},
+-    {1, arcs_64_4},
+-    {2, arcs_64_5},
+-    {1, arcs_64_6},
+-    {1, arcs_64_7},
+-    {1, arcs_64_8},
+-};
+-static arc arcs_65_0[2] = {
+-    {24, 1},
+-    {48, 1},
+-};
+-static arc arcs_65_1[3] = {
+-    {158, 2},
+-    {30, 3},
+-    {0, 1},
+-};
+-static arc arcs_65_2[1] = {
+-    {0, 2},
+-};
+-static arc arcs_65_3[3] = {
+-    {24, 4},
+-    {48, 4},
+-    {0, 3},
+-};
+-static arc arcs_65_4[2] = {
+-    {30, 3},
+-    {0, 4},
+-};
+-static state states_65[5] = {
+-    {2, arcs_65_0},
+-    {3, arcs_65_1},
+-    {1, arcs_65_2},
+-    {3, arcs_65_3},
+-    {2, arcs_65_4},
+-};
+-static arc arcs_66_0[3] = {
+-    {13, 1},
+-    {148, 2},
+-    {78, 3},
+-};
+-static arc arcs_66_1[2] = {
+-    {14, 4},
+-    {15, 5},
+-};
+-static arc arcs_66_2[1] = {
+-    {159, 6},
+-};
+-static arc arcs_66_3[1] = {
+-    {21, 5},
+-};
+-static arc arcs_66_4[1] = {
+-    {15, 5},
+-};
+-static arc arcs_66_5[1] = {
+-    {0, 5},
+-};
+-static arc arcs_66_6[1] = {
+-    {149, 5},
+-};
+-static state states_66[7] = {
+-    {3, arcs_66_0},
+-    {2, arcs_66_1},
+-    {1, arcs_66_2},
+-    {1, arcs_66_3},
+-    {1, arcs_66_4},
+-    {1, arcs_66_5},
+-    {1, arcs_66_6},
+-};
+-static arc arcs_67_0[1] = {
+-    {160, 1},
+-};
+-static arc arcs_67_1[2] = {
+-    {30, 2},
+-    {0, 1},
+-};
+-static arc arcs_67_2[2] = {
+-    {160, 1},
+-    {0, 2},
+-};
+-static state states_67[3] = {
+-    {1, arcs_67_0},
+-    {2, arcs_67_1},
+-    {2, arcs_67_2},
+-};
+-static arc arcs_68_0[2] = {
+-    {24, 1},
+-    {25, 2},
+-};
+-static arc arcs_68_1[2] = {
+-    {25, 2},
+-    {0, 1},
+-};
+-static arc arcs_68_2[3] = {
+-    {24, 3},
+-    {161, 4},
+-    {0, 2},
+-};
+-static arc arcs_68_3[2] = {
+-    {161, 4},
+-    {0, 3},
+-};
+-static arc arcs_68_4[1] = {
+-    {0, 4},
+-};
+-static state states_68[5] = {
+-    {2, arcs_68_0},
+-    {2, arcs_68_1},
+-    {3, arcs_68_2},
+-    {2, arcs_68_3},
+-    {1, arcs_68_4},
+-};
+-static arc arcs_69_0[1] = {
+-    {25, 1},
+-};
+-static arc arcs_69_1[2] = {
+-    {24, 2},
+-    {0, 1},
+-};
+-static arc arcs_69_2[1] = {
+-    {0, 2},
+-};
+-static state states_69[3] = {
+-    {1, arcs_69_0},
+-    {2, arcs_69_1},
+-    {1, arcs_69_2},
+-};
+-static arc arcs_70_0[2] = {
+-    {103, 1},
+-    {48, 1},
+-};
+-static arc arcs_70_1[2] = {
+-    {30, 2},
+-    {0, 1},
+-};
+-static arc arcs_70_2[3] = {
+-    {103, 1},
+-    {48, 1},
+-    {0, 2},
+-};
+-static state states_70[3] = {
+-    {2, arcs_70_0},
+-    {2, arcs_70_1},
+-    {3, arcs_70_2},
+-};
+-static arc arcs_71_0[1] = {
+-    {24, 1},
+-};
+-static arc arcs_71_1[2] = {
+-    {30, 2},
+-    {0, 1},
+-};
+-static arc arcs_71_2[2] = {
+-    {24, 1},
+-    {0, 2},
+-};
+-static state states_71[3] = {
+-    {1, arcs_71_0},
+-    {2, arcs_71_1},
+-    {2, arcs_71_2},
+-};
+-static arc arcs_72_0[1] = {
+-    {24, 1},
+-};
+-static arc arcs_72_1[4] = {
+-    {25, 2},
+-    {158, 3},
+-    {30, 4},
+-    {0, 1},
+-};
+-static arc arcs_72_2[1] = {
+-    {24, 5},
+-};
+-static arc arcs_72_3[1] = {
+-    {0, 3},
+-};
+-static arc arcs_72_4[2] = {
+-    {24, 6},
+-    {0, 4},
+-};
+-static arc arcs_72_5[3] = {
+-    {158, 3},
+-    {30, 7},
+-    {0, 5},
+-};
+-static arc arcs_72_6[2] = {
+-    {30, 4},
+-    {0, 6},
+-};
+-static arc arcs_72_7[2] = {
+-    {24, 8},
+-    {0, 7},
+-};
+-static arc arcs_72_8[1] = {
+-    {25, 9},
+-};
+-static arc arcs_72_9[1] = {
+-    {24, 10},
+-};
+-static arc arcs_72_10[2] = {
+-    {30, 7},
+-    {0, 10},
+-};
+-static state states_72[11] = {
+-    {1, arcs_72_0},
+-    {4, arcs_72_1},
+-    {1, arcs_72_2},
+-    {1, arcs_72_3},
+-    {2, arcs_72_4},
+-    {3, arcs_72_5},
+-    {2, arcs_72_6},
+-    {2, arcs_72_7},
+-    {1, arcs_72_8},
+-    {1, arcs_72_9},
+-    {2, arcs_72_10},
+-};
+-static arc arcs_73_0[1] = {
+-    {162, 1},
+-};
+-static arc arcs_73_1[1] = {
+-    {21, 2},
+-};
+-static arc arcs_73_2[2] = {
+-    {13, 3},
+-    {25, 4},
+-};
+-static arc arcs_73_3[2] = {
+-    {14, 5},
+-    {15, 6},
+-};
+-static arc arcs_73_4[1] = {
+-    {26, 7},
+-};
+-static arc arcs_73_5[1] = {
+-    {15, 6},
+-};
+-static arc arcs_73_6[1] = {
+-    {25, 4},
+-};
+-static arc arcs_73_7[1] = {
+-    {0, 7},
+-};
+-static state states_73[8] = {
+-    {1, arcs_73_0},
+-    {1, arcs_73_1},
+-    {2, arcs_73_2},
+-    {2, arcs_73_3},
+-    {1, arcs_73_4},
+-    {1, arcs_73_5},
+-    {1, arcs_73_6},
+-    {1, arcs_73_7},
+-};
+-static arc arcs_74_0[3] = {
+-    {163, 1},
+-    {31, 2},
+-    {32, 3},
+-};
+-static arc arcs_74_1[2] = {
+-    {30, 4},
+-    {0, 1},
+-};
+-static arc arcs_74_2[1] = {
+-    {24, 5},
+-};
+-static arc arcs_74_3[1] = {
+-    {24, 6},
+-};
+-static arc arcs_74_4[4] = {
+-    {163, 1},
+-    {31, 2},
+-    {32, 3},
+-    {0, 4},
+-};
+-static arc arcs_74_5[2] = {
+-    {30, 7},
+-    {0, 5},
+-};
+-static arc arcs_74_6[1] = {
+-    {0, 6},
+-};
+-static arc arcs_74_7[2] = {
+-    {163, 5},
+-    {32, 3},
+-};
+-static state states_74[8] = {
+-    {3, arcs_74_0},
+-    {2, arcs_74_1},
+-    {1, arcs_74_2},
+-    {1, arcs_74_3},
+-    {4, arcs_74_4},
+-    {2, arcs_74_5},
+-    {1, arcs_74_6},
+-    {2, arcs_74_7},
+-};
+-static arc arcs_75_0[1] = {
+-    {24, 1},
+-};
+-static arc arcs_75_1[3] = {
+-    {158, 2},
+-    {29, 3},
+-    {0, 1},
+-};
+-static arc arcs_75_2[1] = {
+-    {0, 2},
+-};
+-static arc arcs_75_3[1] = {
+-    {24, 2},
+-};
+-static state states_75[4] = {
+-    {1, arcs_75_0},
+-    {3, arcs_75_1},
+-    {1, arcs_75_2},
+-    {1, arcs_75_3},
+-};
+-static arc arcs_76_0[2] = {
+-    {158, 1},
+-    {165, 1},
+-};
+-static arc arcs_76_1[1] = {
+-    {0, 1},
+-};
+-static state states_76[2] = {
+-    {2, arcs_76_0},
+-    {1, arcs_76_1},
+-};
+-static arc arcs_77_0[1] = {
+-    {96, 1},
+-};
+-static arc arcs_77_1[1] = {
+-    {62, 2},
+-};
+-static arc arcs_77_2[1] = {
+-    {97, 3},
+-};
+-static arc arcs_77_3[1] = {
+-    {107, 4},
+-};
+-static arc arcs_77_4[2] = {
+-    {164, 5},
+-    {0, 4},
+-};
+-static arc arcs_77_5[1] = {
+-    {0, 5},
+-};
+-static state states_77[6] = {
+-    {1, arcs_77_0},
+-    {1, arcs_77_1},
+-    {1, arcs_77_2},
+-    {1, arcs_77_3},
+-    {2, arcs_77_4},
+-    {1, arcs_77_5},
+-};
+-static arc arcs_78_0[1] = {
+-    {92, 1},
+-};
+-static arc arcs_78_1[1] = {
+-    {109, 2},
+-};
+-static arc arcs_78_2[2] = {
+-    {164, 3},
+-    {0, 2},
+-};
+-static arc arcs_78_3[1] = {
+-    {0, 3},
+-};
+-static state states_78[4] = {
+-    {1, arcs_78_0},
+-    {1, arcs_78_1},
+-    {2, arcs_78_2},
+-    {1, arcs_78_3},
+-};
+-static arc arcs_79_0[1] = {
+-    {21, 1},
+-};
+-static arc arcs_79_1[1] = {
+-    {0, 1},
+-};
+-static state states_79[2] = {
+-    {1, arcs_79_0},
+-    {1, arcs_79_1},
+-};
+-static arc arcs_80_0[1] = {
+-    {167, 1},
+-};
+-static arc arcs_80_1[2] = {
+-    {168, 2},
+-    {0, 1},
+-};
+-static arc arcs_80_2[1] = {
+-    {0, 2},
+-};
+-static state states_80[3] = {
+-    {1, arcs_80_0},
+-    {2, arcs_80_1},
+-    {1, arcs_80_2},
+-};
+-static arc arcs_81_0[2] = {
+-    {73, 1},
+-    {9, 2},
+-};
+-static arc arcs_81_1[1] = {
+-    {24, 2},
+-};
+-static arc arcs_81_2[1] = {
+-    {0, 2},
+-};
+-static state states_81[3] = {
+-    {2, arcs_81_0},
+-    {1, arcs_81_1},
+-    {1, arcs_81_2},
+-};
+-static dfa dfas[82] = {
+-    {256, "single_input", 0, 3, states_0,
+-     "\004\050\060\200\000\000\000\240\340\223\160\220\045\200\020\000\000\206\120\076\204\000"},
+-    {257, "file_input", 0, 2, states_1,
+-     "\204\050\060\200\000\000\000\240\340\223\160\220\045\200\020\000\000\206\120\076\204\000"},
+-    {258, "eval_input", 0, 3, states_2,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {259, "decorator", 0, 7, states_3,
+-     "\000\010\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {260, "decorators", 0, 2, states_4,
+-     "\000\010\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {261, "decorated", 0, 3, states_5,
+-     "\000\010\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {262, "funcdef", 0, 8, states_6,
+-     "\000\000\020\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {263, "parameters", 0, 4, states_7,
+-     "\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {264, "typedargslist", 0, 18, states_8,
+-     "\000\000\040\200\001\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {265, "tfpdef", 0, 4, states_9,
+-     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {266, "varargslist", 0, 18, states_10,
+-     "\000\000\040\200\001\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {267, "vfpdef", 0, 2, states_11,
+-     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {268, "stmt", 0, 2, states_12,
+-     "\000\050\060\200\000\000\000\240\340\223\160\220\045\200\020\000\000\206\120\076\204\000"},
+-    {269, "simple_stmt", 0, 4, states_13,
+-     "\000\040\040\200\000\000\000\240\340\223\160\000\000\200\020\000\000\206\120\076\200\000"},
+-    {270, "small_stmt", 0, 2, states_14,
+-     "\000\040\040\200\000\000\000\240\340\223\160\000\000\200\020\000\000\206\120\076\200\000"},
+-    {271, "expr_stmt", 0, 6, states_15,
+-     "\000\040\040\200\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {272, "testlist_star_expr", 0, 3, states_16,
+-     "\000\040\040\200\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {273, "augassign", 0, 2, states_17,
+-     "\000\000\000\000\000\000\376\037\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {274, "del_stmt", 0, 3, states_18,
+-     "\000\000\000\000\000\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {275, "pass_stmt", 0, 2, states_19,
+-     "\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {276, "flow_stmt", 0, 2, states_20,
+-     "\000\000\000\000\000\000\000\000\340\001\000\000\000\000\000\000\000\000\000\000\200\000"},
+-    {277, "break_stmt", 0, 2, states_21,
+-     "\000\000\000\000\000\000\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {278, "continue_stmt", 0, 2, states_22,
+-     "\000\000\000\000\000\000\000\000\100\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {279, "return_stmt", 0, 3, states_23,
+-     "\000\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {280, "yield_stmt", 0, 2, states_24,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\200\000"},
+-    {281, "raise_stmt", 0, 5, states_25,
+-     "\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {282, "import_stmt", 0, 2, states_26,
+-     "\000\000\000\000\000\000\000\000\000\022\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {283, "import_name", 0, 3, states_27,
+-     "\000\000\000\000\000\000\000\000\000\020\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {284, "import_from", 0, 8, states_28,
+-     "\000\000\000\000\000\000\000\000\000\002\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {285, "import_as_name", 0, 4, states_29,
+-     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {286, "dotted_as_name", 0, 4, states_30,
+-     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {287, "import_as_names", 0, 3, states_31,
+-     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {288, "dotted_as_names", 0, 2, states_32,
+-     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {289, "dotted_name", 0, 2, states_33,
+-     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {290, "global_stmt", 0, 3, states_34,
+-     "\000\000\000\000\000\000\000\000\000\000\020\000\000\000\000\000\000\000\000\000\000\000"},
+-    {291, "nonlocal_stmt", 0, 3, states_35,
+-     "\000\000\000\000\000\000\000\000\000\000\040\000\000\000\000\000\000\000\000\000\000\000"},
+-    {292, "assert_stmt", 0, 5, states_36,
+-     "\000\000\000\000\000\000\000\000\000\000\100\000\000\000\000\000\000\000\000\000\000\000"},
+-    {293, "compound_stmt", 0, 2, states_37,
+-     "\000\010\020\000\000\000\000\000\000\000\000\220\045\000\000\000\000\000\000\000\004\000"},
+-    {294, "if_stmt", 0, 8, states_38,
+-     "\000\000\000\000\000\000\000\000\000\000\000\020\000\000\000\000\000\000\000\000\000\000"},
+-    {295, "while_stmt", 0, 8, states_39,
+-     "\000\000\000\000\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000"},
+-    {296, "for_stmt", 0, 10, states_40,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000"},
+-    {297, "try_stmt", 0, 13, states_41,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\004\000\000\000\000\000\000\000\000\000"},
+-    {298, "with_stmt", 0, 5, states_42,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\040\000\000\000\000\000\000\000\000\000"},
+-    {299, "with_item", 0, 4, states_43,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {300, "except_clause", 0, 5, states_44,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000"},
+-    {301, "suite", 0, 5, states_45,
+-     "\004\040\040\200\000\000\000\240\340\223\160\000\000\200\020\000\000\206\120\076\200\000"},
+-    {302, "test", 0, 6, states_46,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {303, "test_nocond", 0, 2, states_47,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {304, "lambdef", 0, 5, states_48,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000"},
+-    {305, "lambdef_nocond", 0, 5, states_49,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000"},
+-    {306, "or_test", 0, 2, states_50,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\020\000\000\206\120\076\000\000"},
+-    {307, "and_test", 0, 2, states_51,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\020\000\000\206\120\076\000\000"},
+-    {308, "not_test", 0, 3, states_52,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\020\000\000\206\120\076\000\000"},
+-    {309, "comparison", 0, 2, states_53,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
+-    {310, "comp_op", 0, 4, states_54,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\002\000\220\177\000\000\000\000\000\000"},
+-    {311, "star_expr", 0, 3, states_55,
+-     "\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {312, "expr", 0, 2, states_56,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
+-    {313, "xor_expr", 0, 2, states_57,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
+-    {314, "and_expr", 0, 2, states_58,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
+-    {315, "shift_expr", 0, 2, states_59,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
+-    {316, "arith_expr", 0, 2, states_60,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
+-    {317, "term", 0, 2, states_61,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
+-    {318, "factor", 0, 3, states_62,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
+-    {319, "power", 0, 4, states_63,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\120\076\000\000"},
+-    {320, "atom", 0, 9, states_64,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\120\076\000\000"},
+-    {321, "testlist_comp", 0, 5, states_65,
+-     "\000\040\040\200\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {322, "trailer", 0, 7, states_66,
+-     "\000\040\000\000\000\000\000\000\000\100\000\000\000\000\000\000\000\000\020\000\000\000"},
+-    {323, "subscriptlist", 0, 3, states_67,
+-     "\000\040\040\002\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {324, "subscript", 0, 5, states_68,
+-     "\000\040\040\002\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {325, "sliceop", 0, 3, states_69,
+-     "\000\000\000\002\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {326, "exprlist", 0, 3, states_70,
+-     "\000\040\040\200\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
+-    {327, "testlist", 0, 3, states_71,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {328, "dictorsetmaker", 0, 11, states_72,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {329, "classdef", 0, 8, states_73,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\004\000"},
+-    {330, "arglist", 0, 8, states_74,
+-     "\000\040\040\200\001\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {331, "argument", 0, 4, states_75,
+-     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
+-    {332, "comp_iter", 0, 2, states_76,
+-     "\000\000\000\000\000\000\000\000\000\000\000\020\001\000\000\000\000\000\000\000\000\000"},
+-    {333, "comp_for", 0, 6, states_77,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000"},
+-    {334, "comp_if", 0, 4, states_78,
+-     "\000\000\000\000\000\000\000\000\000\000\000\020\000\000\000\000\000\000\000\000\000\000"},
+-    {335, "encoding_decl", 0, 2, states_79,
+-     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
+-    {336, "yield_expr", 0, 3, states_80,
+-     "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\200\000"},
+-    {337, "yield_arg", 0, 3, states_81,
+-     "\000\040\040\000\000\000\000\000\000\202\000\000\000\200\020\000\000\206\120\076\000\000"},
+-};
+-static label labels[169] = {
+-    {0, "EMPTY"},
+-    {256, 0},
+-    {4, 0},
+-    {269, 0},
+-    {293, 0},
+-    {257, 0},
+-    {268, 0},
+-    {0, 0},
+-    {258, 0},
+-    {327, 0},
+-    {259, 0},
+-    {49, 0},
+-    {289, 0},
+-    {7, 0},
+-    {330, 0},
+-    {8, 0},
+-    {260, 0},
+-    {261, 0},
+-    {329, 0},
+-    {262, 0},
+-    {1, "def"},
+-    {1, 0},
+-    {263, 0},
+-    {50, 0},
+-    {302, 0},
+-    {11, 0},
+-    {301, 0},
+-    {264, 0},
+-    {265, 0},
+-    {22, 0},
+-    {12, 0},
+-    {16, 0},
+-    {35, 0},
+-    {266, 0},
+-    {267, 0},
+-    {270, 0},
+-    {13, 0},
+-    {271, 0},
+-    {274, 0},
+-    {275, 0},
+-    {276, 0},
+-    {282, 0},
+-    {290, 0},
+-    {291, 0},
+-    {292, 0},
+-    {272, 0},
+-    {273, 0},
+-    {336, 0},
+-    {311, 0},
+-    {36, 0},
+-    {37, 0},
+-    {38, 0},
+-    {39, 0},
+-    {40, 0},
+-    {41, 0},
+-    {42, 0},
+-    {43, 0},
+-    {44, 0},
+-    {45, 0},
+-    {46, 0},
+-    {48, 0},
+-    {1, "del"},
+-    {326, 0},
+-    {1, "pass"},
+-    {277, 0},
+-    {278, 0},
+-    {279, 0},
+-    {281, 0},
+-    {280, 0},
+-    {1, "break"},
+-    {1, "continue"},
+-    {1, "return"},
+-    {1, "raise"},
+-    {1, "from"},
+-    {283, 0},
+-    {284, 0},
+-    {1, "import"},
+-    {288, 0},
+-    {23, 0},
+-    {51, 0},
+-    {287, 0},
+-    {285, 0},
+-    {1, "as"},
+-    {286, 0},
+-    {1, "global"},
+-    {1, "nonlocal"},
+-    {1, "assert"},
+-    {294, 0},
+-    {295, 0},
+-    {296, 0},
+-    {297, 0},
+-    {298, 0},
+-    {1, "if"},
+-    {1, "elif"},
+-    {1, "else"},
+-    {1, "while"},
+-    {1, "for"},
+-    {1, "in"},
+-    {1, "try"},
+-    {300, 0},
+-    {1, "finally"},
+-    {1, "with"},
+-    {299, 0},
+-    {312, 0},
+-    {1, "except"},
+-    {5, 0},
+-    {6, 0},
+-    {306, 0},
+-    {304, 0},
+-    {303, 0},
+-    {305, 0},
+-    {1, "lambda"},
+-    {307, 0},
+-    {1, "or"},
+-    {308, 0},
+-    {1, "and"},
+-    {1, "not"},
+-    {309, 0},
+-    {310, 0},
+-    {20, 0},
+-    {21, 0},
+-    {27, 0},
+-    {30, 0},
+-    {29, 0},
+-    {28, 0},
+-    {28, 0},
+-    {1, "is"},
+-    {313, 0},
+-    {18, 0},
+-    {314, 0},
+-    {32, 0},
+-    {315, 0},
+-    {19, 0},
+-    {316, 0},
+-    {33, 0},
+-    {34, 0},
+-    {317, 0},
+-    {14, 0},
+-    {15, 0},
+-    {318, 0},
+-    {17, 0},
+-    {24, 0},
+-    {47, 0},
+-    {31, 0},
+-    {319, 0},
+-    {320, 0},
+-    {322, 0},
+-    {321, 0},
+-    {9, 0},
+-    {10, 0},
+-    {25, 0},
+-    {328, 0},
+-    {26, 0},
+-    {2, 0},
+-    {3, 0},
+-    {1, "None"},
+-    {1, "True"},
+-    {1, "False"},
+-    {333, 0},
+-    {323, 0},
+-    {324, 0},
+-    {325, 0},
+-    {1, "class"},
+-    {331, 0},
+-    {332, 0},
+-    {334, 0},
+-    {335, 0},
+-    {1, "yield"},
+-    {337, 0},
+-};
+-grammar _PyParser_Grammar = {
+-    82,
+-    dfas,
+-    {169, labels},
+-    256
+-};
++/* Generated by Parser/pgen */
++
++#include "pgenheaders.h"
++#include "grammar.h"
++PyAPI_DATA(grammar) _PyParser_Grammar;
++static arc arcs_0_0[3] = {
++    {2, 1},
++    {3, 1},
++    {4, 2},
++};
++static arc arcs_0_1[1] = {
++    {0, 1},
++};
++static arc arcs_0_2[1] = {
++    {2, 1},
++};
++static state states_0[3] = {
++    {3, arcs_0_0},
++    {1, arcs_0_1},
++    {1, arcs_0_2},
++};
++static arc arcs_1_0[3] = {
++    {2, 0},
++    {6, 0},
++    {7, 1},
++};
++static arc arcs_1_1[1] = {
++    {0, 1},
++};
++static state states_1[2] = {
++    {3, arcs_1_0},
++    {1, arcs_1_1},
++};
++static arc arcs_2_0[1] = {
++    {9, 1},
++};
++static arc arcs_2_1[2] = {
++    {2, 1},
++    {7, 2},
++};
++static arc arcs_2_2[1] = {
++    {0, 2},
++};
++static state states_2[3] = {
++    {1, arcs_2_0},
++    {2, arcs_2_1},
++    {1, arcs_2_2},
++};
++static arc arcs_3_0[1] = {
++    {11, 1},
++};
++static arc arcs_3_1[1] = {
++    {12, 2},
++};
++static arc arcs_3_2[2] = {
++    {13, 3},
++    {2, 4},
++};
++static arc arcs_3_3[2] = {
++    {14, 5},
++    {15, 6},
++};
++static arc arcs_3_4[1] = {
++    {0, 4},
++};
++static arc arcs_3_5[1] = {
++    {15, 6},
++};
++static arc arcs_3_6[1] = {
++    {2, 4},
++};
++static state states_3[7] = {
++    {1, arcs_3_0},
++    {1, arcs_3_1},
++    {2, arcs_3_2},
++    {2, arcs_3_3},
++    {1, arcs_3_4},
++    {1, arcs_3_5},
++    {1, arcs_3_6},
++};
++static arc arcs_4_0[1] = {
++    {10, 1},
++};
++static arc arcs_4_1[2] = {
++    {10, 1},
++    {0, 1},
++};
++static state states_4[2] = {
++    {1, arcs_4_0},
++    {2, arcs_4_1},
++};
++static arc arcs_5_0[1] = {
++    {16, 1},
++};
++static arc arcs_5_1[2] = {
++    {18, 2},
++    {19, 2},
++};
++static arc arcs_5_2[1] = {
++    {0, 2},
++};
++static state states_5[3] = {
++    {1, arcs_5_0},
++    {2, arcs_5_1},
++    {1, arcs_5_2},
++};
++static arc arcs_6_0[1] = {
++    {20, 1},
++};
++static arc arcs_6_1[1] = {
++    {21, 2},
++};
++static arc arcs_6_2[1] = {
++    {22, 3},
++};
++static arc arcs_6_3[2] = {
++    {23, 4},
++    {25, 5},
++};
++static arc arcs_6_4[1] = {
++    {24, 6},
++};
++static arc arcs_6_5[1] = {
++    {26, 7},
++};
++static arc arcs_6_6[1] = {
++    {25, 5},
++};
++static arc arcs_6_7[1] = {
++    {0, 7},
++};
++static state states_6[8] = {
++    {1, arcs_6_0},
++    {1, arcs_6_1},
++    {1, arcs_6_2},
++    {2, arcs_6_3},
++    {1, arcs_6_4},
++    {1, arcs_6_5},
++    {1, arcs_6_6},
++    {1, arcs_6_7},
++};
++static arc arcs_7_0[1] = {
++    {13, 1},
++};
++static arc arcs_7_1[2] = {
++    {27, 2},
++    {15, 3},
++};
++static arc arcs_7_2[1] = {
++    {15, 3},
++};
++static arc arcs_7_3[1] = {
++    {0, 3},
++};
++static state states_7[4] = {
++    {1, arcs_7_0},
++    {2, arcs_7_1},
++    {1, arcs_7_2},
++    {1, arcs_7_3},
++};
++static arc arcs_8_0[3] = {
++    {28, 1},
++    {31, 2},
++    {32, 3},
++};
++static arc arcs_8_1[3] = {
++    {29, 4},
++    {30, 5},
++    {0, 1},
++};
++static arc arcs_8_2[3] = {
++    {28, 6},
++    {30, 7},
++    {0, 2},
++};
++static arc arcs_8_3[1] = {
++    {28, 8},
++};
++static arc arcs_8_4[1] = {
++    {24, 9},
++};
++static arc arcs_8_5[4] = {
++    {28, 10},
++    {31, 11},
++    {32, 3},
++    {0, 5},
++};
++static arc arcs_8_6[2] = {
++    {30, 7},
++    {0, 6},
++};
++static arc arcs_8_7[2] = {
++    {28, 12},
++    {32, 3},
++};
++static arc arcs_8_8[1] = {
++    {0, 8},
++};
++static arc arcs_8_9[2] = {
++    {30, 5},
++    {0, 9},
++};
++static arc arcs_8_10[3] = {
++    {30, 5},
++    {29, 4},
++    {0, 10},
++};
++static arc arcs_8_11[3] = {
++    {28, 13},
++    {30, 14},
++    {0, 11},
++};
++static arc arcs_8_12[3] = {
++    {30, 7},
++    {29, 15},
++    {0, 12},
++};
++static arc arcs_8_13[2] = {
++    {30, 14},
++    {0, 13},
++};
++static arc arcs_8_14[2] = {
++    {28, 16},
++    {32, 3},
++};
++static arc arcs_8_15[1] = {
++    {24, 6},
++};
++static arc arcs_8_16[3] = {
++    {30, 14},
++    {29, 17},
++    {0, 16},
++};
++static arc arcs_8_17[1] = {
++    {24, 13},
++};
++static state states_8[18] = {
++    {3, arcs_8_0},
++    {3, arcs_8_1},
++    {3, arcs_8_2},
++    {1, arcs_8_3},
++    {1, arcs_8_4},
++    {4, arcs_8_5},
++    {2, arcs_8_6},
++    {2, arcs_8_7},
++    {1, arcs_8_8},
++    {2, arcs_8_9},
++    {3, arcs_8_10},
++    {3, arcs_8_11},
++    {3, arcs_8_12},
++    {2, arcs_8_13},
++    {2, arcs_8_14},
++    {1, arcs_8_15},
++    {3, arcs_8_16},
++    {1, arcs_8_17},
++};
++static arc arcs_9_0[1] = {
++    {21, 1},
++};
++static arc arcs_9_1[2] = {
++    {25, 2},
++    {0, 1},
++};
++static arc arcs_9_2[1] = {
++    {24, 3},
++};
++static arc arcs_9_3[1] = {
++    {0, 3},
++};
++static state states_9[4] = {
++    {1, arcs_9_0},
++    {2, arcs_9_1},
++    {1, arcs_9_2},
++    {1, arcs_9_3},
++};
++static arc arcs_10_0[3] = {
++    {34, 1},
++    {31, 2},
++    {32, 3},
++};
++static arc arcs_10_1[3] = {
++    {29, 4},
++    {30, 5},
++    {0, 1},
++};
++static arc arcs_10_2[3] = {
++    {34, 6},
++    {30, 7},
++    {0, 2},
++};
++static arc arcs_10_3[1] = {
++    {34, 8},
++};
++static arc arcs_10_4[1] = {
++    {24, 9},
++};
++static arc arcs_10_5[4] = {
++    {34, 10},
++    {31, 11},
++    {32, 3},
++    {0, 5},
++};
++static arc arcs_10_6[2] = {
++    {30, 7},
++    {0, 6},
++};
++static arc arcs_10_7[2] = {
++    {34, 12},
++    {32, 3},
++};
++static arc arcs_10_8[1] = {
++    {0, 8},
++};
++static arc arcs_10_9[2] = {
++    {30, 5},
++    {0, 9},
++};
++static arc arcs_10_10[3] = {
++    {30, 5},
++    {29, 4},
++    {0, 10},
++};
++static arc arcs_10_11[3] = {
++    {34, 13},
++    {30, 14},
++    {0, 11},
++};
++static arc arcs_10_12[3] = {
++    {30, 7},
++    {29, 15},
++    {0, 12},
++};
++static arc arcs_10_13[2] = {
++    {30, 14},
++    {0, 13},
++};
++static arc arcs_10_14[2] = {
++    {34, 16},
++    {32, 3},
++};
++static arc arcs_10_15[1] = {
++    {24, 6},
++};
++static arc arcs_10_16[3] = {
++    {30, 14},
++    {29, 17},
++    {0, 16},
++};
++static arc arcs_10_17[1] = {
++    {24, 13},
++};
++static state states_10[18] = {
++    {3, arcs_10_0},
++    {3, arcs_10_1},
++    {3, arcs_10_2},
++    {1, arcs_10_3},
++    {1, arcs_10_4},
++    {4, arcs_10_5},
++    {2, arcs_10_6},
++    {2, arcs_10_7},
++    {1, arcs_10_8},
++    {2, arcs_10_9},
++    {3, arcs_10_10},
++    {3, arcs_10_11},
++    {3, arcs_10_12},
++    {2, arcs_10_13},
++    {2, arcs_10_14},
++    {1, arcs_10_15},
++    {3, arcs_10_16},
++    {1, arcs_10_17},
++};
++static arc arcs_11_0[1] = {
++    {21, 1},
++};
++static arc arcs_11_1[1] = {
++    {0, 1},
++};
++static state states_11[2] = {
++    {1, arcs_11_0},
++    {1, arcs_11_1},
++};
++static arc arcs_12_0[2] = {
++    {3, 1},
++    {4, 1},
++};
++static arc arcs_12_1[1] = {
++    {0, 1},
++};
++static state states_12[2] = {
++    {2, arcs_12_0},
++    {1, arcs_12_1},
++};
++static arc arcs_13_0[1] = {
++    {35, 1},
++};
++static arc arcs_13_1[2] = {
++    {36, 2},
++    {2, 3},
++};
++static arc arcs_13_2[2] = {
++    {35, 1},
++    {2, 3},
++};
++static arc arcs_13_3[1] = {
++    {0, 3},
++};
++static state states_13[4] = {
++    {1, arcs_13_0},
++    {2, arcs_13_1},
++    {2, arcs_13_2},
++    {1, arcs_13_3},
++};
++static arc arcs_14_0[8] = {
++    {37, 1},
++    {38, 1},
++    {39, 1},
++    {40, 1},
++    {41, 1},
++    {42, 1},
++    {43, 1},
++    {44, 1},
++};
++static arc arcs_14_1[1] = {
++    {0, 1},
++};
++static state states_14[2] = {
++    {8, arcs_14_0},
++    {1, arcs_14_1},
++};
++static arc arcs_15_0[1] = {
++    {45, 1},
++};
++static arc arcs_15_1[3] = {
++    {46, 2},
++    {29, 3},
++    {0, 1},
++};
++static arc arcs_15_2[2] = {
++    {47, 4},
++    {9, 4},
++};
++static arc arcs_15_3[2] = {
++    {47, 5},
++    {45, 5},
++};
++static arc arcs_15_4[1] = {
++    {0, 4},
++};
++static arc arcs_15_5[2] = {
++    {29, 3},
++    {0, 5},
++};
++static state states_15[6] = {
++    {1, arcs_15_0},
++    {3, arcs_15_1},
++    {2, arcs_15_2},
++    {2, arcs_15_3},
++    {1, arcs_15_4},
++    {2, arcs_15_5},
++};
++static arc arcs_16_0[2] = {
++    {24, 1},
++    {48, 1},
++};
++static arc arcs_16_1[2] = {
++    {30, 2},
++    {0, 1},
++};
++static arc arcs_16_2[3] = {
++    {24, 1},
++    {48, 1},
++    {0, 2},
++};
++static state states_16[3] = {
++    {2, arcs_16_0},
++    {2, arcs_16_1},
++    {3, arcs_16_2},
++};
++static arc arcs_17_0[12] = {
++    {49, 1},
++    {50, 1},
++    {51, 1},
++    {52, 1},
++    {53, 1},
++    {54, 1},
++    {55, 1},
++    {56, 1},
++    {57, 1},
++    {58, 1},
++    {59, 1},
++    {60, 1},
++};
++static arc arcs_17_1[1] = {
++    {0, 1},
++};
++static state states_17[2] = {
++    {12, arcs_17_0},
++    {1, arcs_17_1},
++};
++static arc arcs_18_0[1] = {
++    {61, 1},
++};
++static arc arcs_18_1[1] = {
++    {62, 2},
++};
++static arc arcs_18_2[1] = {
++    {0, 2},
++};
++static state states_18[3] = {
++    {1, arcs_18_0},
++    {1, arcs_18_1},
++    {1, arcs_18_2},
++};
++static arc arcs_19_0[1] = {
++    {63, 1},
++};
++static arc arcs_19_1[1] = {
++    {0, 1},
++};
++static state states_19[2] = {
++    {1, arcs_19_0},
++    {1, arcs_19_1},
++};
++static arc arcs_20_0[5] = {
++    {64, 1},
++    {65, 1},
++    {66, 1},
++    {67, 1},
++    {68, 1},
++};
++static arc arcs_20_1[1] = {
++    {0, 1},
++};
++static state states_20[2] = {
++    {5, arcs_20_0},
++    {1, arcs_20_1},
++};
++static arc arcs_21_0[1] = {
++    {69, 1},
++};
++static arc arcs_21_1[1] = {
++    {0, 1},
++};
++static state states_21[2] = {
++    {1, arcs_21_0},
++    {1, arcs_21_1},
++};
++static arc arcs_22_0[1] = {
++    {70, 1},
++};
++static arc arcs_22_1[1] = {
++    {0, 1},
++};
++static state states_22[2] = {
++    {1, arcs_22_0},
++    {1, arcs_22_1},
++};
++static arc arcs_23_0[1] = {
++    {71, 1},
++};
++static arc arcs_23_1[2] = {
++    {9, 2},
++    {0, 1},
++};
++static arc arcs_23_2[1] = {
++    {0, 2},
++};
++static state states_23[3] = {
++    {1, arcs_23_0},
++    {2, arcs_23_1},
++    {1, arcs_23_2},
++};
++static arc arcs_24_0[1] = {
++    {47, 1},
++};
++static arc arcs_24_1[1] = {
++    {0, 1},
++};
++static state states_24[2] = {
++    {1, arcs_24_0},
++    {1, arcs_24_1},
++};
++static arc arcs_25_0[1] = {
++    {72, 1},
++};
++static arc arcs_25_1[2] = {
++    {24, 2},
++    {0, 1},
++};
++static arc arcs_25_2[2] = {
++    {73, 3},
++    {0, 2},
++};
++static arc arcs_25_3[1] = {
++    {24, 4},
++};
++static arc arcs_25_4[1] = {
++    {0, 4},
++};
++static state states_25[5] = {
++    {1, arcs_25_0},
++    {2, arcs_25_1},
++    {2, arcs_25_2},
++    {1, arcs_25_3},
++    {1, arcs_25_4},
++};
++static arc arcs_26_0[2] = {
++    {74, 1},
++    {75, 1},
++};
++static arc arcs_26_1[1] = {
++    {0, 1},
++};
++static state states_26[2] = {
++    {2, arcs_26_0},
++    {1, arcs_26_1},
++};
++static arc arcs_27_0[1] = {
++    {76, 1},
++};
++static arc arcs_27_1[1] = {
++    {77, 2},
++};
++static arc arcs_27_2[1] = {
++    {0, 2},
++};
++static state states_27[3] = {
++    {1, arcs_27_0},
++    {1, arcs_27_1},
++    {1, arcs_27_2},
++};
++static arc arcs_28_0[1] = {
++    {73, 1},
++};
++static arc arcs_28_1[3] = {
++    {78, 2},
++    {79, 2},
++    {12, 3},
++};
++static arc arcs_28_2[4] = {
++    {78, 2},
++    {79, 2},
++    {12, 3},
++    {76, 4},
++};
++static arc arcs_28_3[1] = {
++    {76, 4},
++};
++static arc arcs_28_4[3] = {
++    {31, 5},
++    {13, 6},
++    {80, 5},
++};
++static arc arcs_28_5[1] = {
++    {0, 5},
++};
++static arc arcs_28_6[1] = {
++    {80, 7},
++};
++static arc arcs_28_7[1] = {
++    {15, 5},
++};
++static state states_28[8] = {
++    {1, arcs_28_0},
++    {3, arcs_28_1},
++    {4, arcs_28_2},
++    {1, arcs_28_3},
++    {3, arcs_28_4},
++    {1, arcs_28_5},
++    {1, arcs_28_6},
++    {1, arcs_28_7},
++};
++static arc arcs_29_0[1] = {
++    {21, 1},
++};
++static arc arcs_29_1[2] = {
++    {82, 2},
++    {0, 1},
++};
++static arc arcs_29_2[1] = {
++    {21, 3},
++};
++static arc arcs_29_3[1] = {
++    {0, 3},
++};
++static state states_29[4] = {
++    {1, arcs_29_0},
++    {2, arcs_29_1},
++    {1, arcs_29_2},
++    {1, arcs_29_3},
++};
++static arc arcs_30_0[1] = {
++    {12, 1},
++};
++static arc arcs_30_1[2] = {
++    {82, 2},
++    {0, 1},
++};
++static arc arcs_30_2[1] = {
++    {21, 3},
++};
++static arc arcs_30_3[1] = {
++    {0, 3},
++};
++static state states_30[4] = {
++    {1, arcs_30_0},
++    {2, arcs_30_1},
++    {1, arcs_30_2},
++    {1, arcs_30_3},
++};
++static arc arcs_31_0[1] = {
++    {81, 1},
++};
++static arc arcs_31_1[2] = {
++    {30, 2},
++    {0, 1},
++};
++static arc arcs_31_2[2] = {
++    {81, 1},
++    {0, 2},
++};
++static state states_31[3] = {
++    {1, arcs_31_0},
++    {2, arcs_31_1},
++    {2, arcs_31_2},
++};
++static arc arcs_32_0[1] = {
++    {83, 1},
++};
++static arc arcs_32_1[2] = {
++    {30, 0},
++    {0, 1},
++};
++static state states_32[2] = {
++    {1, arcs_32_0},
++    {2, arcs_32_1},
++};
++static arc arcs_33_0[1] = {
++    {21, 1},
++};
++static arc arcs_33_1[2] = {
++    {78, 0},
++    {0, 1},
++};
++static state states_33[2] = {
++    {1, arcs_33_0},
++    {2, arcs_33_1},
++};
++static arc arcs_34_0[1] = {
++    {84, 1},
++};
++static arc arcs_34_1[1] = {
++    {21, 2},
++};
++static arc arcs_34_2[2] = {
++    {30, 1},
++    {0, 2},
++};
++static state states_34[3] = {
++    {1, arcs_34_0},
++    {1, arcs_34_1},
++    {2, arcs_34_2},
++};
++static arc arcs_35_0[1] = {
++    {85, 1},
++};
++static arc arcs_35_1[1] = {
++    {21, 2},
++};
++static arc arcs_35_2[2] = {
++    {30, 1},
++    {0, 2},
++};
++static state states_35[3] = {
++    {1, arcs_35_0},
++    {1, arcs_35_1},
++    {2, arcs_35_2},
++};
++static arc arcs_36_0[1] = {
++    {86, 1},
++};
++static arc arcs_36_1[1] = {
++    {24, 2},
++};
++static arc arcs_36_2[2] = {
++    {30, 3},
++    {0, 2},
++};
++static arc arcs_36_3[1] = {
++    {24, 4},
++};
++static arc arcs_36_4[1] = {
++    {0, 4},
++};
++static state states_36[5] = {
++    {1, arcs_36_0},
++    {1, arcs_36_1},
++    {2, arcs_36_2},
++    {1, arcs_36_3},
++    {1, arcs_36_4},
++};
++static arc arcs_37_0[8] = {
++    {87, 1},
++    {88, 1},
++    {89, 1},
++    {90, 1},
++    {91, 1},
++    {19, 1},
++    {18, 1},
++    {17, 1},
++};
++static arc arcs_37_1[1] = {
++    {0, 1},
++};
++static state states_37[2] = {
++    {8, arcs_37_0},
++    {1, arcs_37_1},
++};
++static arc arcs_38_0[1] = {
++    {92, 1},
++};
++static arc arcs_38_1[1] = {
++    {24, 2},
++};
++static arc arcs_38_2[1] = {
++    {25, 3},
++};
++static arc arcs_38_3[1] = {
++    {26, 4},
++};
++static arc arcs_38_4[3] = {
++    {93, 1},
++    {94, 5},
++    {0, 4},
++};
++static arc arcs_38_5[1] = {
++    {25, 6},
++};
++static arc arcs_38_6[1] = {
++    {26, 7},
++};
++static arc arcs_38_7[1] = {
++    {0, 7},
++};
++static state states_38[8] = {
++    {1, arcs_38_0},
++    {1, arcs_38_1},
++    {1, arcs_38_2},
++    {1, arcs_38_3},
++    {3, arcs_38_4},
++    {1, arcs_38_5},
++    {1, arcs_38_6},
++    {1, arcs_38_7},
++};
++static arc arcs_39_0[1] = {
++    {95, 1},
++};
++static arc arcs_39_1[1] = {
++    {24, 2},
++};
++static arc arcs_39_2[1] = {
++    {25, 3},
++};
++static arc arcs_39_3[1] = {
++    {26, 4},
++};
++static arc arcs_39_4[2] = {
++    {94, 5},
++    {0, 4},
++};
++static arc arcs_39_5[1] = {
++    {25, 6},
++};
++static arc arcs_39_6[1] = {
++    {26, 7},
++};
++static arc arcs_39_7[1] = {
++    {0, 7},
++};
++static state states_39[8] = {
++    {1, arcs_39_0},
++    {1, arcs_39_1},
++    {1, arcs_39_2},
++    {1, arcs_39_3},
++    {2, arcs_39_4},
++    {1, arcs_39_5},
++    {1, arcs_39_6},
++    {1, arcs_39_7},
++};
++static arc arcs_40_0[1] = {
++    {96, 1},
++};
++static arc arcs_40_1[1] = {
++    {62, 2},
++};
++static arc arcs_40_2[1] = {
++    {97, 3},
++};
++static arc arcs_40_3[1] = {
++    {9, 4},
++};
++static arc arcs_40_4[1] = {
++    {25, 5},
++};
++static arc arcs_40_5[1] = {
++    {26, 6},
++};
++static arc arcs_40_6[2] = {
++    {94, 7},
++    {0, 6},
++};
++static arc arcs_40_7[1] = {
++    {25, 8},
++};
++static arc arcs_40_8[1] = {
++    {26, 9},
++};
++static arc arcs_40_9[1] = {
++    {0, 9},
++};
++static state states_40[10] = {
++    {1, arcs_40_0},
++    {1, arcs_40_1},
++    {1, arcs_40_2},
++    {1, arcs_40_3},
++    {1, arcs_40_4},
++    {1, arcs_40_5},
++    {2, arcs_40_6},
++    {1, arcs_40_7},
++    {1, arcs_40_8},
++    {1, arcs_40_9},
++};
++static arc arcs_41_0[1] = {
++    {98, 1},
++};
++static arc arcs_41_1[1] = {
++    {25, 2},
++};
++static arc arcs_41_2[1] = {
++    {26, 3},
++};
++static arc arcs_41_3[2] = {
++    {99, 4},
++    {100, 5},
++};
++static arc arcs_41_4[1] = {
++    {25, 6},
++};
++static arc arcs_41_5[1] = {
++    {25, 7},
++};
++static arc arcs_41_6[1] = {
++    {26, 8},
++};
++static arc arcs_41_7[1] = {
++    {26, 9},
++};
++static arc arcs_41_8[4] = {
++    {99, 4},
++    {94, 10},
++    {100, 5},
++    {0, 8},
++};
++static arc arcs_41_9[1] = {
++    {0, 9},
++};
++static arc arcs_41_10[1] = {
++    {25, 11},
++};
++static arc arcs_41_11[1] = {
++    {26, 12},
++};
++static arc arcs_41_12[2] = {
++    {100, 5},
++    {0, 12},
++};
++static state states_41[13] = {
++    {1, arcs_41_0},
++    {1, arcs_41_1},
++    {1, arcs_41_2},
++    {2, arcs_41_3},
++    {1, arcs_41_4},
++    {1, arcs_41_5},
++    {1, arcs_41_6},
++    {1, arcs_41_7},
++    {4, arcs_41_8},
++    {1, arcs_41_9},
++    {1, arcs_41_10},
++    {1, arcs_41_11},
++    {2, arcs_41_12},
++};
++static arc arcs_42_0[1] = {
++    {101, 1},
++};
++static arc arcs_42_1[1] = {
++    {102, 2},
++};
++static arc arcs_42_2[2] = {
++    {30, 1},
++    {25, 3},
++};
++static arc arcs_42_3[1] = {
++    {26, 4},
++};
++static arc arcs_42_4[1] = {
++    {0, 4},
++};
++static state states_42[5] = {
++    {1, arcs_42_0},
++    {1, arcs_42_1},
++    {2, arcs_42_2},
++    {1, arcs_42_3},
++    {1, arcs_42_4},
++};
++static arc arcs_43_0[1] = {
++    {24, 1},
++};
++static arc arcs_43_1[2] = {
++    {82, 2},
++    {0, 1},
++};
++static arc arcs_43_2[1] = {
++    {103, 3},
++};
++static arc arcs_43_3[1] = {
++    {0, 3},
++};
++static state states_43[4] = {
++    {1, arcs_43_0},
++    {2, arcs_43_1},
++    {1, arcs_43_2},
++    {1, arcs_43_3},
++};
++static arc arcs_44_0[1] = {
++    {104, 1},
++};
++static arc arcs_44_1[2] = {
++    {24, 2},
++    {0, 1},
++};
++static arc arcs_44_2[2] = {
++    {82, 3},
++    {0, 2},
++};
++static arc arcs_44_3[1] = {
++    {21, 4},
++};
++static arc arcs_44_4[1] = {
++    {0, 4},
++};
++static state states_44[5] = {
++    {1, arcs_44_0},
++    {2, arcs_44_1},
++    {2, arcs_44_2},
++    {1, arcs_44_3},
++    {1, arcs_44_4},
++};
++static arc arcs_45_0[2] = {
++    {3, 1},
++    {2, 2},
++};
++static arc arcs_45_1[1] = {
++    {0, 1},
++};
++static arc arcs_45_2[1] = {
++    {105, 3},
++};
++static arc arcs_45_3[1] = {
++    {6, 4},
++};
++static arc arcs_45_4[2] = {
++    {6, 4},
++    {106, 1},
++};
++static state states_45[5] = {
++    {2, arcs_45_0},
++    {1, arcs_45_1},
++    {1, arcs_45_2},
++    {1, arcs_45_3},
++    {2, arcs_45_4},
++};
++static arc arcs_46_0[2] = {
++    {107, 1},
++    {108, 2},
++};
++static arc arcs_46_1[2] = {
++    {92, 3},
++    {0, 1},
++};
++static arc arcs_46_2[1] = {
++    {0, 2},
++};
++static arc arcs_46_3[1] = {
++    {107, 4},
++};
++static arc arcs_46_4[1] = {
++    {94, 5},
++};
++static arc arcs_46_5[1] = {
++    {24, 2},
++};
++static state states_46[6] = {
++    {2, arcs_46_0},
++    {2, arcs_46_1},
++    {1, arcs_46_2},
++    {1, arcs_46_3},
++    {1, arcs_46_4},
++    {1, arcs_46_5},
++};
++static arc arcs_47_0[2] = {
++    {107, 1},
++    {110, 1},
++};
++static arc arcs_47_1[1] = {
++    {0, 1},
++};
++static state states_47[2] = {
++    {2, arcs_47_0},
++    {1, arcs_47_1},
++};
++static arc arcs_48_0[1] = {
++    {111, 1},
++};
++static arc arcs_48_1[2] = {
++    {33, 2},
++    {25, 3},
++};
++static arc arcs_48_2[1] = {
++    {25, 3},
++};
++static arc arcs_48_3[1] = {
++    {24, 4},
++};
++static arc arcs_48_4[1] = {
++    {0, 4},
++};
++static state states_48[5] = {
++    {1, arcs_48_0},
++    {2, arcs_48_1},
++    {1, arcs_48_2},
++    {1, arcs_48_3},
++    {1, arcs_48_4},
++};
++static arc arcs_49_0[1] = {
++    {111, 1},
++};
++static arc arcs_49_1[2] = {
++    {33, 2},
++    {25, 3},
++};
++static arc arcs_49_2[1] = {
++    {25, 3},
++};
++static arc arcs_49_3[1] = {
++    {109, 4},
++};
++static arc arcs_49_4[1] = {
++    {0, 4},
++};
++static state states_49[5] = {
++    {1, arcs_49_0},
++    {2, arcs_49_1},
++    {1, arcs_49_2},
++    {1, arcs_49_3},
++    {1, arcs_49_4},
++};
++static arc arcs_50_0[1] = {
++    {112, 1},
++};
++static arc arcs_50_1[2] = {
++    {113, 0},
++    {0, 1},
++};
++static state states_50[2] = {
++    {1, arcs_50_0},
++    {2, arcs_50_1},
++};
++static arc arcs_51_0[1] = {
++    {114, 1},
++};
++static arc arcs_51_1[2] = {
++    {115, 0},
++    {0, 1},
++};
++static state states_51[2] = {
++    {1, arcs_51_0},
++    {2, arcs_51_1},
++};
++static arc arcs_52_0[2] = {
++    {116, 1},
++    {117, 2},
++};
++static arc arcs_52_1[1] = {
++    {114, 2},
++};
++static arc arcs_52_2[1] = {
++    {0, 2},
++};
++static state states_52[3] = {
++    {2, arcs_52_0},
++    {1, arcs_52_1},
++    {1, arcs_52_2},
++};
++static arc arcs_53_0[1] = {
++    {103, 1},
++};
++static arc arcs_53_1[2] = {
++    {118, 0},
++    {0, 1},
++};
++static state states_53[2] = {
++    {1, arcs_53_0},
++    {2, arcs_53_1},
++};
++static arc arcs_54_0[10] = {
++    {119, 1},
++    {120, 1},
++    {121, 1},
++    {122, 1},
++    {123, 1},
++    {124, 1},
++    {125, 1},
++    {97, 1},
++    {116, 2},
++    {126, 3},
++};
++static arc arcs_54_1[1] = {
++    {0, 1},
++};
++static arc arcs_54_2[1] = {
++    {97, 1},
++};
++static arc arcs_54_3[2] = {
++    {116, 1},
++    {0, 3},
++};
++static state states_54[4] = {
++    {10, arcs_54_0},
++    {1, arcs_54_1},
++    {1, arcs_54_2},
++    {2, arcs_54_3},
++};
++static arc arcs_55_0[1] = {
++    {31, 1},
++};
++static arc arcs_55_1[1] = {
++    {103, 2},
++};
++static arc arcs_55_2[1] = {
++    {0, 2},
++};
++static state states_55[3] = {
++    {1, arcs_55_0},
++    {1, arcs_55_1},
++    {1, arcs_55_2},
++};
++static arc arcs_56_0[1] = {
++    {127, 1},
++};
++static arc arcs_56_1[2] = {
++    {128, 0},
++    {0, 1},
++};
++static state states_56[2] = {
++    {1, arcs_56_0},
++    {2, arcs_56_1},
++};
++static arc arcs_57_0[1] = {
++    {129, 1},
++};
++static arc arcs_57_1[2] = {
++    {130, 0},
++    {0, 1},
++};
++static state states_57[2] = {
++    {1, arcs_57_0},
++    {2, arcs_57_1},
++};
++static arc arcs_58_0[1] = {
++    {131, 1},
++};
++static arc arcs_58_1[2] = {
++    {132, 0},
++    {0, 1},
++};
++static state states_58[2] = {
++    {1, arcs_58_0},
++    {2, arcs_58_1},
++};
++static arc arcs_59_0[1] = {
++    {133, 1},
++};
++static arc arcs_59_1[3] = {
++    {134, 0},
++    {135, 0},
++    {0, 1},
++};
++static state states_59[2] = {
++    {1, arcs_59_0},
++    {3, arcs_59_1},
++};
++static arc arcs_60_0[1] = {
++    {136, 1},
++};
++static arc arcs_60_1[3] = {
++    {137, 0},
++    {138, 0},
++    {0, 1},
++};
++static state states_60[2] = {
++    {1, arcs_60_0},
++    {3, arcs_60_1},
++};
++static arc arcs_61_0[1] = {
++    {139, 1},
++};
++static arc arcs_61_1[5] = {
++    {31, 0},
++    {140, 0},
++    {141, 0},
++    {142, 0},
++    {0, 1},
++};
++static state states_61[2] = {
++    {1, arcs_61_0},
++    {5, arcs_61_1},
++};
++static arc arcs_62_0[4] = {
++    {137, 1},
++    {138, 1},
++    {143, 1},
++    {144, 2},
++};
++static arc arcs_62_1[1] = {
++    {139, 2},
++};
++static arc arcs_62_2[1] = {
++    {0, 2},
++};
++static state states_62[3] = {
++    {4, arcs_62_0},
++    {1, arcs_62_1},
++    {1, arcs_62_2},
++};
++static arc arcs_63_0[1] = {
++    {145, 1},
++};
++static arc arcs_63_1[3] = {
++    {146, 1},
++    {32, 2},
++    {0, 1},
++};
++static arc arcs_63_2[1] = {
++    {139, 3},
++};
++static arc arcs_63_3[1] = {
++    {0, 3},
++};
++static state states_63[4] = {
++    {1, arcs_63_0},
++    {3, arcs_63_1},
++    {1, arcs_63_2},
++    {1, arcs_63_3},
++};
++static arc arcs_64_0[10] = {
++    {13, 1},
++    {148, 2},
++    {150, 3},
++    {21, 4},
++    {153, 4},
++    {154, 5},
++    {79, 4},
++    {155, 4},
++    {156, 4},
++    {157, 4},
++};
++static arc arcs_64_1[3] = {
++    {47, 6},
++    {147, 6},
++    {15, 4},
++};
++static arc arcs_64_2[2] = {
++    {147, 7},
++    {149, 4},
++};
++static arc arcs_64_3[2] = {
++    {151, 8},
++    {152, 4},
++};
++static arc arcs_64_4[1] = {
++    {0, 4},
++};
++static arc arcs_64_5[2] = {
++    {154, 5},
++    {0, 5},
++};
++static arc arcs_64_6[1] = {
++    {15, 4},
++};
++static arc arcs_64_7[1] = {
++    {149, 4},
++};
++static arc arcs_64_8[1] = {
++    {152, 4},
++};
++static state states_64[9] = {
++    {10, arcs_64_0},
++    {3, arcs_64_1},
++    {2, arcs_64_2},
++    {2, arcs_64_3},
++    {1, arcs_64_4},
++    {2, arcs_64_5},
++    {1, arcs_64_6},
++    {1, arcs_64_7},
++    {1, arcs_64_8},
++};
++static arc arcs_65_0[2] = {
++    {24, 1},
++    {48, 1},
++};
++static arc arcs_65_1[3] = {
++    {158, 2},
++    {30, 3},
++    {0, 1},
++};
++static arc arcs_65_2[1] = {
++    {0, 2},
++};
++static arc arcs_65_3[3] = {
++    {24, 4},
++    {48, 4},
++    {0, 3},
++};
++static arc arcs_65_4[2] = {
++    {30, 3},
++    {0, 4},
++};
++static state states_65[5] = {
++    {2, arcs_65_0},
++    {3, arcs_65_1},
++    {1, arcs_65_2},
++    {3, arcs_65_3},
++    {2, arcs_65_4},
++};
++static arc arcs_66_0[3] = {
++    {13, 1},
++    {148, 2},
++    {78, 3},
++};
++static arc arcs_66_1[2] = {
++    {14, 4},
++    {15, 5},
++};
++static arc arcs_66_2[1] = {
++    {159, 6},
++};
++static arc arcs_66_3[1] = {
++    {21, 5},
++};
++static arc arcs_66_4[1] = {
++    {15, 5},
++};
++static arc arcs_66_5[1] = {
++    {0, 5},
++};
++static arc arcs_66_6[1] = {
++    {149, 5},
++};
++static state states_66[7] = {
++    {3, arcs_66_0},
++    {2, arcs_66_1},
++    {1, arcs_66_2},
++    {1, arcs_66_3},
++    {1, arcs_66_4},
++    {1, arcs_66_5},
++    {1, arcs_66_6},
++};
++static arc arcs_67_0[1] = {
++    {160, 1},
++};
++static arc arcs_67_1[2] = {
++    {30, 2},
++    {0, 1},
++};
++static arc arcs_67_2[2] = {
++    {160, 1},
++    {0, 2},
++};
++static state states_67[3] = {
++    {1, arcs_67_0},
++    {2, arcs_67_1},
++    {2, arcs_67_2},
++};
++static arc arcs_68_0[2] = {
++    {24, 1},
++    {25, 2},
++};
++static arc arcs_68_1[2] = {
++    {25, 2},
++    {0, 1},
++};
++static arc arcs_68_2[3] = {
++    {24, 3},
++    {161, 4},
++    {0, 2},
++};
++static arc arcs_68_3[2] = {
++    {161, 4},
++    {0, 3},
++};
++static arc arcs_68_4[1] = {
++    {0, 4},
++};
++static state states_68[5] = {
++    {2, arcs_68_0},
++    {2, arcs_68_1},
++    {3, arcs_68_2},
++    {2, arcs_68_3},
++    {1, arcs_68_4},
++};
++static arc arcs_69_0[1] = {
++    {25, 1},
++};
++static arc arcs_69_1[2] = {
++    {24, 2},
++    {0, 1},
++};
++static arc arcs_69_2[1] = {
++    {0, 2},
++};
++static state states_69[3] = {
++    {1, arcs_69_0},
++    {2, arcs_69_1},
++    {1, arcs_69_2},
++};
++static arc arcs_70_0[2] = {
++    {103, 1},
++    {48, 1},
++};
++static arc arcs_70_1[2] = {
++    {30, 2},
++    {0, 1},
++};
++static arc arcs_70_2[3] = {
++    {103, 1},
++    {48, 1},
++    {0, 2},
++};
++static state states_70[3] = {
++    {2, arcs_70_0},
++    {2, arcs_70_1},
++    {3, arcs_70_2},
++};
++static arc arcs_71_0[1] = {
++    {24, 1},
++};
++static arc arcs_71_1[2] = {
++    {30, 2},
++    {0, 1},
++};
++static arc arcs_71_2[2] = {
++    {24, 1},
++    {0, 2},
++};
++static state states_71[3] = {
++    {1, arcs_71_0},
++    {2, arcs_71_1},
++    {2, arcs_71_2},
++};
++static arc arcs_72_0[1] = {
++    {24, 1},
++};
++static arc arcs_72_1[4] = {
++    {25, 2},
++    {158, 3},
++    {30, 4},
++    {0, 1},
++};
++static arc arcs_72_2[1] = {
++    {24, 5},
++};
++static arc arcs_72_3[1] = {
++    {0, 3},
++};
++static arc arcs_72_4[2] = {
++    {24, 6},
++    {0, 4},
++};
++static arc arcs_72_5[3] = {
++    {158, 3},
++    {30, 7},
++    {0, 5},
++};
++static arc arcs_72_6[2] = {
++    {30, 4},
++    {0, 6},
++};
++static arc arcs_72_7[2] = {
++    {24, 8},
++    {0, 7},
++};
++static arc arcs_72_8[1] = {
++    {25, 9},
++};
++static arc arcs_72_9[1] = {
++    {24, 10},
++};
++static arc arcs_72_10[2] = {
++    {30, 7},
++    {0, 10},
++};
++static state states_72[11] = {
++    {1, arcs_72_0},
++    {4, arcs_72_1},
++    {1, arcs_72_2},
++    {1, arcs_72_3},
++    {2, arcs_72_4},
++    {3, arcs_72_5},
++    {2, arcs_72_6},
++    {2, arcs_72_7},
++    {1, arcs_72_8},
++    {1, arcs_72_9},
++    {2, arcs_72_10},
++};
++static arc arcs_73_0[1] = {
++    {162, 1},
++};
++static arc arcs_73_1[1] = {
++    {21, 2},
++};
++static arc arcs_73_2[2] = {
++    {13, 3},
++    {25, 4},
++};
++static arc arcs_73_3[2] = {
++    {14, 5},
++    {15, 6},
++};
++static arc arcs_73_4[1] = {
++    {26, 7},
++};
++static arc arcs_73_5[1] = {
++    {15, 6},
++};
++static arc arcs_73_6[1] = {
++    {25, 4},
++};
++static arc arcs_73_7[1] = {
++    {0, 7},
++};
++static state states_73[8] = {
++    {1, arcs_73_0},
++    {1, arcs_73_1},
++    {2, arcs_73_2},
++    {2, arcs_73_3},
++    {1, arcs_73_4},
++    {1, arcs_73_5},
++    {1, arcs_73_6},
++    {1, arcs_73_7},
++};
++static arc arcs_74_0[3] = {
++    {163, 1},
++    {31, 2},
++    {32, 3},
++};
++static arc arcs_74_1[2] = {
++    {30, 4},
++    {0, 1},
++};
++static arc arcs_74_2[1] = {
++    {24, 5},
++};
++static arc arcs_74_3[1] = {
++    {24, 6},
++};
++static arc arcs_74_4[4] = {
++    {163, 1},
++    {31, 2},
++    {32, 3},
++    {0, 4},
++};
++static arc arcs_74_5[2] = {
++    {30, 7},
++    {0, 5},
++};
++static arc arcs_74_6[1] = {
++    {0, 6},
++};
++static arc arcs_74_7[2] = {
++    {163, 5},
++    {32, 3},
++};
++static state states_74[8] = {
++    {3, arcs_74_0},
++    {2, arcs_74_1},
++    {1, arcs_74_2},
++    {1, arcs_74_3},
++    {4, arcs_74_4},
++    {2, arcs_74_5},
++    {1, arcs_74_6},
++    {2, arcs_74_7},
++};
++static arc arcs_75_0[1] = {
++    {24, 1},
++};
++static arc arcs_75_1[3] = {
++    {158, 2},
++    {29, 3},
++    {0, 1},
++};
++static arc arcs_75_2[1] = {
++    {0, 2},
++};
++static arc arcs_75_3[1] = {
++    {24, 2},
++};
++static state states_75[4] = {
++    {1, arcs_75_0},
++    {3, arcs_75_1},
++    {1, arcs_75_2},
++    {1, arcs_75_3},
++};
++static arc arcs_76_0[2] = {
++    {158, 1},
++    {165, 1},
++};
++static arc arcs_76_1[1] = {
++    {0, 1},
++};
++static state states_76[2] = {
++    {2, arcs_76_0},
++    {1, arcs_76_1},
++};
++static arc arcs_77_0[1] = {
++    {96, 1},
++};
++static arc arcs_77_1[1] = {
++    {62, 2},
++};
++static arc arcs_77_2[1] = {
++    {97, 3},
++};
++static arc arcs_77_3[1] = {
++    {107, 4},
++};
++static arc arcs_77_4[2] = {
++    {164, 5},
++    {0, 4},
++};
++static arc arcs_77_5[1] = {
++    {0, 5},
++};
++static state states_77[6] = {
++    {1, arcs_77_0},
++    {1, arcs_77_1},
++    {1, arcs_77_2},
++    {1, arcs_77_3},
++    {2, arcs_77_4},
++    {1, arcs_77_5},
++};
++static arc arcs_78_0[1] = {
++    {92, 1},
++};
++static arc arcs_78_1[1] = {
++    {109, 2},
++};
++static arc arcs_78_2[2] = {
++    {164, 3},
++    {0, 2},
++};
++static arc arcs_78_3[1] = {
++    {0, 3},
++};
++static state states_78[4] = {
++    {1, arcs_78_0},
++    {1, arcs_78_1},
++    {2, arcs_78_2},
++    {1, arcs_78_3},
++};
++static arc arcs_79_0[1] = {
++    {21, 1},
++};
++static arc arcs_79_1[1] = {
++    {0, 1},
++};
++static state states_79[2] = {
++    {1, arcs_79_0},
++    {1, arcs_79_1},
++};
++static arc arcs_80_0[1] = {
++    {167, 1},
++};
++static arc arcs_80_1[2] = {
++    {168, 2},
++    {0, 1},
++};
++static arc arcs_80_2[1] = {
++    {0, 2},
++};
++static state states_80[3] = {
++    {1, arcs_80_0},
++    {2, arcs_80_1},
++    {1, arcs_80_2},
++};
++static arc arcs_81_0[2] = {
++    {73, 1},
++    {9, 2},
++};
++static arc arcs_81_1[1] = {
++    {24, 2},
++};
++static arc arcs_81_2[1] = {
++    {0, 2},
++};
++static state states_81[3] = {
++    {2, arcs_81_0},
++    {1, arcs_81_1},
++    {1, arcs_81_2},
++};
++static dfa dfas[82] = {
++    {256, "single_input", 0, 3, states_0,
++     "\004\050\060\200\000\000\000\240\340\223\160\220\045\200\020\000\000\206\120\076\204\000"},
++    {257, "file_input", 0, 2, states_1,
++     "\204\050\060\200\000\000\000\240\340\223\160\220\045\200\020\000\000\206\120\076\204\000"},
++    {258, "eval_input", 0, 3, states_2,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {259, "decorator", 0, 7, states_3,
++     "\000\010\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {260, "decorators", 0, 2, states_4,
++     "\000\010\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {261, "decorated", 0, 3, states_5,
++     "\000\010\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {262, "funcdef", 0, 8, states_6,
++     "\000\000\020\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {263, "parameters", 0, 4, states_7,
++     "\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {264, "typedargslist", 0, 18, states_8,
++     "\000\000\040\200\001\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {265, "tfpdef", 0, 4, states_9,
++     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {266, "varargslist", 0, 18, states_10,
++     "\000\000\040\200\001\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {267, "vfpdef", 0, 2, states_11,
++     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {268, "stmt", 0, 2, states_12,
++     "\000\050\060\200\000\000\000\240\340\223\160\220\045\200\020\000\000\206\120\076\204\000"},
++    {269, "simple_stmt", 0, 4, states_13,
++     "\000\040\040\200\000\000\000\240\340\223\160\000\000\200\020\000\000\206\120\076\200\000"},
++    {270, "small_stmt", 0, 2, states_14,
++     "\000\040\040\200\000\000\000\240\340\223\160\000\000\200\020\000\000\206\120\076\200\000"},
++    {271, "expr_stmt", 0, 6, states_15,
++     "\000\040\040\200\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {272, "testlist_star_expr", 0, 3, states_16,
++     "\000\040\040\200\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {273, "augassign", 0, 2, states_17,
++     "\000\000\000\000\000\000\376\037\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {274, "del_stmt", 0, 3, states_18,
++     "\000\000\000\000\000\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {275, "pass_stmt", 0, 2, states_19,
++     "\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {276, "flow_stmt", 0, 2, states_20,
++     "\000\000\000\000\000\000\000\000\340\001\000\000\000\000\000\000\000\000\000\000\200\000"},
++    {277, "break_stmt", 0, 2, states_21,
++     "\000\000\000\000\000\000\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {278, "continue_stmt", 0, 2, states_22,
++     "\000\000\000\000\000\000\000\000\100\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {279, "return_stmt", 0, 3, states_23,
++     "\000\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {280, "yield_stmt", 0, 2, states_24,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\200\000"},
++    {281, "raise_stmt", 0, 5, states_25,
++     "\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {282, "import_stmt", 0, 2, states_26,
++     "\000\000\000\000\000\000\000\000\000\022\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {283, "import_name", 0, 3, states_27,
++     "\000\000\000\000\000\000\000\000\000\020\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {284, "import_from", 0, 8, states_28,
++     "\000\000\000\000\000\000\000\000\000\002\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {285, "import_as_name", 0, 4, states_29,
++     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {286, "dotted_as_name", 0, 4, states_30,
++     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {287, "import_as_names", 0, 3, states_31,
++     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {288, "dotted_as_names", 0, 2, states_32,
++     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {289, "dotted_name", 0, 2, states_33,
++     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {290, "global_stmt", 0, 3, states_34,
++     "\000\000\000\000\000\000\000\000\000\000\020\000\000\000\000\000\000\000\000\000\000\000"},
++    {291, "nonlocal_stmt", 0, 3, states_35,
++     "\000\000\000\000\000\000\000\000\000\000\040\000\000\000\000\000\000\000\000\000\000\000"},
++    {292, "assert_stmt", 0, 5, states_36,
++     "\000\000\000\000\000\000\000\000\000\000\100\000\000\000\000\000\000\000\000\000\000\000"},
++    {293, "compound_stmt", 0, 2, states_37,
++     "\000\010\020\000\000\000\000\000\000\000\000\220\045\000\000\000\000\000\000\000\004\000"},
++    {294, "if_stmt", 0, 8, states_38,
++     "\000\000\000\000\000\000\000\000\000\000\000\020\000\000\000\000\000\000\000\000\000\000"},
++    {295, "while_stmt", 0, 8, states_39,
++     "\000\000\000\000\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000"},
++    {296, "for_stmt", 0, 10, states_40,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000"},
++    {297, "try_stmt", 0, 13, states_41,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\004\000\000\000\000\000\000\000\000\000"},
++    {298, "with_stmt", 0, 5, states_42,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\040\000\000\000\000\000\000\000\000\000"},
++    {299, "with_item", 0, 4, states_43,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {300, "except_clause", 0, 5, states_44,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000"},
++    {301, "suite", 0, 5, states_45,
++     "\004\040\040\200\000\000\000\240\340\223\160\000\000\200\020\000\000\206\120\076\200\000"},
++    {302, "test", 0, 6, states_46,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {303, "test_nocond", 0, 2, states_47,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {304, "lambdef", 0, 5, states_48,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000"},
++    {305, "lambdef_nocond", 0, 5, states_49,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000"},
++    {306, "or_test", 0, 2, states_50,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\020\000\000\206\120\076\000\000"},
++    {307, "and_test", 0, 2, states_51,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\020\000\000\206\120\076\000\000"},
++    {308, "not_test", 0, 3, states_52,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\020\000\000\206\120\076\000\000"},
++    {309, "comparison", 0, 2, states_53,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
++    {310, "comp_op", 0, 4, states_54,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\002\000\220\177\000\000\000\000\000\000"},
++    {311, "star_expr", 0, 3, states_55,
++     "\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {312, "expr", 0, 2, states_56,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
++    {313, "xor_expr", 0, 2, states_57,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
++    {314, "and_expr", 0, 2, states_58,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
++    {315, "shift_expr", 0, 2, states_59,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
++    {316, "arith_expr", 0, 2, states_60,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
++    {317, "term", 0, 2, states_61,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
++    {318, "factor", 0, 3, states_62,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
++    {319, "power", 0, 4, states_63,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\120\076\000\000"},
++    {320, "atom", 0, 9, states_64,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\000\000\000\000\000\120\076\000\000"},
++    {321, "testlist_comp", 0, 5, states_65,
++     "\000\040\040\200\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {322, "trailer", 0, 7, states_66,
++     "\000\040\000\000\000\000\000\000\000\100\000\000\000\000\000\000\000\000\020\000\000\000"},
++    {323, "subscriptlist", 0, 3, states_67,
++     "\000\040\040\002\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {324, "subscript", 0, 5, states_68,
++     "\000\040\040\002\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {325, "sliceop", 0, 3, states_69,
++     "\000\000\000\002\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {326, "exprlist", 0, 3, states_70,
++     "\000\040\040\200\000\000\000\000\000\200\000\000\000\000\000\000\000\206\120\076\000\000"},
++    {327, "testlist", 0, 3, states_71,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {328, "dictorsetmaker", 0, 11, states_72,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {329, "classdef", 0, 8, states_73,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\004\000"},
++    {330, "arglist", 0, 8, states_74,
++     "\000\040\040\200\001\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {331, "argument", 0, 4, states_75,
++     "\000\040\040\000\000\000\000\000\000\200\000\000\000\200\020\000\000\206\120\076\000\000"},
++    {332, "comp_iter", 0, 2, states_76,
++     "\000\000\000\000\000\000\000\000\000\000\000\020\001\000\000\000\000\000\000\000\000\000"},
++    {333, "comp_for", 0, 6, states_77,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000"},
++    {334, "comp_if", 0, 4, states_78,
++     "\000\000\000\000\000\000\000\000\000\000\000\020\000\000\000\000\000\000\000\000\000\000"},
++    {335, "encoding_decl", 0, 2, states_79,
++     "\000\000\040\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"},
++    {336, "yield_expr", 0, 3, states_80,
++     "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\200\000"},
++    {337, "yield_arg", 0, 3, states_81,
++     "\000\040\040\000\000\000\000\000\000\202\000\000\000\200\020\000\000\206\120\076\000\000"},
++};
++static label labels[169] = {
++    {0, "EMPTY"},
++    {256, 0},
++    {4, 0},
++    {269, 0},
++    {293, 0},
++    {257, 0},
++    {268, 0},
++    {0, 0},
++    {258, 0},
++    {327, 0},
++    {259, 0},
++    {49, 0},
++    {289, 0},
++    {7, 0},
++    {330, 0},
++    {8, 0},
++    {260, 0},
++    {261, 0},
++    {329, 0},
++    {262, 0},
++    {1, "def"},
++    {1, 0},
++    {263, 0},
++    {50, 0},
++    {302, 0},
++    {11, 0},
++    {301, 0},
++    {264, 0},
++    {265, 0},
++    {22, 0},
++    {12, 0},
++    {16, 0},
++    {35, 0},
++    {266, 0},
++    {267, 0},
++    {270, 0},
++    {13, 0},
++    {271, 0},
++    {274, 0},
++    {275, 0},
++    {276, 0},
++    {282, 0},
++    {290, 0},
++    {291, 0},
++    {292, 0},
++    {272, 0},
++    {273, 0},
++    {336, 0},
++    {311, 0},
++    {36, 0},
++    {37, 0},
++    {38, 0},
++    {39, 0},
++    {40, 0},
++    {41, 0},
++    {42, 0},
++    {43, 0},
++    {44, 0},
++    {45, 0},
++    {46, 0},
++    {48, 0},
++    {1, "del"},
++    {326, 0},
++    {1, "pass"},
++    {277, 0},
++    {278, 0},
++    {279, 0},
++    {281, 0},
++    {280, 0},
++    {1, "break"},
++    {1, "continue"},
++    {1, "return"},
++    {1, "raise"},
++    {1, "from"},
++    {283, 0},
++    {284, 0},
++    {1, "import"},
++    {288, 0},
++    {23, 0},
++    {51, 0},
++    {287, 0},
++    {285, 0},
++    {1, "as"},
++    {286, 0},
++    {1, "global"},
++    {1, "nonlocal"},
++    {1, "assert"},
++    {294, 0},
++    {295, 0},
++    {296, 0},
++    {297, 0},
++    {298, 0},
++    {1, "if"},
++    {1, "elif"},
++    {1, "else"},
++    {1, "while"},
++    {1, "for"},
++    {1, "in"},
++    {1, "try"},
++    {300, 0},
++    {1, "finally"},
++    {1, "with"},
++    {299, 0},
++    {312, 0},
++    {1, "except"},
++    {5, 0},
++    {6, 0},
++    {306, 0},
++    {304, 0},
++    {303, 0},
++    {305, 0},
++    {1, "lambda"},
++    {307, 0},
++    {1, "or"},
++    {308, 0},
++    {1, "and"},
++    {1, "not"},
++    {309, 0},
++    {310, 0},
++    {20, 0},
++    {21, 0},
++    {27, 0},
++    {30, 0},
++    {29, 0},
++    {28, 0},
++    {28, 0},
++    {1, "is"},
++    {313, 0},
++    {18, 0},
++    {314, 0},
++    {32, 0},
++    {315, 0},
++    {19, 0},
++    {316, 0},
++    {33, 0},
++    {34, 0},
++    {317, 0},
++    {14, 0},
++    {15, 0},
++    {318, 0},
++    {17, 0},
++    {24, 0},
++    {47, 0},
++    {31, 0},
++    {319, 0},
++    {320, 0},
++    {322, 0},
++    {321, 0},
++    {9, 0},
++    {10, 0},
++    {25, 0},
++    {328, 0},
++    {26, 0},
++    {2, 0},
++    {3, 0},
++    {1, "None"},
++    {1, "True"},
++    {1, "False"},
++    {333, 0},
++    {323, 0},
++    {324, 0},
++    {325, 0},
++    {1, "class"},
++    {331, 0},
++    {332, 0},
++    {334, 0},
++    {335, 0},
++    {1, "yield"},
++    {337, 0},
++};
++grammar _PyParser_Grammar = {
++    82,
++    dfas,
++    {169, labels},
++    256
++};
+diff -r da161499d0c0 -r 7b0db7469f0a Parser/metagrammar.c
+--- a/Parser/metagrammar.c	Mon Dec 17 20:46:29 2012 +0100
++++ b/Parser/metagrammar.c	Tue Dec 18 21:47:22 2012 -0500
+@@ -139,7 +139,7 @@
+     {7, 0},
+     {8, 0},
+ };
+-static grammar _PyParser_Grammar = {
++static grammar _PyParser_MetaGrammar = {
+     6,
+     dfas,
+     {19, labels},
+@@ -149,7 +149,7 @@
+ grammar *
+ meta_grammar(void)
+ {
+-    return &_PyParser_Grammar;
++    return &_PyParser_MetaGrammar;
+ }
+ 
+ grammar *

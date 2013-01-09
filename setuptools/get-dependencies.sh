@@ -830,8 +830,8 @@ buildInstallGDAL() {
 
 buildInstallPython() {
     local _project="Python-*"
-    local _binCheck="python33"
-    local _exeToTest="python33 --version"
+    local _binCheck="python3.3"
+    local _exeToTest="python3.3 --version"
 
     echo
 echo "Building $_project..."
@@ -857,10 +857,10 @@ echo "Building $_project..."
             #wget http://bugs.python.org/file27474/py3k-20121004-MINGW.patch
             
             #my update
-            cp /home/developer/patches/python/3.0.0/py3k-20121227-MINGW.patch .
+            cp /home/developer/patches/python/3.0.0/py3k-20130109-MINGW.patch .
         fi
         
-        ad_patch "py3k-20121227-MINGW.patch"
+        ad_patch "py3k-20130109-MINGW.patch"
         
         echo "Executing autoconf..."
         
@@ -909,7 +909,7 @@ echo "Building $_project..."
 
         ad_make $_project
         
-        ln -s /mingw/bin/python33 /mingw/bin/python
+        ln -s /mingw/bin/python3.3 /mingw/bin/python
     else
         echo "Already Installed."
     fi
@@ -1260,8 +1260,8 @@ buildInstallBoostJam
 buildInstallBoost
 buildInstallPython
 buildInstallWAF
-buildInstallPyCairo
-#buildInstallMapnik
+#buildInstallPyCairo
+buildInstallMapnik
 #buildInstallAPR
 #buildInstallSVN
 #buildInstallGit

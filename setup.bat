@@ -78,6 +78,11 @@ ECHO.
 msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
 if not exist "msys\home\developer" msys\bin\bash -l -c "mkdir /home/developer"
 
+ECHO "Make Sure Previous PYTHONPATH is cleared..."
+ECHO.
+
+COPY setuptools\profile msys\etc 
+
 ECHO "Checking for Visual Studio 2012 Express for Windows Desktop..."
 ECHO.
 reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\11.0"
