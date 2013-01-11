@@ -857,10 +857,10 @@ echo "Building $_project..."
             #wget http://bugs.python.org/file27474/py3k-20121004-MINGW.patch
             
             #my update
-            cp /home/developer/patches/python/3.0.0/py3k-20130109-MINGW.patch .
+            cp /home/developer/patches/python/3.0.0/py3k-20130110-MINGW.patch .
         fi
         
-        ad_patch "py3k-20130109-MINGW.patch"
+        ad_patch "py3k-20130110-MINGW.patch"
         
         echo "Executing autoconf..."
         
@@ -905,7 +905,7 @@ echo "Building $_project..."
         
         echo "Using flags: $CFLAGS"
                
-        ad_configure "$_project" "--with-universal-archs=64-bit --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"      
+        ad_configure "$_project" "--with-universal-archs=64-bit --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
         ad_make $_project
         
@@ -940,6 +940,8 @@ buildInstallPyCairo() {
     echo
     
     ad_preCleanEnv
+
+    export "PYTHON_CONFIG=/mingw/bin/python3.3-config"
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -947,14 +949,11 @@ buildInstallPyCairo() {
         
         cd $_project
         
-        ./waf configure --target=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw
+        ./waf configure --target=x86_64-w64-mingw32 --prefix=/mingw --check-c-compiler=gcc
         ./waf build
         ./waf install
         
         cd ..
-        #from distutils.sysconfig import get_config_var
-        #from distutils.sysconfig import get_python_lib
-        #breaks waf: print(repr(get_config_var('LIBDEST') or ''))
     else
         echo "Already Installed."
     fi
@@ -1260,7 +1259,7 @@ buildInstallBoostJam
 buildInstallBoost
 buildInstallPython
 buildInstallWAF
-#buildInstallPyCairo
+buildInstallPyCairo
 buildInstallMapnik
 #buildInstallAPR
 #buildInstallSVN
