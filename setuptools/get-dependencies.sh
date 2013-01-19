@@ -62,7 +62,10 @@ export AD_CAIRO_VERSION=1.12.8
 export AD_CAIROMM_VERSION=1.10.0
 export AD_PYCAIRO_VERSION=1.10.0
 
-export AD_PYTHON_VERSION=3.3.0
+#export AD_PYTHON_VERSION=3.3.0
+export AD_PYTHON_MAJOR=2.7
+export AD_PYTHON_MINOR=.3
+export AD_PYTHON_VERSION=$AD_PYTHON_MAJOR$AD_PYTHON_MINOR
 export AD_WAF_VERSION=1.7.8
 export AD_POSTGRES_VERSION=9.2.2
 
@@ -232,9 +235,7 @@ download () {
     fi
     
     if [ ! -e "Python-$AD_PYTHON_VERSION.tgz" ];then
-    #if ! ( [ -e "python-latest.tar" ] || [ -e "python-latest.tar.bz2" ] );then
         wget http://www.python.org/ftp/python/$AD_PYTHON_VERSION/Python-$AD_PYTHON_VERSION.tgz
-        #wget http://hg.python.org/cpython/archive/tip.tar.bz2 -O python-latest.tar.bz2
     fi
     
     if ! ( [ -e "waf-$AD_WAF_VERSION.tar" ] || [ -e "waf-$AD_WAF_VERSION.tar.bz2" ] );then
@@ -830,11 +831,11 @@ buildInstallGDAL() {
 
 buildInstallPython() {
     local _project="Python-*"
-    local _binCheck="python3.3"
-    local _exeToTest="python3.3 --version"
+    local _binCheck="python$AD_PYTHON_MAJOR"
+    local _exeToTest="python --version"
 
     echo
-echo "Building $_project..."
+    echo "Building $_project..."
     echo
     
     $ad_preCleanEnv
@@ -853,14 +854,11 @@ echo "Building $_project..."
             #http://bugs.python.org/issue3754
             #http://bugs.python.org/issue4709
             
-            #http://bugs.python.org/issue3871
-            #wget http://bugs.python.org/file27474/py3k-20121004-MINGW.patch
-            
             #my update
-            cp /home/developer/patches/python/3.0.0/py3k-20130110-MINGW.patch .
+            cp /home/developer/patches/python/$AD_PYTHON_VERSION/python-mingw.patch .
         fi
         
-        ad_patch "py3k-20130110-MINGW.patch"
+        ad_patch "python-mingw.patch"
         
         echo "Executing autoconf..."
         
@@ -905,11 +903,11 @@ echo "Building $_project..."
         
         echo "Using flags: $CFLAGS"
                
-        ad_configure "$_project" "--with-universal-archs=64-bit --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
+        ad_configure "$_project" "--with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
         ad_make $_project
         
-        ln -s /mingw/bin/python3.3 /mingw/bin/python
+        ln -s /mingw/bin/python$AD_PYTHON_MAJOR /mingw/bin/python
     else
         echo "Already Installed."
     fi
@@ -942,6 +940,7 @@ buildInstallPyCairo() {
     ad_preCleanEnv
 
     export "PYTHON_CONFIG=/mingw/bin/python3.3-config"
+    export "CFLAGS=$CFLAGS -I/mingw/include/Python3.3"
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -1259,7 +1258,7 @@ buildInstallBoostJam
 buildInstallBoost
 buildInstallPython
 buildInstallWAF
-buildInstallPyCairo
+#buildInstallPyCairo
 buildInstallMapnik
 #buildInstallAPR
 #buildInstallSVN
