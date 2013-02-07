@@ -12,42 +12,42 @@ Requirements
 
 The following projects are fully building in the environment setup:
 
-pthreads
-autoconf
-libtool
-pkgconfig
-zlib
-bzip2
-libiconv
-libjpeg-turbo
-libpng
-libtiff
-expat
-ICU
-SQLite
-freetype
-polarssl
-openssl
-libxml2
-fontconfig
-curl
-postgres
-libproj
-projdatumgrid
-libgeotiff
-sigc
-pixman
-cairo
-cairomm
-libgeos
-libgdal
-boostjam
-boost
-python2.7
-python3.3 (Very Experimental)
-waf
-pycairo
-mapnik
+* pthreads
+* autoconf
+* libtool
+* pkgconfig
+* zlib
+* bzip2
+* libiconv
+* libjpeg-turbo
+* libpng
+* libtiff
+* expat
+* ICU
+* SQLite
+* freetype
+* polarssl
+* openssl
+* libxml2
+* fontconfig
+* curl
+* postgres
+* libproj
+* projdatumgrid
+* libgeotiff
+* sigc
+* pixman
+* cairo
+* cairomm
+* libgeos
+* libgdal
+* boostjam
+* boost
+* python2.7
+* python3.3 (Very Experimental)
+* waf
+* pycairo
+* mapnik
 
 This build includes python27 with the sqlite3 extention:
 
