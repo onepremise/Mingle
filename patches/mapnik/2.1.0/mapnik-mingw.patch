@@ -1,0 +1,527 @@
+diff -ruN mapnik-v2.1.0/SConstruct _mapnik-v2.1.0/SConstruct
+--- mapnik-v2.1.0/SConstruct	2012-08-23 17:57:06 -0400
++++ _mapnik-v2.1.0/SConstruct	2013-02-06 12:21:57 -0500
+@@ -113,10 +113,20 @@
+ 
+ 
+ #### SCons build options and initial setup ####
+-env = Environment(ENV=os.environ)
++
++mingwbuild = sys.platform == "win32" and sys.version.upper().find('GCC') >= 0
++    
++if mingwbuild:
++    env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
++    env['smp'] = 0
++else:
++    env = Environment(ENV = {'PATH' : os.environ['PATH']})
++
+ env.Decider('MD5-timestamp')
+ env.SourceCode(".", None)
+ 
++#print 'compiling for architecture ', env['arch']
++
+ def color_print(color,text,newline=True):
+     # 1 - red
+     # 2 - green
+@@ -284,7 +294,7 @@
+     ('LINK_PRIORITY','Priority list in which to sort library and include paths (default order is internal, other, frameworks, user, then system - see source of `sort_paths` function for more detail)',','.join(DEFAULT_LINK_PRIORITY)),
+ 
+     # Install Variables
+-    ('PREFIX', 'The install path "prefix"', '/usr/local'),
++    ('PREFIX', 'The install path "prefix"', '/usr'),
+     ('LIBDIR_SCHEMA', 'The library sub-directory appended to the "prefix", sometimes lib64 on 64bit linux systems', LIBDIR_SCHEMA_DEFAULT),
+     ('PYTHON_PREFIX','Custom install path "prefix" for python bindings (default of no prefix)',''),
+     ('DESTDIR', 'The root directory to install into. Useful mainly for binary package building', '/'),
+@@ -293,10 +303,10 @@
+     ('PATH_REPLACE', 'Two path prefixes (divided with a :) to search/replace from all known command and compile paths', ''),
+ 
+     # Boost variables
+-    # default is '/usr/include', see FindBoost method below
+-    ('BOOST_INCLUDES', 'Search path for boost include files', '',False),
++    # default is '$PREFIX/include', see FindBoost method below
++    ('BOOST_INCLUDES', 'Search path for boost include files', '$PREFIX/include',False),
+     # default is '/usr/' + LIBDIR_SCHEMA, see FindBoost method below
+-    ('BOOST_LIBS', 'Search path for boost library files', '',False),
++    ('BOOST_LIBS', 'Search path for boost library files', '$PREFIX' + LIBDIR_SCHEMA_DEFAULT,False),
+     ('BOOST_TOOLKIT','Specify boost toolkit, e.g., gcc41.','',False),
+     ('BOOST_ABI', 'Specify boost ABI, e.g., d.','',False),
+     ('BOOST_VERSION','Specify boost version, e.g., 1_35.','',False),
+@@ -304,21 +314,28 @@
+ 
+     # Variables for required dependencies
+     ('FREETYPE_CONFIG', 'The path to the freetype-config executable.', 'freetype-config'),
++    PathVariable('FREETYPE_INCLUDES', 'Search path for freetype include files', '$PREFIX/include/freetype2', PathVariable.PathAccept),
++    PathVariable('FREETYPE_LIBS', 'Search path for freetype library files', '$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+     ('XML2_CONFIG', 'The path to the xml2-config executable.', 'xml2-config'),
+-    PathVariable('ICU_INCLUDES', 'Search path for ICU include files', '/usr/include', PathVariable.PathAccept),
+-    PathVariable('ICU_LIBS','Search path for ICU include files','/usr/' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    PathVariable('XML2_INCLUDES', 'Search path for libxml2 include files', '$PREFIX/include/libxml2', PathVariable.PathAccept),
++    PathVariable('XML2_LIBS', 'Search path for libxml2 include files', '$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    ('ICU_CONFIG', 'The path to the icu-config executable.', 'icu-config'),
++    PathVariable('ICU_INCLUDES', 'Search path for ICU include files', '$PREFIX/include', PathVariable.PathAccept),
++    PathVariable('ICU_LIBS','Search path for ICU include files','$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+     ('ICU_LIB_NAME', 'The library name for icu (such as icuuc, sicuuc, or icucore)', 'icuuc'),
+-    PathVariable('PNG_INCLUDES', 'Search path for libpng include files', '/usr/include', PathVariable.PathAccept),
+-    PathVariable('PNG_LIBS','Search path for libpng library files','/usr/' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+-    PathVariable('LTDL_INCLUDES', 'Search path for libltdl (part of libtool) include files', '/usr/include', PathVariable.PathAccept),
+-    PathVariable('LTDL_LIBS','Search path for libltdl (ltdl.h) library files','/usr/' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    ('ICU_LIB_I18N', 'The international lib for icu', 'icui18n'),
++    ('ICU_LIB_DATA', 'The data lib for icu', 'icudata'),
++    PathVariable('PNG_INCLUDES', 'Search path for libpng include files', '$PREFIX/include', PathVariable.PathAccept),
++    PathVariable('PNG_LIBS','Search path for libpng library files','$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    PathVariable('LTDL_INCLUDES', 'Search path for libltdl (part of libtool) include files', '$PREFIX/include', PathVariable.PathAccept),
++    PathVariable('LTDL_LIBS','Search path for libltdl (ltdl.h) library files','$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+     BoolVariable('JPEG', 'Build Mapnik with JPEG read and write support', 'True'),
+-    PathVariable('JPEG_INCLUDES', 'Search path for libjpeg include files', '/usr/include', PathVariable.PathAccept),
+-    PathVariable('JPEG_LIBS', 'Search path for libjpeg library files', '/usr/' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+-    PathVariable('TIFF_INCLUDES', 'Search path for libtiff include files', '/usr/include', PathVariable.PathAccept),
+-    PathVariable('TIFF_LIBS', 'Search path for libtiff library files', '/usr/' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+-    PathVariable('PROJ_INCLUDES', 'Search path for PROJ.4 include files', '/usr/include', PathVariable.PathAccept),
+-    PathVariable('PROJ_LIBS', 'Search path for PROJ.4 library files', '/usr/' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    PathVariable('JPEG_INCLUDES', 'Search path for libjpeg include files', '$PREFIX/include', PathVariable.PathAccept),
++    PathVariable('JPEG_LIBS', 'Search path for libjpeg library files', '$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    PathVariable('TIFF_INCLUDES', 'Search path for libtiff include files', '$PREFIX/include', PathVariable.PathAccept),
++    PathVariable('TIFF_LIBS', 'Search path for libtiff library files', '$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    PathVariable('PROJ_INCLUDES', 'Search path for PROJ.4 include files', '$PREFIX/include', PathVariable.PathAccept),
++    PathVariable('PROJ_LIBS', 'Search path for PROJ.4 library files', '$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+     ('PKG_CONFIG_PATH', 'Use this path to point pkg-config to .pc files instead of the PKG_CONFIG_PATH environment setting',''),
+ 
+     # Variables affecting rendering back-ends
+@@ -336,12 +353,12 @@
+     PathVariable('CAIRO_LIBS', 'Search path for cairo/cairomm library files','',PathVariable.PathAccept),
+     ('GDAL_CONFIG', 'The path to the gdal-config executable for finding gdal and ogr details.', 'gdal-config'),
+     ('PG_CONFIG', 'The path to the pg_config executable.', 'pg_config'),
+-    PathVariable('OCCI_INCLUDES', 'Search path for OCCI include files', '/usr/lib/oracle/10.2.0.3/client/include', PathVariable.PathAccept),
+-    PathVariable('OCCI_LIBS', 'Search path for OCCI library files', '/usr/lib/oracle/10.2.0.3/client/'+ LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+-    PathVariable('SQLITE_INCLUDES', 'Search path for SQLITE include files', '/usr/include/', PathVariable.PathAccept),
+-    PathVariable('SQLITE_LIBS', 'Search path for SQLITE library files', '/usr/' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+-    PathVariable('RASTERLITE_INCLUDES', 'Search path for RASTERLITE include files', '/usr/include/', PathVariable.PathAccept),
+-    PathVariable('RASTERLITE_LIBS', 'Search path for RASTERLITE library files', '/usr/' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    PathVariable('OCCI_INCLUDES', 'Search path for OCCI include files', '$PREFIX/lib/oracle/10.2.0.3/client/include', PathVariable.PathAccept),
++    PathVariable('OCCI_LIBS', 'Search path for OCCI library files', '$PREFIX/lib/oracle/10.2.0.3/client/'+ LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    PathVariable('SQLITE_INCLUDES', 'Search path for SQLITE include files', '$PREFIX/include/', PathVariable.PathAccept),
++    PathVariable('SQLITE_LIBS', 'Search path for SQLITE library files', '$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
++    PathVariable('RASTERLITE_INCLUDES', 'Search path for RASTERLITE include files', '$PREFIX/include/', PathVariable.PathAccept),
++    PathVariable('RASTERLITE_LIBS', 'Search path for RASTERLITE library files', '$PREFIX' + LIBDIR_SCHEMA_DEFAULT, PathVariable.PathAccept),
+ 
+     # Variables for logging and statistics
+     BoolVariable('ENABLE_LOG', 'Enable logging, which is enabled by default when building in *debug*', 'False'),
+@@ -405,6 +422,7 @@
+         'HAS_CAIRO',
+         'HAS_PYCAIRO',
+         'HAS_LIBXML2',
++        'HAS_ICU',
+         'PYTHON_IS_64BIT',
+         'SAMPLE_INPUT_PLUGINS',
+         'PKG_CONFIG_PATH',
+@@ -498,6 +516,10 @@
+ if env.has_key('COLOR_PRINT') and env['COLOR_PRINT'] == False:
+     color_print = regular_print
+ 
++#Debug printout for env variables
++#for k,v in env.items():
++#    print('k = %s, v = %s' % (k,v))
++
+ if sys.platform == "win32":
+     color_print = regular_print
+ 
+@@ -523,17 +545,19 @@
+     context.Result( ret )
+     return ret
+ 
++#pkg-config returns 0 upon success
++#http://people.freedesktop.org/~dbn/pkg-config-guide.html
+ def CheckPKG(context, name):
+     context.Message( 'Checking for %s... ' % name )
+     ret = context.TryAction('pkg-config --exists \'%s\'' % name)[0]
+-    context.Result( ret )
+-    return ret
++    context.Result( not ret )
++    return not ret
+ 
+ def CheckPKGVersion(context, name, version):
+     context.Message( 'Checking for at least version %s for %s... ' % (version,name) )
+     ret = context.TryAction('pkg-config --atleast-version=%s \'%s\'' % (version,name))[0]
+-    context.Result( ret )
+-    return ret
++    context.Result( not ret )
++    return not ret
+ 
+ def parse_config(context, config, checks='--libs --cflags'):
+     env = context.env
+@@ -542,7 +566,12 @@
+     if config in ('GDAL_CONFIG','GEOS_CONFIG'):
+         toolname += ' %s' % checks
+     context.Message( 'Checking for %s... ' % toolname)
+-    cmd = '%s %s' % (env[config],checks)
++    
++    if mingwbuild:
++        cmd = 'python sanitize-script.py %s %s' % (env[config],checks)
++    else:
++        cmd = '%s %s' % (env[config],checks)
++        
+     ret = context.TryAction(cmd)[0]
+     parsed = False
+     if ret:
+@@ -582,7 +611,12 @@
+     libname = None
+     env = context.env
+     context.Message( 'Checking for name of %s library... ' % lib)
+-    cmd = '%s --libs' % env[config]
++    
++    if mingwbuild:
++        cmd = 'python sanitize-script.py %s --libs' % env[config]
++    else:
++        cmd = '%s --libs' % env[config]
++        
+     ret = context.TryAction(cmd)[0]
+     parsed = False
+     if ret:
+@@ -623,7 +657,10 @@
+ def ogr_enabled(context):
+     env = context.env
+     context.Message( 'Checking if gdal is ogr enabled... ')
+-    ret = context.TryAction('%s --ogr-enabled' % env['GDAL_CONFIG'])[0]
++    if mingwbuild:
++        ret = context.TryAction('python sanitize-script.py %s --ogr-enabled' % env['GDAL_CONFIG'])[0]
++    else:
++        ret = context.TryAction('%s --ogr-enabled' % env['GDAL_CONFIG'])[0]
+     if not ret:
+         env['SKIPPED_DEPS'].append('ogr')
+     context.Result( ret )
+@@ -814,6 +851,7 @@
+ 
+ def boost_regex_has_icu(context):
+     if env['RUNTIME_LINK'] == 'static':
++        context.env.Append(LIBS='icuuc')
+         context.env.Append(LIBS='icui18n')
+         context.env.Append(LIBS='icudata')
+     ret = context.TryRun("""
+@@ -931,7 +969,12 @@
+                     # but if the default is overridden and the file is not found, give warning
+                     color_print(1,"SCons CONFIG not found: '%s'" % conf)
+             # Recreate the base environment using modified `opts`
+-            env = Environment(ENV=os.environ,options=opts)
++            
++            if mingwbuild:
++	        env = Environment(tools = ['mingw'], ENV = os.environ, options=opts)
++	    else:
++                env = Environment(ENV=os.environ,options=opts)
++            
+             env.Decider('MD5-timestamp')
+             env.SourceCode(".", None)
+             env['USE_CONFIG'] = True
+@@ -944,8 +987,10 @@
+         mode = 'debug mode'
+     else:
+         mode = 'release mode'
+-
+-    env['PLATFORM'] = platform.uname()[0]
++    if mingwbuild:
++        env['PLATFORM'] = "MinGW"
++    else:
++        env['PLATFORM'] = platform.uname()[0]
+     color_print(4,"Configuring on %s in *%s*..." % (env['PLATFORM'],mode))
+ 
+     env['MISSING_DEPS'] = []
+@@ -956,6 +1001,7 @@
+     env['CAIROMM_CPPPATHS'] = []
+     env['HAS_PYCAIRO'] = False
+     env['HAS_LIBXML2'] = False
++    env['HAS_ICU'] = False
+     env['LIBMAPNIK_LIBS'] = []
+     env['LIBMAPNIK_CPPATHS'] = []
+     env['LIBMAPNIK_CXXFLAGS'] = []
+@@ -982,7 +1028,11 @@
+     # install prefix is a pre-pended base location to
+     # re-route the install and only intended for package building
+     # we normalize to ensure no trailing slash and proper pre-pending to the absolute prefix
+-    install_prefix = os.path.normpath(os.path.realpath(env['DESTDIR'])) + os.path.realpath(env['PREFIX'])
++    if mingwbuild:
++        install_prefix = os.path.realpath(env['PREFIX'])
++    else:
++    	install_prefix = os.path.normpath(os.path.realpath(env['DESTDIR'])) + os.path.realpath(env['PREFIX'])
++    	
+     env['INSTALL_PREFIX'] = strip_first(install_prefix,'//','/')
+     # all values from above based on install_prefix
+     # if env['DESTDIR'] == '/' these should be unchanged
+@@ -1057,11 +1107,14 @@
+ 
+     # Adding the required prerequisite library directories to the include path for
+     # compiling and the library path for linking, respectively.
+-    for required in ('PNG', 'JPEG', 'TIFF','PROJ','ICU', 'SQLITE', 'LTDL'):
++    for required in ('PNG', 'JPEG', 'XML2', 'FREETYPE', 'TIFF','PROJ','ICU', 'SQLITE', 'LTDL'):
+         inc_path = env['%s_INCLUDES' % required]
+         lib_path = env['%s_LIBS' % required]
+         env.AppendUnique(CPPPATH = os.path.realpath(inc_path))
+         env.AppendUnique(LIBPATH = os.path.realpath(lib_path))
++        
++    if conf.parse_config('ICU_CONFIG', checks='--cflags --ldflags'):
++        env['HAS_ICU'] = True
+ 
+     if conf.parse_config('FREETYPE_CONFIG'):
+         # check if freetype links to bz2
+@@ -1128,6 +1181,7 @@
+         ['system', 'boost/system/system_error.hpp', True],
+         ['filesystem', 'boost/filesystem/operations.hpp', True],
+         ['regex', 'boost/regex.hpp', True],
++        ['iostreams', 'boost/iostreams/detail/iostream.hpp', True],
+         ['program_options', 'boost/program_options.hpp', False]
+     ]
+ 
+@@ -1349,6 +1403,7 @@
+                 sys_version = '''%s -c "from distutils.sysconfig import get_python_version; print(get_python_version())"''' % env['PYTHON']
+             else:
+                 sys_version = '''%s -c "from distutils.sysconfig import get_python_version; print get_python_version()"''' % env['PYTHON']
++                
+             env['PYTHON_VERSION'] = call(sys_version)
+ 
+             if py3:
+@@ -1370,7 +1425,9 @@
+             env['PYTHON_SITE_PACKAGES'] = env['DESTDIR'] + os.path.sep + env['PYTHON_SYS_PREFIX'] + os.path.sep + env['LIBDIR_SCHEMA'] + '/python' + env['PYTHON_VERSION'] + '/site-packages/'
+ 
+         # if user-requested custom prefix fall back to manual concatenation for building subdirectories
+-        if env['PYTHON_PREFIX']:
++        if mingwbuild:
++            env['PYTHON_INSTALL_LOCATION'] = env['PYTHON_SITE_PACKAGES']
++        elif env['PYTHON_PREFIX']:
+             py_relative_install = env['LIBDIR_SCHEMA'] + '/python' + env['PYTHON_VERSION'] + '/site-packages/'
+             env['PYTHON_INSTALL_LOCATION'] = env['DESTDIR'] + os.path.sep + env['PYTHON_PREFIX'] + os.path.sep +  py_relative_install
+         else:
+@@ -1422,6 +1479,13 @@
+         if not HELP_REQUESTED:
+             Exit(1)
+     else:
++        #Workaround for bug http://scons.tigris.org/issues/show_bug.cgi?id=1500
++	#if mingwbuild:
++	#    env['PREFIX'] = os.path.realpath(env['PREFIX'])
++	#    opts.Update(env)
++	#    for k,v in env.items():
++        #        print('k = %s, v = %s' % (k,v))
++        
+         # Save the custom variables in a SCONS_LOCAL_CONFIG
+         # that will be reloaded to allow for `install` without re-specifying custom variables
+         color_print(4,"\nAll Required dependencies found!\n")
+@@ -1457,6 +1521,9 @@
+             common_cxx_flags = '-D%s -DBOOST_SPIRIT_THREADSAFE -DMAPNIK_THREADSAFE ' % env['PLATFORM'].upper()
+         else :
+             common_cxx_flags = '-D%s ' % env['PLATFORM'].upper()
++            
++        if mingwbuild:
++            common_cxx_flags += '-D__MINGW32__ -D_WINDOWS '
+ 
+         # Mac OSX (Darwin) special settings
+         if env['PLATFORM'] == 'Darwin':
+@@ -1525,7 +1592,7 @@
+ 
+             if env['DEBUG_UNDEFINED']:
+                 env.Append(CXXFLAGS = '-fcatch-undefined-behavior -ftrapv -fwrapv')
+-
++        
+         if 'python' in env['BINDINGS']:
+             majver, minver = env['PYTHON_VERSION'].split('.')
+             # we don't want the includes it in the main environment...
+@@ -1559,6 +1626,8 @@
+             pickle_dict[i] = env.get(i)
+         pickle.dump(pickle_dict,env_cache)
+         env_cache.close()
++        
++        
+         # fix up permissions on configure outputs
+         # this is hackish but avoids potential problems
+         # with a non-root configure following a root install
+@@ -1590,7 +1659,6 @@
+ 
+ #### Builds ####
+ if not HELP_REQUESTED:
+-
+     if 'uninstall' in COMMAND_LINE_TARGETS:
+         # dummy action in case there is nothing to uninstall, to avoid phony error..
+         env.Alias("uninstall", "")
+diff -ruN mapnik-v2.1.0/bindings/python/build.py _mapnik-v2.1.0/bindings/python/build.py
+--- mapnik-v2.1.0/bindings/python/build.py	2012-08-23 17:57:06 -0400
++++ _mapnik-v2.1.0/bindings/python/build.py	2013-02-06 10:52:04 -0500
+@@ -43,7 +43,12 @@
+ target_path = os.path.normpath(env['PYTHON_INSTALL_LOCATION'] + os.path.sep + 'mapnik')
+ target_path_deprecated = os.path.normpath(env['PYTHON_INSTALL_LOCATION'] + os.path.sep + 'mapnik2')
+ 
+-libraries = ['mapnik',env['BOOST_PYTHON_LIB']]
++filesystem = 'boost_filesystem%s' % env['BOOST_APPEND']
++regex = 'boost_regex%s' % env['BOOST_APPEND']
++system = 'boost_system%s' % env['BOOST_APPEND']
++python = 'python%s' % env['PYTHON_VERSION']
++
++libraries = ['mapnik',env['ICU_LIB_NAME'],env['ICU_LIB_I18N'], env['ICU_LIB_DATA'],python, filesystem, regex, system, env['BOOST_PYTHON_LIB'], ]
+ 
+ # TODO - do solaris/fedora need direct linking too?
+ if env['PLATFORM'] == 'Darwin':
+@@ -183,7 +188,11 @@
+         py_env.Append(CXXFLAGS = '-DHAVE_PYCAIRO')
+ 
+ libraries.append('boost_thread%s' % env['BOOST_APPEND'])
+-_mapnik = py_env.LoadableModule('mapnik/_mapnik', sources, LIBS=libraries, LDMODULEPREFIX='', LDMODULESUFFIX='.so',LINKFLAGS=linkflags)
++
++if env['PLATFORM'] == 'MinGW':
++    _mapnik = py_env.SharedLibrary('mapnik/_mapnik', sources, LIBS=libraries, SHLIBPREFIX='', SHLIBSUFFIX='.pyd', LINKFLAGS=linkflags)
++else:
++    _mapnik = py_env.LoadableModule('mapnik/_mapnik', sources, LIBS=libraries, LDMODULEPREFIX='', LDMODULESUFFIX='.so',LINKFLAGS=linkflags)
+ 
+ Depends(_mapnik, env.subst('../../src/%s' % env['MAPNIK_LIB_NAME']))
+ 
+diff -ruN mapnik-v2.1.0/bindings/python/mapnik/paths.py _mapnik-v2.1.0/bindings/python/mapnik/paths.py
+--- mapnik-v2.1.0/bindings/python/mapnik/paths.py	1969-12-31 19:00:00 -0500
++++ _mapnik-v2.1.0/bindings/python/mapnik/paths.py	2013-02-06 12:13:33 -0500
+@@ -0,0 +1,10 @@
++
++"""Configuration paths of Mapnik fonts and input plugins (auto-generated by SCons)."""
++
++from os.path import normpath,join,dirname
++
++mapniklibpath = 'C:/projects/tools/MinGW-AD64S/mingw64\lib\mapnik'
++mapniklibpath = normpath(join(dirname(__file__),mapniklibpath))
++inputpluginspath = join(mapniklibpath,'input')
++fontscollectionpath = join(mapniklibpath,'fonts')
++__all__ = [mapniklibpath,inputpluginspath,fontscollectionpath]
+diff -ruN mapnik-v2.1.0/include/mapnik/config.hpp _mapnik-v2.1.0/include/mapnik/config.hpp
+--- mapnik-v2.1.0/include/mapnik/config.hpp	2012-08-23 17:57:06 -0400
++++ _mapnik-v2.1.0/include/mapnik/config.hpp	2013-02-06 11:25:00 -0500
+@@ -25,7 +25,7 @@
+ 
+ // Windows DLL support
+ 
+-#ifdef _WINDOWS
++#if defined(_WINDOWS) && !defined(__MINGW32__)
+ #  define MAPNIK_EXP __declspec (dllexport)
+ #  define MAPNIK_IMP __declspec (dllimport)
+ #  ifdef MAPNIK_EXPORTS
+diff -ruN mapnik-v2.1.0/include/mapnik/global.hpp _mapnik-v2.1.0/include/mapnik/global.hpp
+--- mapnik-v2.1.0/include/mapnik/global.hpp	2012-08-23 17:57:06 -0400
++++ _mapnik-v2.1.0/include/mapnik/global.hpp	2013-01-30 10:58:09 -0500
+@@ -29,6 +29,7 @@
+ 
+ // stl
+ #include <cstring>
++#include <cmath>
+ 
+ namespace mapnik
+ {
+diff -ruN mapnik-v2.1.0/plugins/input/gdal/gdal_featureset.cpp _mapnik-v2.1.0/plugins/input/gdal/gdal_featureset.cpp
+--- mapnik-v2.1.0/plugins/input/gdal/gdal_featureset.cpp	2012-08-23 17:57:06 -0400
++++ _mapnik-v2.1.0/plugins/input/gdal/gdal_featureset.cpp	2013-02-06 11:25:31 -0500
+@@ -42,7 +42,7 @@
+ using mapnik::datasource_exception;
+ using mapnik::feature_factory;
+ 
+-#ifdef _WINDOWS
++#if defined(_WINDOWS) && !defined(__MINGW32__)
+ using mapnik::rint;
+ #endif
+ 
+Files mapnik-v2.1.0/plugins/input/ogr/ogr_featureset.o and _mapnik-v2.1.0/plugins/input/ogr/ogr_featureset.o differ
+Files mapnik-v2.1.0/plugins/input/ogr/ogr_index_featureset.o and _mapnik-v2.1.0/plugins/input/ogr/ogr_index_featureset.o differ
+diff -ruN mapnik-v2.1.0/plugins/input/python/build.py _mapnik-v2.1.0/plugins/input/python/build.py
+--- mapnik-v2.1.0/plugins/input/python/build.py	2012-08-23 17:57:06 -0400
++++ _mapnik-v2.1.0/plugins/input/python/build.py	2013-02-05 12:27:52 -0500
+@@ -18,8 +18,12 @@
+   """ % locals()
+         )
+ 
+-boost_system = 'boost_system%s' % env['BOOST_APPEND']
+-libraries = ['mapnik',env['BOOST_PYTHON_LIB'],boost_system,env['ICU_LIB_NAME']]
++filesystem = 'boost_filesystem%s' % env['BOOST_APPEND']
++regex = 'boost_regex%s' % env['BOOST_APPEND']
++system = 'boost_system%s' % env['BOOST_APPEND']
++python = 'python%s' % env['PYTHON_VERSION']
++
++libraries = ['mapnik',env['ICU_LIB_NAME'],python,regex,system,env['BOOST_PYTHON_LIB']]
+ 
+ # NOTE: explicit linking to libpython is uneeded on most linux version if the
+ # python plugin is used by a app in python using mapnik's python bindings
+diff -ruN mapnik-v2.1.0/sanitize-script.py _mapnik-v2.1.0/sanitize-script.py
+--- mapnik-v2.1.0/sanitize-script.py	1969-12-31 19:00:00 -0500
++++ _mapnik-v2.1.0/sanitize-script.py	2013-01-25 11:09:48 -0500
+@@ -0,0 +1,14 @@
++import subprocess, sys
++
++command=['bash.exe', '-c']
++command.append(" ".join(map(str, sys.argv[1:])))
++
++if len(command)>2:
++    p = subprocess.Popen(command, stdout=subprocess.PIPE)
++    out, err = p.communicate()
++
++    san = out.replace("\\", "/")
++
++    sys.stdout.write(san)
++
++sys.exit(0)
+\ No newline at end of file
+--- mapnik-v2.1.0/scons/scons-local-2.2.0/SCons/Variables/__init__.py	2012-08-23 17:57:06 -0400
++++ _mapnik-v2.1.0/scons/scons-local-2.2.0/SCons/Variables/__init__.py	2013-02-06 12:19:39 -0500
+@@ -186,6 +186,18 @@
+                 if arg in list(option.aliases) + [ option.key ]:
+                     values[option.key] = value
+                     added = True
++                elif '$'+arg in values[option.key]:
++                    envVar='$'+arg
++
++                    sepCheck=values[option.key].replace(envVar,'')[0]
++
++                    if sepCheck=='/' or sepCheck=='\\':
++                        values[option.key]=values[option.key].replace(envVar, value)
++                    else:
++                        values[option.key]=values[option.key].replace(envVar, value+'/')
++
++                    env[option.key] = values[option.key]
++
+             if not added:
+                 self.unknown[arg] = value
+ 
+diff -ruN mapnik-v2.1.0/src/build.py _mapnik-v2.1.0/src/build.py
+--- mapnik-v2.1.0/src/build.py	2012-08-23 17:57:06 -0400
++++ _mapnik-v2.1.0/src/build.py	2013-02-04 20:27:58 -0500
+@@ -56,7 +56,7 @@
+ system = 'boost_system%s' % env['BOOST_APPEND']
+ 
+ # clear out and re-set libs for this env
+-lib_env['LIBS'] = ['freetype','ltdl','png','tiff','z','proj',env['ICU_LIB_NAME'],filesystem,system,regex]
++lib_env['LIBS'] = ['freetype','ltdl','png','tiff','z','proj',env['BOOST_PYTHON_LIB'], env['ICU_LIB_NAME'],env['ICU_LIB_I18N'], env['ICU_LIB_DATA'],filesystem,system,regex]
+ 
+ if env['JPEG']:
+    lib_env['LIBS'].append('jpeg')
+@@ -71,13 +71,15 @@
+ if env['THREADING'] == 'multi':
+     lib_env['LIBS'].append('boost_thread%s' % env['BOOST_APPEND'])
+ 
++# Not sure about all this, right now you need data and i18n even with shared
++# DLLS are generated for both.
++#if env['RUNTIME_LINK'] == 'static':
++#    if 'icuuc' in env['ICU_LIB_NAME']:
++#        lib_env['LIBS'].append('icudata')
++#        lib_env['LIBS'].append('icui18n')
++#else:
+ 
+-if env['RUNTIME_LINK'] == 'static':
+-    if 'icuuc' in env['ICU_LIB_NAME']:
+-        lib_env['LIBS'].append('icudata')
+-        lib_env['LIBS'].append('icui18n')
+-else:
+-    lib_env['LIBS'].insert(0, 'agg')
++lib_env['LIBS'].insert(0, 'agg')
+ 
+ if env['PLATFORM'] == 'Darwin':
+     mapnik_libname = env.subst(env['MAPNIK_LIB_NAME'])
+diff -ruN mapnik-v2.1.0/tests/cpp_tests/build.py _mapnik-v2.1.0/tests/cpp_tests/build.py
+--- mapnik-v2.1.0/tests/cpp_tests/build.py	2012-08-23 17:57:06 -0400
++++ _mapnik-v2.1.0/tests/cpp_tests/build.py	2013-01-25 11:09:48 -0500
+@@ -16,7 +16,9 @@
+     name = cpp_test.replace('.cpp','-bin')
+     source_files = [cpp_test]
+     if 'csv_parse' in cpp_test:
+-        source_files += glob.glob('../../plugins/input/csv/' + '*.cpp')
++        source_files += env.Object(glob.glob('../../plugins/input/csv/' + '*.cpp'))
++    print('cpp_test=%s' % cpp_test)
++    print('source_files=%s' % source_files)
+     test_program = test_env_local.Program(name, source=source_files, LINKFLAGS=env['CUSTOM_LDFLAGS'])
+     Depends(test_program, env.subst('../../src/%s' % env['MAPNIK_LIB_NAME']))
+     # build locally if installing

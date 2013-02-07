@@ -61,3 +61,5 @@ cd "$HOME"
 export PYTHONPATH=
 
 export PATH=`echo $PATH|sed -e 's/:[^:]*[Pp]ython[^:]*//'`
+
+export PATH=/mingw/opt/bin:$PATH

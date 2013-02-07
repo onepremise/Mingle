@@ -286,6 +286,13 @@ setupPaths() {
     echo
 }
 
+updateGCC() {
+    echo "Updating GCC..."
+
+    sed 's/\(template<class Q>\)/\/\/\1/g' /mingw/x86_64-w64-mingw32/include/unknwn.h > unknwn.h
+    mv unknwn.h /mingw/x86_64-w64-mingw32/include/unknwn.h || { stat=$?; echo "Move failed, aborting" >&2; exit $stat; }
+}
+
 updateFindCommand() {
     echo
     echo "Update Find Command..."
@@ -488,7 +495,7 @@ buildInstallPThreads() {
 }
 
 buildInstallPkgconfig() {
-    buildInstallGeneric "pkg-config-*" "--with-internal-glib" "pkg-config" "" "pkg-config --version"
+    buildInstallGeneric "pkg-config-*" "--host=x86_64-w64-mingw32 --with-internal-glib" "pkg-config" "" "pkg-config --version"
 }
 
 installLibJPEG () {
@@ -498,23 +505,44 @@ installLibJPEG () {
 
     STOREPATH=`pwd`
 
-    cd /mingw
+    if [ ! -e libjpeg-turbo ]; then
+        mkdir libjpeg-turbo
+    fi
+
+    cd libjpeg-turbo
 
     DOSPATH=`cmd /c 'echo %CD%'`
 
     cd $STOREPATH
 
-    if [ ! -e "$DOSPATH/uninstall_1.2.1.exe" ]; then
-        cmd /c "libjpeg-turbo-1.2.1-gcc64.exe /S /D=$DOSPATH"
-        
-        if [ ! -e "$DOSPATH/uninstall_1.2.1.exe" ]; then
-            echo "Install failed, aborting"
-            exit
-        fi
+    if [ ! -e /mingw/lib/libturbojpeg.a ]; then
+		if [ ! -e "libjpeg-turbo.tar" ]; then
+			cmd /c "libjpeg-turbo-1.2.1-gcc64.exe /S /D=$DOSPATH"
+
+			if [ ! -e "$DOSPATH/uninstall_1.2.1.exe" ]; then
+				echo "Install failed, aborting"
+				exit
+			fi
+
+			tar cvf libjpeg-turbo.tar libjpeg-turbo --exclude=uninstall*
+
+			cd libjpeg-turbo
+
+			cmd /c "uninstall_1.2.1.exe /S"
+
+			cd ..
+
+            sleep 2
+
+			rmdir libjpeg-turbo
+		fi
+
+        tar xvf libjpeg-turbo.tar
+        cp -rf libjpeg-turbo/* /mingw
     else
         echo "libjpeg-turbo already installed."
     fi
-    
+
     echo
 }
 
@@ -658,7 +686,7 @@ buildInstallGit() {
 
 buildInstallFontConfig() {
     local _project="fontconfig-*"
-    local _additionFlags="--enable-libxml2 --disable-docs"
+    local _additionFlags="--enable-static --enable-libxml2 --disable-docs"
     local _binCheck="fc-list"
     local _exeToTest="fc-list"
     
@@ -850,15 +878,14 @@ buildInstallPython() {
         
         cd $_project
         
-        if [ ! -e py3k-20121004-MINGW.patch ]; then
+        if [ ! -e python-mingw.patch ]; then
             #http://bugs.python.org/issue3754
             #http://bugs.python.org/issue4709
             
             #my update
             cp /home/developer/patches/python/$AD_PYTHON_VERSION/python-mingw.patch .
+            ad_patch "python-mingw.patch"
         fi
-        
-        ad_patch "python-mingw.patch"
         
         echo "Executing autoconf..."
         
@@ -924,13 +951,32 @@ buildInstallBoostJam() {
 }
 
 buildInstallBoost() {
+    local _project="boost_-*"
+    local _projectDir=$(ad_getDirFromWC "$_project")
+
+    ad_decompress "$_project"
+
+    cd $_project
+        
+    if [ ! -e boost-mingw.patch ]; then
+        # Apply patch for https://svn.boost.org/trac/boost/ticket/5023
+        cp /home/developer/patches/boost/$AD_BOOST_PATH_VERSION/boost-mingw.patch .
+        ad_patch "boost-mingw.patch"
+    fi
+
+    cd ..
+
+    export CPLUS_INCLUDE_PATH=/mingw/include/python2.7
     buildInstallGeneric "boost_*" "" "libboost_wave-47-mt-d-1_52.lib" "" ""
+    export CPLUS_INCLUDE_PATH=
+
+    ad_relocate_bin_dlls "boost_"
 }
 
 buildInstallPyCairo() {
     local _project="py2cairo-*"
     local _additionFlags=""
-    local _binCheck="xxx"
+    local _binCheck="/pkgconfig/pycairo.pc"
     local _exeToTest=""
     
     echo
@@ -939,8 +985,8 @@ buildInstallPyCairo() {
     
     ad_preCleanEnv
 
-    export "PYTHON_CONFIG=/mingw/bin/python3.3-config"
-    export "CFLAGS=$CFLAGS -I/mingw/include/Python3.3"
+    export "PYTHON_CONFIG=/mingw/bin/python2.7-config"
+    export "CFLAGS=$CFLAGS -I/mingw/include/Python2.7"
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -948,9 +994,20 @@ buildInstallPyCairo() {
         
         cd $_project
         
-        ./waf configure --target=x86_64-w64-mingw32 --prefix=/mingw --check-c-compiler=gcc
+        ./waf configure --target=x86_64-w64-mingw32 --prefix=/mingw --libdir=/mingw/lib --check-c-compiler=gcc
         ./waf build
         ./waf install
+
+        if [ -e "/mingw/bin/pkgconfig/pycairo.pc" ]; then
+            mv /mingw/bin/pkgconfig/pycairo.pc /mingw/lib/pkgconfig
+            rmdir /mingw/bin/pkgconfig
+            ad_fix_pkg_cfg "pycairo.pc"
+        fi
+
+        if [ -e "/mingw/bin/python2.7" ]; then
+            cp -rf /mingw/bin/python2.7 /mingw/lib
+            rm -rf /mingw/bin/python2.7
+        fi
         
         cd ..
     else
@@ -963,11 +1020,28 @@ buildInstallPyCairo() {
 }
 
 buildInstallMapnik() {
-    buildInstallGeneric "mapnik-*" "" "xxx" "" ""
+    local _project="mapnik-*"
+    local _projectDir=$(ad_getDirFromWC "$_project")
+
+    ad_decompress "$_project"
+
+    cd "$_projectDir"
+        
+    if [ ! -e mapnik-mingw.patch ]; then
+         #my update
+         cp /home/developer/patches/mapnik/$AD_MAPNIK_VERSION/mapnik-mingw.patch .
+         ad_patch "mapnik-mingw.patch"
+    fi
+
+    cd ..
+
+    buildInstallGeneric "mapnik-*" "PREFIX=/mingw BOOST_INCLUDES=/mingw/include/boost-1_52 BOOST_LIBS=/mingw/lib configure CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "xxx" "" ""
+
+    ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
 }
 
 ad_getDirFromWC() {
-    local _project=$1
+    local _project="$1"
     echo `find . -maxdepth 1 -name "$_project" -prune -type d`
 }
 
@@ -989,6 +1063,24 @@ ad_rename() {
         echo mv ${line} "${B}/${A}"
         mv ${line} "${B}/${A}"
     done
+}
+
+ad_relocate_bin_dlls() {
+    local _dllPrefix="$1"
+
+    echo "Checking for DLLS with prefix: $_dllPrefix.*.dll..."
+
+    find /mingw/lib -regex "/mingw/lib/$_dllPrefix.*\.dll" | while read line; do
+        echo "Copying ${line} to /mingw/bin..."
+        cp ${line} "/mingw/bin" || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+    done
+}
+
+ad_fix_pkg_cfg() {
+    local _pkgconfigfile=/mingw/lib/pkgconfig/$1
+
+     sed 's/\\/\//g' $_pkgconfigfile>$_pkgconfigfile-2
+     mv $_pkgconfigfile-2 $_pkgconfigfile
 }
 
 ad_fix_shared_lib() {  
@@ -1075,9 +1167,9 @@ ad_configure() {
         
     if [ -e "configure" ]; then
         echo
-        echo "executing: ./configure --target=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags"
+        echo "executing: ./configure --target=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags"
         echo
-        ./configure --target=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
+        ./configure --target=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
     fi
         
     cd ..
@@ -1089,6 +1181,7 @@ ad_make() {
     local _projectDir=$(ad_getDirFromWC $_project)
     cd $_projectDir
     
+    #make clean || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     
@@ -1103,10 +1196,11 @@ ad_boost_jam() {
     
     #this is needed for boost https://svn.boost.org/trac/boost/ticket/6350
     cp /home/developer/mingw.jam tools/build/v2/tools
+
     
    ./bootstrap.sh --with-icu --prefix=/mingw --with-toolset=mingw|| { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
    
-    bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 variant=debug,release link=static,shared threading=multi install
+    bjam --prefix=/mingw --with-python python-debugging=off -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 variant=debug,release link=static,shared threading=multi define=MS_WIN64 install
     
     cd ..
 }
@@ -1183,7 +1277,9 @@ buildInstallGeneric() {
         ad_decompress "$_project"
         ad_configure "$_project" "$_additionFlags"
 
-        if [ -e "$_projectDir/bootstrap.sh" ]; then
+        local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"`
+
+        if [ -e "$_projectDir/bootstrap.sh" ] && [ ! -z "$_jamCheck" ]; then
             ad_boost_jam "$_project"
         elif [ -e "$_projectDir/build.sh" ]; then
             ad_build "$_project"
@@ -1214,6 +1310,7 @@ buildInstallGeneric() {
 }
 
 setupPaths
+updateGCC
 
 cd dependencies
 
@@ -1258,7 +1355,7 @@ buildInstallBoostJam
 buildInstallBoost
 buildInstallPython
 buildInstallWAF
-#buildInstallPyCairo
+buildInstallPyCairo
 buildInstallMapnik
 #buildInstallAPR
 #buildInstallSVN

@@ -39,26 +39,72 @@ ECHO.
 
 powershell -command "Set-ExecutionPolicy Unrestricted"
 
-if not exist "packages\MSYS-20111123.zip" (
-    ECHO "Downloading msys..."
-    powershell -command ". .\setuptools\Get-WebFile.ps1; Get-WebFile -url 'http://sourceforge.net/projects/mingw-w64/files/External binary packages (Win64 hosted)/MSYS (32-bit)/MSYS-20111123.zip/download' -fileName 'packages\MSYS-20111123.zip'"
+set MSYSTOOLS="MSYS-20111123.zip"
+
+if not exist "packages\%MSYSTOOLS%" (
+     ECHO "Downloading msys..."
+     powershell -command ". .\setuptools\Get-WebFile.ps1; Get-WebFile -url 'http://sourceforge.net/projects/mingw-w64/files/External binary packages (Win64 hosted)/MSYS (32-bit)/%MSYSTOOLS%/download' -fileName 'packages\\%MSYSTOOLS%'"
 )
 
-if not exist "packages\x86_64-w64-mingw32-gcc-4.7.2-release-win64_rubenvb.7z" (
-    ECHO "Downloading x86_64-w64-mingw32-gcc..."
-    powershell -command ". .\setuptools\Get-WebFile.ps1; Get-WebFile -url 'http://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/rubenvb/gcc-4.7-release/x86_64-w64-mingw32-gcc-4.7.2-release-win64_rubenvb.7z/download' -fileName 'packages\x86_64-w64-mingw32-gcc-4.7.2-release-win64_rubenvb.7z'"
+if not exist "packages\%MSYSTOOLS%" (
+    ECHO "Failed to download MSYS!"
+    ECHO.
+    EXIT /B 1
+)
+
+set GCCCOMPILER=x86_64-w64-mingw32-gcc-4.7.2-release-win64_rubenvb.7z
+set GCCURL="'http://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/rubenvb/gcc-4.7-release/%GCCCOMPILER%/download'"
+
+REM set GCCCOMPILERUPDATE=x86_64-w64-mingw32-mingw-w64-update-trunk-20130115_rubenvb.7z
+REM set GCCUPDATEURL="'http://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/rubenvb/update/%GCCCOMPILERUPDATE%/download'"
+
+
+REM set GCCCOMPILER=mingw-w64-bin-x86_64-20130104.7z
+REM set GCCURL="'http://www.drangon.org/mingw/mirror.php?num=2&fname=mingw-w64-bin-x86_64-20130104.7z'"
+
+                    
+REM set GCCCOMPILER=x64-4.7.2-release-posix-sjlj-rev5.7z
+REM set GCCURL="'http://sourceforge.net/projects/mingwbuilds/files/host-windows/releases/4.7.2/64-bit/threads-posix/sjlj/%GCCCOMPILER%/download'"
+
+if not exist "packages\%GCCCOMPILER%" (
+    ECHO "Downloading %GCCCOMPILER%..."
+    powershell -command ". .\setuptools\Get-WebFile.ps1; Get-WebFile -url %GCCURL% -fileName 'packages\\%GCCCOMPILER%'"
+)
+
+REM if not exist "packages\%GCCCOMPILERUPDATE%" (
+REM     ECHO "Downloading %GCCCOMPILERUPDATE%..."
+REM     powershell -command ". .\setuptools\Get-WebFile.ps1; Get-WebFile -url %GCCUPDATEURL% -fileName 'packages\\%GCCCOMPILERUPDATE%'"
+REM )
+
+if not exist "packages\%GCCCOMPILER%" (
+    ECHO "Failed to download compiler!"
+    ECHO.
+    EXIT /B 1
 )
 
 ECHO "Extracting base tools..."
 ECHO.
 
 if not exist "msys" setuptools\unzip packages\MSYS-20111123.zip
-if not exist "mingw64" setuptools\7za x packages\x86_64-w64-mingw32-gcc-4.7.2-release-win64_rubenvb.7z
+if not exist "mingw64" (
+    setuptools\7za x packages\%GCCCOMPILER%
+REM     setuptools\7za x -y packages\%GCCCOMPILERUPDATE% -ir!*mingw64\x86_64-w64-mingw32*
+)
+
+IF EXIST "mingw" (
+    MOVE mingw mingw64
+)
+
+IF NOT EXIST "mingw64\bin\gcc.exe" (
+    ECHO "Failed to install GCC!"
+    ECHO.
+    EXIT /B 1
+)
 
 IF EXIST "mingw64\bin\lib" (
-ECHO Not sure why these python libraries exist in bin. We will remove and reinstall later after we build Python. Otherwise, this will interfere with the msvc lib command.
-DEL /s /Q mingw64\bin\lib
-RMDIR /S /Q mingw64\bin\lib
+    ECHO Not sure why these python libraries exist in bin. We will remove and reinstall later after we build Python. Otherwise, this will interfere with the msvc lib command.
+    DEL /s /Q mingw64\bin\lib
+    RMDIR /S /Q mingw64\bin\lib
 )
 
 
