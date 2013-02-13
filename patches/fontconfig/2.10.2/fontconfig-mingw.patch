@@ -1,0 +1,23 @@
+diff -ruN fontconfig-2.10.2/src/Makefile.in _fontconfig-2.10.2/src/Makefile.in
+--- fontconfig-2.10.2/src/Makefile.in	2012-11-26 03:22:02 -0500
++++ _fontconfig-2.10.2/src/Makefile.in	2013-02-12 16:53:25 -0500
+@@ -462,6 +462,10 @@
+ 	  echo "rm -f \"$${dir}/so_locations\""; \
+ 	  rm -f "$${dir}/so_locations"; \
+ 	done
++
++libfontconfig.dll:
++	$(CC) -o libfontconfig-1.dll -s -shared $(libfontconfig_la_LIBADD) -Wl,--out-implib=.libs/libfontconfig.dll.a -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive .libs/*.o -Wl,--no-whole-archive $(libfontconfig_la_LIBADD)
++
+ libfontconfig.la: $(libfontconfig_la_OBJECTS) $(libfontconfig_la_DEPENDENCIES) $(EXTRA_libfontconfig_la_DEPENDENCIES) 
+ 	$(AM_V_CCLD)$(libfontconfig_la_LINK) -rpath $(libdir) $(libfontconfig_la_OBJECTS) $(libfontconfig_la_LIBADD) $(LIBS)
+ 
+@@ -761,7 +765,7 @@
+ @OS_WIN32_FALSE@install-libtool-import-lib:
+ @OS_WIN32_FALSE@uninstall-libtool-import-lib:
+ 
+-@MS_LIB_AVAILABLE_TRUE@fontconfig.lib : libfontconfig.la
++@MS_LIB_AVAILABLE_TRUE@fontconfig.lib : libfontconfig.la libfontconfig.dll
+ @MS_LIB_AVAILABLE_TRUE@	lib -name:libfontconfig-@LIBT_CURRENT_MINUS_AGE@.dll -def:fontconfig.def -out:$@
+ 
+ @MS_LIB_AVAILABLE_TRUE@install-ms-import-lib:

@@ -42,7 +42,7 @@ export AD_BOOST_JAM_VERSION=3.1.18
 export AD_BOOST_PATH_VERSION=1.52.0
 export AD_BOOST_VERSION=1_52_0
 
-export AD_FONT_CONFIG=2.10.0
+export AD_FONT_CONFIG=2.10.2
 export AD_FREETYPE_VERSION=2.4.10
 
 export AD_SQLITE_VERSION=3071500
@@ -431,7 +431,7 @@ buildInstallLibiconv() {
     
     if [ ! -e /mingw/lib/libiconv.dll.a ]; then
         echo "Building Dynamic lib..."
-        ./configure --host=x86_64-w64-mingw32 --prefix=/mingw
+        ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw
         make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
         make install-strip || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
 
@@ -446,7 +446,7 @@ buildInstallLibiconv() {
     if [ ! -e /mingw/lib/libiconv.a ]; then
         echo "Building Static lib..."
         make distclean
-        ./configure --host=x86_64-w64-mingw32 --disable-shared --prefix=/mingw
+        ./configure --build=x86_64-w64-mingw32 --disable-shared --prefix=/mingw
         make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
         make install-strip || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
         
@@ -701,6 +701,11 @@ buildInstallFontConfig() {
         ad_decompress "$_project"
         
         cd $_project
+        
+        if [ ! -e fontconfig-mingw.patch ]; then
+            cp /home/developer/patches/fontconfig/$AD_FONT_CONFIG/fontconfig-mingw.patch .
+            ad_patch "fontconfig-mingw.patch"
+        fi
         
         mkdir -p /mingw/share/fontconfig/conf.avail        
         cp -rf conf.d/*.conf /mingw/share/fontconfig/conf.avail
