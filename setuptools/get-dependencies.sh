@@ -432,6 +432,7 @@ buildInstallLibiconv() {
     if [ ! -e /mingw/lib/libiconv.dll.a ]; then
         echo "Building Dynamic lib..."
         ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw
+        make clean
         make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
         make install-strip || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
 
