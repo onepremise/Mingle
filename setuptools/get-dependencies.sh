@@ -42,7 +42,7 @@ export AD_BOOST_JAM_VERSION=3.1.18
 export AD_BOOST_PATH_VERSION=1.52.0
 export AD_BOOST_VERSION=1_52_0
 
-export AD_FONT_CONFIG=2.10.2
+export AD_FONT_CONFIG=2.10.0
 export AD_FREETYPE_VERSION=2.4.10
 
 export AD_SQLITE_VERSION=3071500
@@ -70,6 +70,8 @@ export AD_WAF_VERSION=1.7.8
 export AD_POSTGRES_VERSION=9.2.2
 
 export AD_MAPNIK_VERSION=2.1.0
+
+export AD_SWIG_VERSION=2.0.9
 
 download () {
     echo "Checking Downloads..."
@@ -256,6 +258,10 @@ download () {
     
     if ! ( [ -e "mapnik-v$AD_MAPNIK_VERSION.tar" ] || [ -e "mapnik-v$AD_MAPNIK_VERSION.tar.bz2" ] );then
         wget --no-check-certificate https://github.com/downloads/mapnik/mapnik/mapnik-v$AD_MAPNIK_VERSION.tar.bz2
+    fi
+
+    if ! ( [ -e "swig-$AD_SWIG_VERSION.tar" ] || [ -e "swig-$AD_SWIG_VERSION.tar.gz" ] );then
+        wget http://downloads.sourceforge.net/project/swig/swigwin/swigwin-$AD_SWIG_VERSION/swigwin-$AD_SWIG_VERSION.zip
     fi
 }
 
@@ -687,7 +693,7 @@ buildInstallGit() {
 
 buildInstallFontConfig() {
     local _project="fontconfig-*"
-    local _additionFlags="--enable-static --enable-libxml2 --disable-docs"
+    local _additionFlags="--enable-libxml2 --disable-docs"
     local _binCheck="fc-list"
     local _exeToTest="fc-list"
     
@@ -713,8 +719,15 @@ buildInstallFontConfig() {
         
         cd ..
         
+        #export "CFLAGS=$CFLAGS -DFC_DBG_CONFIG"
         ad_configure "$_project" "$_additionFlags"
         ad_make "$_project"
+
+        local _shortProjectName=$(ad_getShortLibName $_project)
+            
+        echo "Short Name: $_shortProjectName"
+            
+        ad_fix_shared_lib "$_shortProjectName"
     else
         echo "Already Installed."
     fi
@@ -1046,6 +1059,10 @@ buildInstallMapnik() {
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
 }
 
+buildInstallSwig() {
+    buildInstallGeneric "swig-*" "" "" "" ""
+}
+
 ad_getDirFromWC() {
     local _project="$1"
     echo `find . -maxdepth 1 -name "$_project" -prune -type d`
@@ -1187,7 +1204,7 @@ ad_make() {
     local _projectDir=$(ad_getDirFromWC $_project)
     cd $_projectDir
     
-    #make clean || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+    make clean || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     
@@ -1321,6 +1338,7 @@ updateGCC
 cd dependencies
 
 download
+
 updateFindCommand
 install7Zip
 buildInstallPThreads
@@ -1363,6 +1381,7 @@ buildInstallPython
 buildInstallWAF
 buildInstallPyCairo
 buildInstallMapnik
+buildInstallSwig
 #buildInstallAPR
 #buildInstallSVN
 #buildInstallGit

@@ -63,3 +63,5 @@ export PYTHONPATH=
 export PATH=`echo $PATH|sed -e 's/:[^:]*[Pp]ython[^:]*//'`
 
 export PATH=/mingw/opt/bin:$PATH
+
+export FONTCONFIG_FILE=/mingw/etc/fonts/fonts.conf
