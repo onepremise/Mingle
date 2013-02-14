@@ -260,7 +260,7 @@ download () {
         wget --no-check-certificate https://github.com/downloads/mapnik/mapnik/mapnik-v$AD_MAPNIK_VERSION.tar.bz2
     fi
 
-    if ! ( [ -e "swig-$AD_SWIG_VERSION.tar" ] || [ -e "swig-$AD_SWIG_VERSION.tar.gz" ] );then
+    if [ ! -e "swigwin-$AD_SWIG_VERSION.zip" ];then
         wget http://downloads.sourceforge.net/project/swig/swigwin/swigwin-$AD_SWIG_VERSION/swigwin-$AD_SWIG_VERSION.zip
     fi
 }
@@ -970,12 +970,12 @@ buildInstallBoostJam() {
 }
 
 buildInstallBoost() {
-    local _project="boost_-*"
+    local _project="boost_*"
     local _projectDir=$(ad_getDirFromWC "$_project")
 
     ad_decompress "$_project"
 
-    cd $_project
+    cd $_project || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         
     if [ ! -e boost-mingw.patch ]; then
         # Apply patch for https://svn.boost.org/trac/boost/ticket/5023
@@ -1108,7 +1108,7 @@ ad_fix_pkg_cfg() {
 
 ad_fix_shared_lib() {  
     local _origPath=`pwd`
-    cd /mingw/lib
+    cd /mingw/lib || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
     local _libraryName=`ls $1*.a|head -1|sed -e 's/dll\.a//' -e 's/\.a//'`
     
@@ -1186,7 +1186,7 @@ ad_configure() {
     local _additionFlags=$2
     
     local _projectDir=$(ad_getDirFromWC $_project)
-    cd $_projectDir
+    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         
     if [ -e "configure" ]; then
         echo
@@ -1202,7 +1202,7 @@ ad_make() {
     local _project=$1
     
     local _projectDir=$(ad_getDirFromWC $_project)
-    cd $_projectDir
+    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
     make clean || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
@@ -1215,7 +1215,7 @@ ad_boost_jam() {
     local _project=$1
     
     local _projectDir=$(ad_getDirFromWC $_project)
-    cd $_projectDir
+    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
     #this is needed for boost https://svn.boost.org/trac/boost/ticket/6350
     cp /home/developer/mingw.jam tools/build/v2/tools
@@ -1223,7 +1223,7 @@ ad_boost_jam() {
     
    ./bootstrap.sh --with-icu --prefix=/mingw --with-toolset=mingw|| { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
    
-    bjam --prefix=/mingw --with-python python-debugging=off -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 variant=debug,release link=static,shared threading=multi define=MS_WIN64 install
+    bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 variant=debug,release link=static,shared threading=multi define=MS_WIN64 install
     
     cd ..
 }
@@ -1232,7 +1232,7 @@ ad_build() {
     local _project=$1
     
     local _projectDir=$(ad_getDirFromWC $_project)
-    cd $_projectDir
+    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
     ./build.sh  || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
