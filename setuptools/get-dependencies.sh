@@ -452,7 +452,7 @@ buildInstallLibiconv() {
     
     if [ ! -e /mingw/lib/libiconv.a ]; then
         echo "Building Static lib..."
-        make distclean
+        make clean
         ./configure --build=x86_64-w64-mingw32 --disable-shared --prefix=/mingw
         make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
         make install-strip || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
@@ -502,7 +502,7 @@ buildInstallPThreads() {
 }
 
 buildInstallPkgconfig() {
-    buildInstallGeneric "pkg-config-*" "--host=x86_64-w64-mingw32 --with-internal-glib" "pkg-config" "" "pkg-config --version"
+    buildInstallGeneric "pkg-config-*" "--with-internal-glib" "pkg-config" "" "pkg-config --version"
 }
 
 installLibJPEG () {
@@ -655,7 +655,7 @@ buildInstallLOpenSSL() {
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         ad_decompress "$_project"
         
-        local _dir=$(ad_getDirFromWC $_project)
+        local _dir=$(ad_getDirFromWC "$_project")
         cd $_dir
         ./Configure mingw64 shared no-asm no-idea no-mdc2 no-rc5 --prefix=/mingw
         cd ..
@@ -765,7 +765,7 @@ buildInstallFreeType() {
 }
 
 buildInstallSQLite() {
-    buildInstallGeneric "sqlite-*" "" "libsqlite3.a"
+    buildInstallGeneric "sqlite-*" "" "libsqlite3.a" "" "sqlite3 --version"
 }
 
 buildInstallICU() {
@@ -946,8 +946,6 @@ buildInstallPython() {
         
         export "CFLAGS=$CFLAGS -IPC -DMS_WIN64 -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
 		export "LDFLAGS=$LDFLAGS -Ldependencies/lib"
-        
-        echo "Using flags: $CFLAGS"
                
         ad_configure "$_project" "--with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
@@ -1065,12 +1063,14 @@ buildInstallSwig() {
 
 ad_getDirFromWC() {
     local _project="$1"
-    echo `find . -maxdepth 1 -name "$_project" -prune -type d`
+    local _result=`find . -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
+    echo "$_result"
 }
 
 ad_getArchiveFromWC() {
     local _project="$1"
-    echo `find . -maxdepth 1 -name "$_project" -prune -type f`
+    local _result=`find . -maxdepth 1 -name "$_project" -prune -type f -print | head -1`
+    echo "$_result"
 }
 
 ad_rename() {
@@ -1184,27 +1184,90 @@ ad_patch() {
 ad_configure() {
     local _project=$1
     local _additionFlags=$2
+
+    echo "_project=$_project"
     
-    local _projectDir=$(ad_getDirFromWC $_project)
+    local _projectDir=$(ad_getDirFromWC "$_project")
+
+    echo
+    echo "_projectDir = $_projectDir"
+
     cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         
     if [ -e "configure" ]; then
+        local _counter=1
+        local _retries=3
+        local _options="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32"
+
         echo
-        echo "executing: ./configure --target=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags"
+        echo "Using CFLAGS: $CFLAGS"
+        echo "Using LDFLAGS: $LDFLAGS"
+
         echo
-        ./configure --target=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
+        echo "executing: ./configure $_options $_additionFlags"
+        echo
+
+        ./configure $_options $_additionFlags 2>&1 | tee out.txt
+        while [ $? -eq 1 ]
+        do
+            if [ $_counter -gt $_retries ]; then
+                echo "Max configure retries reached. Build Failed!"
+                exit 1
+            fi
+
+            local _test=`cat out.txt|grep "unrecognized option"|sed -e "s/^.*\(--.*\)'/\1/"`
+
+            if [ -z "$_test" ]; then
+                exit 1
+            fi
+
+            local _newflags=`echo $_options $_additionFlags|sed -e "s/$_test//"`
+            _counter=$(( $_counter + 1 ))
+
+            echo
+            echo "Retrying without option: $_test..."
+            echo
+
+            echo
+            echo "executing: ./configure $_newflags"
+            echo
+            
+            ./configure $_newflags &>out.txt
+        done
+
+        if [ -e "out.txt" ]; then
+            rm out.txt
+        fi
     fi
         
     cd ..
 }
 
-ad_make() {
+ad_make_clean() {
+    echo
+    echo "Executing make clean..."
+    echo
+
     local _project=$1
     
-    local _projectDir=$(ad_getDirFromWC $_project)
+    local _projectDir=$(ad_getDirFromWC "$_project")
     cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
-    make clean || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+    make clean
+
+    cd ..
+}
+
+ad_make() {
+    echo
+    echo "Executing make..."
+    echo
+
+    local _project=$1
+    
+    local _projectDir=$(ad_getDirFromWC "$_project")
+    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    
     make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     
@@ -1214,7 +1277,7 @@ ad_make() {
 ad_boost_jam() {
     local _project=$1
     
-    local _projectDir=$(ad_getDirFromWC $_project)
+    local _projectDir=$(ad_getDirFromWC "$_project")
     cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
     #this is needed for boost https://svn.boost.org/trac/boost/ticket/6350
@@ -1231,7 +1294,7 @@ ad_boost_jam() {
 ad_build() {
     local _project=$1
     
-    local _projectDir=$(ad_getDirFromWC $_project)
+    local _projectDir=$(ad_getDirFromWC "$_project")
     cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
     ./build.sh  || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
@@ -1243,7 +1306,7 @@ ad_exec_script() {
     local _project="$1"
     local _postBuildCommand="$2"
     
-    local _projectDir=$(ad_getDirFromWC $_project)
+    local _projectDir=$(ad_getDirFromWC "$_project")
     cd $_projectDir
         
     if [ ! -z "$_postBuildCommand" ]; then
@@ -1295,7 +1358,7 @@ buildInstallGeneric() {
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
-        local _projectDir=$(ad_getDirFromWC $_project)
+        local _projectDir=$(ad_getDirFromWC "$_project")
         
         ad_decompress "$_project"
         ad_configure "$_project" "$_additionFlags"
@@ -1307,6 +1370,7 @@ buildInstallGeneric() {
         elif [ -e "$_projectDir/build.sh" ]; then
             ad_build "$_project"
         else
+            ad_make_clean "$_project"
             ad_make "$_project"
         fi
         
@@ -1375,12 +1439,13 @@ buildInstallCairo
 buildInstallCairomm
 buildInstallLibgeos
 buildInstallGDAL
+buildInstallPython
 buildInstallBoostJam
 buildInstallBoost
-buildInstallPython
 buildInstallWAF
 buildInstallPyCairo
 buildInstallMapnik
+#move swig before gdal
 buildInstallSwig
 #buildInstallAPR
 #buildInstallSVN
