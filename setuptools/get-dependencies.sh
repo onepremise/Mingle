@@ -72,6 +72,8 @@ export AD_POSTGRES_VERSION=9.2.2
 export AD_MAPNIK_VERSION=2.1.0
 
 export AD_SWIG_VERSION=2.0.9
+export AD_PERL_VERSION=5.16.2
+export AD_PERL_SHRT_VERSION=5.0
 
 download () {
     echo "Checking Downloads..."
@@ -263,6 +265,10 @@ download () {
     if [ ! -e "swigwin-$AD_SWIG_VERSION.zip" ];then
         wget http://downloads.sourceforge.net/project/swig/swigwin/swigwin-$AD_SWIG_VERSION/swigwin-$AD_SWIG_VERSION.zip
     fi
+
+    if ! ( [ -e "perl-$AD_PERL_VERSION.tar" ] || [ -e "perl-$AD_PERL_VERSION.tar.gz" ] );then
+        wget http://www.cpan.org/src/$AD_PERL_SHRT_VERSION/perl-$AD_PERL_VERSION.tar.gz
+    fi
 }
 
 setupPaths() {
@@ -366,16 +372,18 @@ buildInstallGLibC() {
 }
 
 buildInstallZlib() {
+    local _project="zlib-*"
+
     echo
     echo "Building zlib..."
     echo
     
     if [ ! -e /mingw/bin/zlib1.dll ]; then
-        if ! ls -d zlib-*/ &> /dev/null; then
-            tar zxvf zlib-*.tar.gz
-        fi
+        ad_decompress "$_project"
 
-        cd zlib-*
+        local _projectdir=$(ad_getDirFromWC $_project)
+    
+        cd $_projectdir
 
         make -f win32/Makefile.gcc || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
 
@@ -398,16 +406,18 @@ buildInstallZlib() {
 }
 
 buildInstallBzip2() {
+    local _project="bzip2-*"
+
     echo
     echo "Building bzip2..."
     echo
     
     if [ ! -e /mingw/bin/bzip2 ]; then
-        if ! ls -d bzip2-*/ &> /dev/null; then
-            tar zxvf bzip2-*.tar.gz
-        fi
+        ad_decompress "$_project"
 
-        cd bzip2*
+        local _projectdir=$(ad_getDirFromWC $_project)
+    
+        cd $_projectdir
 
         make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
 
@@ -425,15 +435,16 @@ buildInstallBzip2() {
 }
 
 buildInstallLibiconv() {
+    local _project="libiconv-*"
     echo
     echo "Building libiconv..."
     echo
     
-    if ! ls -d libiconv-*/ &> /dev/null; then
-        tar zxvf libiconv-*.tar.gz
-    fi
+    ad_decompress "$_project"
+
+    local _projectdir=$(ad_getDirFromWC $_project)
     
-    cd libiconv-*
+    cd $_projectdir
     
     if [ ! -e /mingw/lib/libiconv.dll.a ]; then
         echo "Building Dynamic lib..."
@@ -623,8 +634,8 @@ buildInstallPolarSSL() {
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         ad_decompress "$_project"
-        
-        cd $_project
+        local _projectdir=$(ad_getDirFromWC $_project)
+        cd $_projectdir
         sed -e 's/DESTDIR=\/usr\/local/DESTDIR=\/mingw/g' Makefile>Makefile2
         mv Makefile2 Makefile
         cd ..
@@ -706,8 +717,10 @@ buildInstallFontConfig() {
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         ad_decompress "$_project"
+
+        local _projectdir=$(ad_getDirFromWC $_project)
         
-        cd $_project
+        cd $_projectdir
         
         if [ ! -e fontconfig-mingw.patch ]; then
             cp /home/developer/patches/fontconfig/$AD_FONT_CONFIG/fontconfig-mingw.patch .
@@ -890,12 +903,14 @@ buildInstallPython() {
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$ _binCheck" ] );then
         ad_decompress $_project
+
+        local _projectDir=$(ad_getDirFromWC "$_project")
         
         if ls -d cpython*/ &> /dev/null; then
             mv cpython* python-latest
         fi
         
-        cd $_project
+        cd $_projectDir
         
         if [ ! -e python-mingw.patch ]; then
             #http://bugs.python.org/issue3754
@@ -969,9 +984,10 @@ buildInstallBoostJam() {
 
 buildInstallBoost() {
     local _project="boost_*"
-    local _projectDir=$(ad_getDirFromWC "$_project")
 
     ad_decompress "$_project"
+
+    local _projectDir=$(ad_getDirFromWC "$_project")
 
     cd $_project || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         
@@ -1008,8 +1024,10 @@ buildInstallPyCairo() {
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         ad_decompress "$_project"
+
+        local _projectDir=$(ad_getDirFromWC "$_project")
         
-        cd $_project
+        cd $_projectDir
         
         ./waf configure --target=x86_64-w64-mingw32 --prefix=/mingw --libdir=/mingw/lib --check-c-compiler=gcc
         ./waf build
@@ -1038,11 +1056,12 @@ buildInstallPyCairo() {
 
 buildInstallMapnik() {
     local _project="mapnik-*"
-    local _projectDir=$(ad_getDirFromWC "$_project")
 
     ad_decompress "$_project"
 
-    cd "$_projectDir"
+    local _projectdir=$(ad_getDirFromWC $_project)
+
+    cd "$_projectdir"
         
     if [ ! -e mapnik-mingw.patch ]; then
          #my update
@@ -1052,13 +1071,17 @@ buildInstallMapnik() {
 
     cd ..
 
-    buildInstallGeneric "mapnik-*" "PREFIX=/mingw BOOST_INCLUDES=/mingw/include/boost-1_52 BOOST_LIBS=/mingw/lib configure CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "xxx" "" ""
+    buildInstallGeneric "mapnik-*" "PREFIX=/mingw BOOST_INCLUDES=/mingw/include/boost-1_52 BOOST_LIBS=/mingw/lib configure CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
 }
 
+buildInstallPerl() {
+    buildInstallGeneric "perl-*" "" "xxx" "" ""
+}
+
 buildInstallSwig() {
-    buildInstallGeneric "swig-*" "" "" "" ""
+    buildInstallGeneric "swigwin-*" "" "xxx" "" ""
 }
 
 ad_getDirFromWC() {
@@ -1095,7 +1118,7 @@ ad_relocate_bin_dlls() {
 
     find /mingw/lib -regex "/mingw/lib/$_dllPrefix.*\.dll" | while read line; do
         echo "Copying ${line} to /mingw/bin..."
-        cp ${line} "/mingw/bin" || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        cp -u ${line} "/mingw/bin" || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
     done
 }
 
@@ -1155,17 +1178,17 @@ ad_decompress() {
         echo "Decompressing $_decompFile"...
             
         if [ ${_decompFile: -4} == ".tgz" ]; then
-            tar xzvf $_decompFile
+            tar xzvf $_decompFile || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         elif [ ${_decompFile: -3} == ".gz" ]; then
-            gzip -d $_decompFile
+            gzip -d $_decompFile || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         elif [ ${_decompFile: -3} == ".xz" ]; then
-            xz -d $_decompFile     
+            xz -d $_decompFile || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         elif [ ${_decompFile: -4} == ".bz2" ]; then
-            bzip2 -d $_decompFile
+            bzip2 -d $_decompFile || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         elif [ ${_decompFile: -3} == ".7z" ]; then
-            7za x $_decompFile 
+            7za x $_decompFile || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         elif [ ${_decompFile: -4} == ".zip" ]; then
-            unzip $_decompFile 
+            unzip $_decompFile || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         fi
         
         _decompFile=$(ad_getArchiveFromWC $_project)
@@ -1178,6 +1201,17 @@ ad_decompress() {
 
 ad_patch() {
     local _patchFile=$1
+    local _workingDir=`pwd`
+
+    if [ "/home/developer/dependencies" == "$_workingDir" ]; then
+        echo
+        echo "Current Project Dir: $_workingDir"
+        echo "Patching failed! Patch should be ran from project directory."
+        echo
+
+        exit 1
+    fi
+
     patch --ignore-whitespace -f -p1 < $_patchFile
 }
 
@@ -1253,7 +1287,7 @@ ad_make_clean() {
     local _projectDir=$(ad_getDirFromWC "$_project")
     cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
-    make clean
+    #make clean
 
     cd ..
 }
@@ -1358,9 +1392,10 @@ buildInstallGeneric() {
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
-        local _projectDir=$(ad_getDirFromWC "$_project")
-        
         ad_decompress "$_project"
+
+        local _projectDir=$(ad_getDirFromWC "$_project")
+
         ad_configure "$_project" "$_additionFlags"
 
         local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"`
@@ -1446,7 +1481,8 @@ buildInstallWAF
 buildInstallPyCairo
 buildInstallMapnik
 #move swig before gdal
-buildInstallSwig
+#buildInstallPerl
+#buildInstallSwig
 #buildInstallAPR
 #buildInstallSVN
 #buildInstallGit

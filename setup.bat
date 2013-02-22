@@ -52,18 +52,17 @@ if not exist "packages\%MSYSTOOLS%" (
     EXIT /B 1
 )
 
+REM Best so far.
 set GCCCOMPILER=x86_64-w64-mingw32-gcc-4.7.2-release-win64_rubenvb.7z
 set GCCURL="'http://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/rubenvb/gcc-4.7-release/%GCCCOMPILER%/download'"
 
 REM set GCCCOMPILERUPDATE=x86_64-w64-mingw32-mingw-w64-update-trunk-20130115_rubenvb.7z
 REM set GCCUPDATEURL="'http://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/rubenvb/update/%GCCCOMPILERUPDATE%/download'"
 
-
 REM set GCCCOMPILER=mingw-w64-bin-x86_64-20130104.7z
 REM set GCCURL="'http://www.drangon.org/mingw/mirror.php?num=2&fname=mingw-w64-bin-x86_64-20130104.7z'"
-
                     
-REM set GCCCOMPILER=x64-4.7.2-release-posix-sjlj-rev5.7z
+REM set GCCCOMPILER=x64-4.7.2-release-posix-sjlj-rev9.7z
 REM set GCCURL="'http://sourceforge.net/projects/mingwbuilds/files/host-windows/releases/4.7.2/64-bit/threads-posix/sjlj/%GCCCOMPILER%/download'"
 
 if not exist "packages\%GCCCOMPILER%" (
