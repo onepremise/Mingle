@@ -1,4 +1,6 @@
 @ECHO off
+@setlocal enableextensions
+@cd /d "%~dp0"
 
 REM http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
 
@@ -33,7 +35,6 @@ IF %ERRORLEVEL% EQU 0 (
 )
 
 if not exist "packages" mkdir packages
-
 ECHO "Set Execution Policy..."
 ECHO.
 
@@ -122,7 +123,6 @@ ECHO.
 
 msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
 if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"
-
 ECHO "Make Sure Previous PYTHONPATH is cleared..."
 ECHO.
 
