@@ -15,6 +15,7 @@
 export AD_MFOUR=1.4.16
 export AD_AUTOCONF=2.69
 export AD_AUTOMAKE=1.12.5
+export AD_MINGW64_CRT=2.0.7
 export AD_GLIBC=2.16.0
 export AD_ZLIB=1.2.7
 export AD_BZIP=1.0.6
@@ -22,6 +23,7 @@ export AD_SEVENZIPPATH=9.20
 export AD_SEVENZIP=920
 export AD_PTHREADS=2-9-1
 export AD_PKGCONFIG=0.27.1
+export AD_BINUTILS_VERSION=2.23.1
 export AD_ICU_VERSION=50_1
 export AD_ZLIB_VERSION=1.2.7
 export AD_EXPAT_VERSION=2.1.0
@@ -31,6 +33,12 @@ export AD_OPENSSL_VERSION=1.0.1c
 export AD_LIBXML2_VERSION=2.9.0
 export AD_LIBCURL_VERSION=7.28.1
 
+export AD_GDB_VERSION=7.5
+
+export AD_TCL_VERSION_MAJOR=8.6
+export AD_TCL_VERSION_MINOR=.0
+export AD_TCL_VERSION=$AD_TCL_VERSION_MAJOR$AD_TCL_VERSION_MINOR
+
 export AD_APR_VERSION=1.4.6
 export AD_SVN_VERSION=1.7.7
 export AD_GIT_VERSION=
@@ -39,8 +47,10 @@ export AD_LIBSIGC_PATH_VERSION=2.3
 export AD_LIBSIGC_VERSION=2.3.1
 
 export AD_BOOST_JAM_VERSION=3.1.18
-export AD_BOOST_PATH_VERSION=1.52.0
-export AD_BOOST_VERSION=1_52_0
+
+export AD_BOOST_MINOR_VERSION=52
+export AD_BOOST_PATH_VERSION=1."$AD_BOOST_MINOR_VERSION".0
+export AD_BOOST_VERSION=1_"$AD_BOOST_MINOR_VERSION"_0
 
 export AD_FONT_CONFIG=2.10.0
 export AD_FREETYPE_VERSION=2.4.10
@@ -62,11 +72,12 @@ export AD_CAIRO_VERSION=1.12.8
 export AD_CAIROMM_VERSION=1.10.0
 export AD_PYCAIRO_VERSION=1.10.0
 
-#export AD_PYTHON_VERSION=3.3.0
 export AD_PYTHON_MAJOR=2.7
 export AD_PYTHON_MINOR=.3
 export AD_PYTHON_VERSION=$AD_PYTHON_MAJOR$AD_PYTHON_MINOR
+export AD_NOSE_VERSION=1.2.1
 export AD_WAF_VERSION=1.7.8
+
 export AD_POSTGRES_VERSION=9.2.2
 
 export AD_MAPNIK_VERSION=2.1.0
@@ -101,10 +112,22 @@ download () {
     if ! ( [ -e "automake-$AD_AUTOMAKE.tar" ] || [ -e "automake-$AD_AUTOMAKE.tar.gz" ] );then
         wget http://ftp.gnu.org/gnu/automake/automake-$AD_AUTOMAKE.tar.gz
     fi
+
+    if ! ( [ -e "mingw-w64-v$AD_MINGW64_CRT.tar" ] || [ -e "mingw-w64-v$AD_MINGW64_CRT.tar.gz" ] );then
+        wget http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-v$AD_MINGW64_CRT.tar.gz
+    fi
     
-    #if ! ( [ -e "glibc-$AD_GLIBC.tar" ] || [ -e "glibc-$AD_GLIBC.tar.xz" ] );then
-    #    wget http://ftp.gnu.org/gnu/libc/glibc-$AD_GLIBC.tar.xz
-    #fi
+    if ! ( [ -e "glibc-$AD_GLIBC.tar" ] || [ -e "glibc-$AD_GLIBC.tar.xz" ] );then
+        wget http://ftp.gnu.org/gnu/libc/glibc-$AD_GLIBC.tar.xz
+    fi
+
+    if ! ( [ -e "gdb-$AD_GDB_VERSION.tar" ] || [ -e "gdb-$AD_GDB_VERSION.tar.gz" ] );then
+        wget http://ftp.gnu.org/gnu/gdb/gdb-$AD_GDB_VERSION.tar.gz
+    fi
+
+    if ! ( [ -e "tcl$AD_TCL_VERSION-src.tar" ] || [ -e "tcl$AD_TCL_VERSION-src.tar.gz" ] );then
+        wget http://prdownloads.sourceforge.net/tcl/tcl$AD_TCL_VERSION-src.tar.gz
+    fi
     
     if ! ( [ -e "libtool-2.4.2.tar" ] || [ -e "libtool-2.4.2.tar.gz" ] );then
         wget http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz
@@ -128,6 +151,10 @@ download () {
 
     if ! ( [ -e "pkg-config-$AD_PKGCONFIG.tar" ] || [ -e "pkg-config-$AD_PKGCONFIG.tar.gz" ] );then
         wget http://pkgconfig.freedesktop.org/releases/pkg-config-$AD_PKGCONFIG.tar.gz
+    fi
+
+    if ! ( [ -e "binutils-$AD_BINUTILS_VERSION.tar" ] || [ -e "binutils-$AD_BINUTILS_VERSION.tar.gz" ] );then
+        wget http://ftp.gnu.org/gnu/binutils/binutils-$AD_BINUTILS_VERSION.tar.gz
     fi
     
     if [ ! -e "boost-jam-"$AD_BOOST_JAM_VERSION".tgz" ]; then
@@ -241,6 +268,10 @@ download () {
     if [ ! -e "Python-$AD_PYTHON_VERSION.tgz" ];then
         wget http://www.python.org/ftp/python/$AD_PYTHON_VERSION/Python-$AD_PYTHON_VERSION.tgz
     fi
+
+    if ! ( [ -e "nose-$AD_NOSE_VERSION.tar" ] || [ -e "nose-$AD_NOSE_VERSION.tar.gz" ] );then
+        wget --no-check-certificate https://pypi.python.org/packages/source/n/nose/nose-$AD_NOSE_VERSION.tar.gz
+    fi
     
     if ! ( [ -e "waf-$AD_WAF_VERSION.tar" ] || [ -e "waf-$AD_WAF_VERSION.tar.bz2" ] );then
         wget http://waf.googlecode.com/files/waf-$AD_WAF_VERSION.tar.bz2
@@ -261,6 +292,10 @@ download () {
     if ! ( [ -e "mapnik-v$AD_MAPNIK_VERSION.tar" ] || [ -e "mapnik-v$AD_MAPNIK_VERSION.tar.bz2" ] );then
         wget --no-check-certificate https://github.com/downloads/mapnik/mapnik/mapnik-v$AD_MAPNIK_VERSION.tar.bz2
     fi
+
+    #if [ ! -e "mapnik-v$AD_MAPNIK_VERSION.zip" ];then
+    #    wget --no-check-certificate https://github.com/mapnik/mapnik/archive/master.zip -O mapnik-v$AD_MAPNIK_VERSION.zip
+    #fi
 
     if [ ! -e "swigwin-$AD_SWIG_VERSION.zip" ];then
         wget http://downloads.sourceforge.net/project/swig/swigwin/swigwin-$AD_SWIG_VERSION/swigwin-$AD_SWIG_VERSION.zip
@@ -363,12 +398,120 @@ buildInstallAutoMake() {
     buildInstallGeneric "automake-*" "" "automake" "" "automake --version"
 }
 
+buildInstallMingw64CRT() {
+    if ad_isDateNewerThanFileModTime "2013-01-01" "/mingw/x86_64-w64-mingw32/lib/libcrtdll.a"; then
+        buildInstallGeneric "mingw-w64-*" "" "x" "" ""
+    else
+        echo "Mingw64 CRT is up to date."
+    fi
+}
+
 buildInstallLibtool() {
     buildInstallGeneric "libtool-*" "" "libtool" "" "libtool --version"
 }
 
 buildInstallGLibC() {
     buildInstallGeneric "glibc-*" "" "xxx" "" ""
+}
+
+buildInstallGDB() {
+    local _project="gdb-*"
+
+    if ad_isDateNewerThanFileModTime "2013-01-01" "/mingw/bin/gdb.exe"; then
+        ad_decompress "$_project"
+
+        local _projectDir=$(ad_getDirFromWC "$_project")
+
+        cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+        
+        if [ ! -e gdb-mingw.patch ]; then
+            cp /home/developer/patches/gdb/$AD_GDB_VERSION/gdb-mingw.patch .
+            ad_patch "gdb-mingw.patch"
+        fi
+
+        if [ ! -e gdb-python.patch ]; then
+            cp /home/developer/patches/gdb/$AD_GDB_VERSION/gdb-python.patch .
+            ad_patch "gdb-python.patch"
+        fi
+        
+        cd ..
+
+        buildInstallGeneric "$_project" "--with-python --enable-shared" "x" "" "gdb --version"
+
+        cd $_projectDir/gdb
+
+        # Need to fix this in Makefile
+        x86_64-w64-mingw32-gcc.exe -o _gdb.pyd -s -shared -Wl,--out-implib=libgdb.dll.a  -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive *.o -Wl,--no-whole-archive -L../bfd -lbfd -L../liberty -liberty -L/mingw/lib -L../readline -lreadline -lhistory -L../libdecnumber -ldecnumber -L../opcodes -lopcodes -lz -lws2_32 -lpython2.7 -lexpat -L../intl -lintl -liconv
+
+        cp -f _gdb.pyd /mingw/share/gdb/python/gdb
+        cp -rf /mingw/share/gdb/python/gdb /mingw/lib/python2.7/site-packages/gdb
+
+        cd ../..
+    else
+        echo "GDB is up to date."
+    fi
+}
+
+buildInstallTCL() {
+    local _project="tcl$AD_TCL_VERSION_MAJOR*"
+    local _additionFlags="--enable-64bit --enable-shared=no"
+    #local _binCheck="xxx"
+    local _binCheck="tclsh"
+    local _exeToTest=""
+    
+    echo
+    echo "Building $_project..."
+    echo
+    
+    ad_preCleanEnv
+    
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        ad_decompress "$_project"
+
+        local _projectdir=$(ad_getDirFromWC $_project)
+
+        cd $_projectdir/compat/zlib
+
+        make -f win32/Makefile.gcc    
+
+        cd ../../win
+
+        cp -rf ../compat/zlib/*.o .
+
+        ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
+
+        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+
+        local _savedir=`pwd`
+
+        cd /mingw/bin
+
+        ln -sf $_savedir/tclsh`echo $AD_TCL_VERSION_MAJOR|sed 's/\.//'`s.exe tclsh.exe
+
+        cd $_savedir
+        
+        make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+
+        cd /mingw/bin
+
+        ln -sf tclsh`echo $AD_TCL_VERSION_MAJOR|sed 's/\.//'`s.exe tclsh.exe
+
+        cd $_savedir
+
+        cd ..
+        cd ..
+    else
+        echo "Already Installed."
+    fi
+    
+    ad_run_test "$_exeToTest"
+    
+    echo
+}
+
+buildInstallTk() {
+    buildInstallGeneric "tk$AD_TCL_VERSION_MAJOR*" "--enable-64bit --enable-shared=no" "libtk86.a" "" ""
 }
 
 buildInstallZlib() {
@@ -510,6 +653,10 @@ buildInstallPThreads() {
     fi
     
     echo
+}
+
+buildInstallBinutils() {
+    buildInstallGeneric "binutils-*" "" "dllwrap.exe" "" "dllwrap.exe --version"
 }
 
 buildInstallPkgconfig() {
@@ -937,6 +1084,14 @@ buildInstallPython() {
             mkdir dependencies/lib
         fi
 
+		cp -rf /mingw/lib/tcl* dependencies/lib/
+        cp -rf /mingw/lib/libtcl* dependencies/lib/
+        cp -rf /mingw/include/tcl* dependencies/include
+
+        cp -rf /mingw/lib/libtk* dependencies/lib/
+        cp -rf /mingw/include/tk* dependencies/include
+        cp -rf /mingw/include/X11* dependencies/include
+
 		cp -f /mingw/lib/libexpat.* dependencies/lib
         cp -f /mingw/include/expat* dependencies/include
 
@@ -974,6 +1129,27 @@ buildInstallPython() {
 	ad_run_test "$_exeToTest"
 }
 
+buildInstallSetupTools() {
+    echo
+    echo "Building Python SetupTools..."
+    echo
+
+    if [ ! -e dependencies ]; then
+        cd /mingw/lib/python2.7/site-packages
+
+        wget http://peak.telecommunity.com/dist/ez_setup.py
+
+        python ez_setup.py --install-dir=.
+    else
+        echo "Already Installed."
+    fi
+}
+
+buildInstallNose() {
+    cd /mingw/lib/python2.7/site-packages
+    easy_install --install-dir=. nose
+}
+
 buildInstallWAF() {
     buildInstallGeneric "waf-*" "" "waf" "" ""
 }
@@ -1000,7 +1176,7 @@ buildInstallBoost() {
     cd ..
 
     export CPLUS_INCLUDE_PATH=/mingw/include/python2.7
-    buildInstallGeneric "boost_*" "" "libboost_wave-47-mt-d-1_52.lib" "" ""
+    buildInstallGeneric "boost_*" "" "boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll" "" ""
     export CPLUS_INCLUDE_PATH=
 
     ad_relocate_bin_dlls "boost_"
@@ -1071,7 +1247,7 @@ buildInstallMapnik() {
 
     cd ..
 
-    buildInstallGeneric "mapnik-*" "PREFIX=/mingw BOOST_INCLUDES=/mingw/include/boost-1_52 BOOST_LIBS=/mingw/lib configure CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
+    buildInstallGeneric "mapnik-*" "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
 }
@@ -1082,6 +1258,28 @@ buildInstallPerl() {
 
 buildInstallSwig() {
     buildInstallGeneric "swigwin-*" "" "xxx" "" ""
+}
+
+ad_isDateNewerThanFileModTime() {
+    local _checkdate=$1
+    local _filename=$2
+
+    if [ ! -e $_filename ]; then
+        return 0
+    fi
+
+    local _chkdtseconds=`date -d "$_checkdate" +%s`
+
+    local _getfiledate=`stat -c %y $_filename|sed 's/ .*//'`
+    local _cnvrtfieldate=`date -d "$_getfiledate" +%s`
+
+    echo "comparing provided date ($_checkdate, $_chkdtseconds), with filedate ($_getfiledate, $_cnvrtfieldate)."
+
+    if [ "$_chkdtseconds" -gt "$_cnvrtfieldate" ]; then
+        return 0
+    fi
+
+    return 1
 }
 
 ad_getDirFromWC() {
@@ -1162,9 +1360,10 @@ ad_fix_shared_lib() {
 }
 
 ad_preCleanEnv() {
-    export "CFLAGS=-I/mingw/include"
+    #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
+    export "CFLAGS=-I/mingw/include -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "LDFLAGS=-L/mingw/lib"
-    export "CPPFLAGS=-I/mingw/include" 
+    export "CPPFLAGS=-I/mingw/include  -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO" 
     export "CRYPTO=POLARSSL"
 }
 
@@ -1278,16 +1477,17 @@ ad_configure() {
 }
 
 ad_make_clean() {
-    echo
-    echo "Executing make clean..."
-    echo
-
     local _project=$1
+
+    echo
+    echo "Executing make clean for $_project..."
+    echo
     
     local _projectDir=$(ad_getDirFromWC "$_project")
+
     cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
     
-    #make clean
+    make distclean || make clean
 
     cd ..
 }
@@ -1320,7 +1520,7 @@ ad_boost_jam() {
     
    ./bootstrap.sh --with-icu --prefix=/mingw --with-toolset=mingw|| { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
    
-    bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 variant=debug,release link=static,shared threading=multi define=MS_WIN64 install
+    bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 threadapi=win32 variant=debug,release link=static,shared threading=multi define=MS_WIN64 define=BOOST_USE_WINDOWS_H --define=__MINGW32__ --define=_WIN64 --define=MS_WIN64 install
     
     cd ..
 }
@@ -1405,7 +1605,6 @@ buildInstallGeneric() {
         elif [ -e "$_projectDir/build.sh" ]; then
             ad_build "$_project"
         else
-            ad_make_clean "$_project"
             ad_make "$_project"
         fi
         
@@ -1438,6 +1637,10 @@ cd dependencies
 
 download
 
+#buildInstallMapnik
+
+#exit
+
 updateFindCommand
 install7Zip
 buildInstallPThreads
@@ -1447,11 +1650,15 @@ buildInstallAutoconf
 buildInstallAutoMake
 buildInstallLibtool
 buildInstallPkgconfig
+buildInstallMingw64CRT
 #Not ready for mingw64
 #buildInstallGLibC
 buildInstallZlib
 buildInstallBzip2
 buildInstallLibiconv
+buildInstallBinutils
+buildInstallTCL
+buildInstallTk
 installLibJPEG
 installLibPNG
 installLibTiff
@@ -1475,6 +1682,9 @@ buildInstallCairomm
 buildInstallLibgeos
 buildInstallGDAL
 buildInstallPython
+buildInstallSetupTools
+buildInstallNose
+buildInstallGDB
 buildInstallBoostJam
 buildInstallBoost
 buildInstallWAF

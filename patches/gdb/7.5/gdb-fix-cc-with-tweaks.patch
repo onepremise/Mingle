@@ -1,0 +1,26 @@
+2012-09-14  Khoo Yit Phang  <khooyp@cs.umd.edu>
+
+	Point contrib/cc-with-tweaks.sh to the build-local data-directory.
+	* contrib/cc-with-tweaks.sh (GDB): Add -data-directory
+	data-directory as appropriate.
+
+diff --git gdb-7.5/gdb/contrib/cc-with-tweaks.sh b/gdb/contrib/cc-with-tweaks.sh
+--- gdb-7.5/gdb/contrib/cc-with-tweaks.sh
++++ b/gdb/contrib/cc-with-tweaks.sh
+@@ -46,13 +46,13 @@
+ then
+     if [ -f ./gdb ]
+     then
+-	GDB="./gdb"
++	GDB="./gdb -data-directory data-directory"
+     elif [ -f ../gdb ]
+     then
+-	GDB="../gdb"
++	GDB="../gdb -data-directory ../data-directory"
+     elif [ -f ../../gdb ]
+     then
+-	GDB="../../gdb"
++	GDB="../../gdb -data-directory ../../data-directory"
+     else
+ 	echo "$myname: unable to find usable gdb" >&2
+ 	exit 1

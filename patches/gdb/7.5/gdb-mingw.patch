@@ -1,0 +1,14 @@
+$ diff -ruN gdb-7.5/gdb/python/python-config.py gdb-7.5/gdb/python/python-config.py.new
+--- gdb-7.5/gdb/python/python-config.py 2011-01-30 23:42:08 -0500
++++ gdb-7.5/gdb/python/python-config.py.new     2013-03-12 13:38:43 -0400
+@@ -67,8 +67,8 @@
+         # shared library in prefix/lib/.
+         if opt == '--ldflags':
+             if not getvar('Py_ENABLE_SHARED'):
+-                if getvar('LIBPL') is not None:
+-                    libs.insert(0, '-L' + getvar('LIBPL'))
++                if getvar('LIBDIR') is not None:
++                    libs.insert(0, '-L' + getvar('LIBDIR'))
+                 elif os.name == 'nt':
+                     libs.insert(0, '-L' + sysconfig.PREFIX + '/libs')
+             if getvar('LINKFORSHARED') is not None:

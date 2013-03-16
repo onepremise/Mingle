@@ -1,0 +1,28 @@
+diff -ruN boost_1_52_0/tools/build/v2/tools/python.jam _boost_1_52_0/tools/build/v2/tools/python.jam
+--- boost_1_52_0/tools/build/v2/tools/python.jam	2012-04-25 23:35:55 -0400
++++ _boost_1_52_0/tools/build/v2/tools/python.jam	2013-01-31 12:29:20 -0500
+@@ -476,15 +476,6 @@
+             exprs += $(s) ;
+         }
+ 
+-        # Invoke Python and ask it for all those values.
+-        if [ version.check-jam-version 3 1 17 ] || ( [ os.name ] != NT )
+-        {
+-            # Prior to version 3.1.17 Boost Jam's SHELL command did not support
+-            # quoted commands correctly on Windows. This means that on that
+-            # platform we do not support using a Python command interpreter
+-            # executable whose path contains a space character.
+-            python-cmd = \"$(python-cmd)\" ;
+-        }
+         local full-cmd =
+             $(python-cmd)" -c \"from sys import *; print('"$(format:J=\\n)"' % ("$(exprs:J=,)"))\"" ;
+ 
+@@ -670,7 +661,7 @@
+     if <target-os>windows in $(requirements)
+     {
+         local major-minor = [ split-version $(version) ] ;
+-        lib-version = $(major-minor:J="") ;
++        lib-version = $(major-minor:J=".") ;
+         if <python-debugging>on in $(requirements)
+         {
+             lib-version = $(lib-version)_d ;

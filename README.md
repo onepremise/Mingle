@@ -23,6 +23,7 @@ The following projects are fully building in the environment setup:
 * libpng
 * libtiff
 * expat
+* TCL
 * ICU
 * SQLite
 * freetype
@@ -45,6 +46,7 @@ The following projects are fully building in the environment setup:
 * boost
 * python2.7
 * python3.3 (Very Experimental)
+* GDB w/python debugger
 * waf
 * pycairo
 * mapnik
