@@ -1131,11 +1131,13 @@ buildInstallPython() {
 
 buildInstallSetupTools() {
     echo
-    echo "Building Python SetupTools..."
+    echo "Downloading and configuring Python SetupTools..."
     echo
 
-    if [ ! -e dependencies ]; then
-        cd /mingw/lib/python2.7/site-packages
+    local _savedir=`pwd`
+        
+    if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/easy_install.exe ]; then
+        cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
 
         wget http://peak.telecommunity.com/dist/ez_setup.py
 
@@ -1143,11 +1145,23 @@ buildInstallSetupTools() {
     else
         echo "Already Installed."
     fi
+
+    cd $_savedir
 }
 
 buildInstallNose() {
-    cd /mingw/lib/python2.7/site-packages
-    easy_install --install-dir=. nose
+    echo
+    echo "Downloading and configuring Nose..."
+    echo
+
+    local _savedir=`pwd`
+
+    if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/nosetests.exe ]; then
+        cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+        easy_install --install-dir=. nose
+    fi
+
+    cd $_savedir
 }
 
 buildInstallWAF() {
