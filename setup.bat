@@ -35,6 +35,7 @@ IF %ERRORLEVEL% EQU 0 (
 )
 
 if not exist "packages" mkdir packages
+
 ECHO "Set Execution Policy..."
 ECHO.
 
@@ -123,6 +124,7 @@ ECHO.
 
 msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
 if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"
+
 ECHO "Make Sure Previous PYTHONPATH is cleared..."
 ECHO.
 
@@ -173,8 +175,11 @@ if not exist "mingw64\bin\ml64.exe" (
        EXIT /B 1
     )
 
-    copy "%VS110COMNTOOLS%..\IDE\mspdb110.dll" mingw64\bin\
-    copy "%VS110COMNTOOLS%..\..\VC\bin\x86_amd64\*.*" mingw64\bin\
+    REM BUG!!!copy "%VS110COMNTOOLS%..\IDE\mspdb110.dll" mingw64\bin\
+    REM copy "%VS110COMNTOOLS%..\..\VC\bin\amd64\mspdbsrv.exe" mingw64\bin\
+    REM copy "%VS110COMNTOOLS%..\..\VC\bin\amd64\mspdbcore.dll" mingw64\bin\
+    REM copy "%VS110COMNTOOLS%..\..\VC\bin\amd64\mspdb110.dll" mingw64\bin\
+    REM copy "%VS110COMNTOOLS%..\..\VC\bin\x86_amd64\*.*" mingw64\bin\
 )
 
 ECHO.
@@ -186,7 +191,7 @@ IF NOT EXIST mingw64\win64bitlibs (
 )
 
 ECHO.
-ECHO "Copy 64bit system libraries..."
+ECHO "Copy 64 bit system libraries..."
 ECHO.
 
 COPY %WINDIR%\System32\gdi32.dll mingw64\win64bitlibs /y
@@ -196,17 +201,38 @@ COPY %WINDIR%\System32\crypt32.dll mingw64\win64bitlibs /y
 COPY %WINDIR%\System32\Wldap32.dll mingw64\win64bitlibs /y
 
 move mingw64\win64bitlibs\gdi32.dll mingw64\win64bitlibs\libgdi32.dll
-move mingw64\win64bitlibs\msimg32.dll mingw64\win64bitlibs\libmsimg32
+move mingw64\win64bitlibs\msimg32.dll mingw64\win64bitlibs\libmsimg32.dll
 move mingw64\win64bitlibs\ws2_32.dll mingw64\win64bitlibs\libws2_32.dll
 move mingw64\win64bitlibs\crypt32.dll mingw64\win64bitlibs\libcrypt32.dll
 move mingw64\win64bitlibs\Wldap32.dll mingw64\win64bitlibs\libwldap32.dll
+
+
+ECHO.
+ECHO "Copy 32 bit system libraries..."
+ECHO.
+
+IF NOT EXIST mingw64\win32bitlibs (
+    mkdir mingw64\win32bitlibs
+)
+
+COPY %WINDIR%\SysWOW64\gdi32.dll mingw64\win32bitlibs /y
+COPY %WINDIR%\SysWOW64\msimg32.dll mingw64\win32bitlibs /y
+COPY %WINDIR%\SysWOW64\ws2_32.dll mingw64\win32bitlibs /y
+COPY %WINDIR%\SysWOW64\crypt32.dll mingw64\win32bitlibs /y
+COPY %WINDIR%\SysWOW64\Wldap32.dll mingw64\win32bitlibs /y
+
+move mingw64\win32bitlibs\gdi32.dll mingw64\win32bitlibs\libgdi32.dll
+move mingw64\win32bitlibs\msimg32.dll mingw64\win32bitlibs\libmsimg32.dll
+move mingw64\win32bitlibs\ws2_32.dll mingw64\win32bitlibs\libws2_32.dll
+move mingw64\win32bitlibs\crypt32.dll mingw64\win32bitlibs\libcrypt32.dll
+move mingw64\win32bitlibs\Wldap32.dll mingw64\win32bitlibs\libwldap32.dll
 
 ECHO.
 ECHO "Copy build scripts and configs..."
 ECHO.
 
-XCOPY /S /Y setuptools\mingw.jam msys\home\developer\
-XCOPY /S /Y setuptools\get-dependencies.sh msys\home\developer\
+XCOPY /Y setuptools\mingw.jam msys\home\developer\
+XCOPY /Y setuptools\get-dependencies.sh msys\home\developer\
 
 IF NOT EXIST "msys\home\developer\patches" MKDIR msys\home\developer\patches
 XCOPY /S /Y patches msys\home\developer\patches
