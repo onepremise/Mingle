@@ -75,6 +75,7 @@ export AD_PYCAIRO_VERSION=1.10.0
 export AD_PYTHON_MAJOR=2.7
 export AD_PYTHON_MINOR=.3
 export AD_PYTHON_VERSION=$AD_PYTHON_MAJOR$AD_PYTHON_MINOR
+export AD_SETUPTOOLS_VERSION=0.6c11
 export AD_NOSE_VERSION=1.2.1
 export AD_WAF_VERSION=1.7.8
 
@@ -269,6 +270,10 @@ download () {
         wget http://www.python.org/ftp/python/$AD_PYTHON_VERSION/Python-$AD_PYTHON_VERSION.tgz
     fi
 
+    if ! ( [ -e "setuptools-$AD_SETUPTOOLS_VERSION.tar" ] || [ -e "setuptools-$AD_SETUPTOOLS_VERSION.tar.gz" ] );then
+        wget --no-check-certificate https://pypi.python.org/packages/source/s/setuptools/setuptools-$AD_SETUPTOOLS_VERSION.tar.gz#md5=7df2a529a074f613b509fb44feefe74ecd s
+    fi
+
     if ! ( [ -e "nose-$AD_NOSE_VERSION.tar" ] || [ -e "nose-$AD_NOSE_VERSION.tar.gz" ] );then
         wget --no-check-certificate https://pypi.python.org/packages/source/n/nose/nose-$AD_NOSE_VERSION.tar.gz
     fi
@@ -303,6 +308,26 @@ download () {
 
     if ! ( [ -e "perl-$AD_PERL_VERSION.tar" ] || [ -e "perl-$AD_PERL_VERSION.tar.gz" ] );then
         wget http://www.cpan.org/src/$AD_PERL_SHRT_VERSION/perl-$AD_PERL_VERSION.tar.gz
+    fi
+
+    if [ ! -e "mapnik-stylesheets.zip" ];then
+        wget --no-check-certificate https://github.com/openstreetmap/mapnik-stylesheets/archive/master.zip -O mapnik-stylesheets.zip
+    fi
+
+    #if [ ! -e "node-mapnik.zip" ];then
+    #    wget --no-check-certificate https://github.com/mapnik/node-mapnik/archive/master.zip -O node-mapnik.zip
+    #fi
+
+    #if ! ( [ -e "node-v0.10.0.tar" ] || [ -e "node-v0.10.0.tar.gz" ] );then
+    #    wget http://nodejs.org/dist/v0.10.0/node-v0.10.0.tar.gz
+    #fi
+
+    #if [ ! -e "werkzeug.zip" ];then
+    #    wget --no-check-certificate https://github.com/mitsuhiko/werkzeug/archive/master.zip -O werkzeug.zip
+    #fi
+
+    if [ ! -e "tilelite.zip" ];then
+        wget --no-check-certificate https://bitbucket.org/springmeyer/tilelite/get/7edec82b0e1f.zip -O tilelite.zip
     fi
 }
 
@@ -1114,7 +1139,7 @@ buildInstallPython() {
 
         cd ..          
         
-        export "CFLAGS=$CFLAGS -IPC -DMS_WIN64 -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
+        export "CFLAGS=$CFLAGS -IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
 		export "LDFLAGS=$LDFLAGS -Ldependencies/lib"
                
         ad_configure "$_project" "--with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
@@ -1135,13 +1160,23 @@ buildInstallSetupTools() {
     echo
 
     local _savedir=`pwd`
+    local _project="setuptools-*"
+
+    ad_decompress "$_project"
+
+    local _projectDir=$(ad_getDirFromWC "$_project")
+
+    cd $_project || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
         
     if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/easy_install.exe ]; then
+        setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
+
         cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+        echo "[easy_install]">setup.cfg
+        echo >> setup.cfg
+        echo "install_dir = `python -c "import sysconfig;print sysconfig.get_path('purelib')"`">> setup.cfg
 
-        wget http://peak.telecommunity.com/dist/ez_setup.py
-
-        python ez_setup.py --install-dir=.
+        echo "Complete."
     else
         echo "Already Installed."
     fi
@@ -1159,9 +1194,55 @@ buildInstallNose() {
     if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/nosetests.exe ]; then
         cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
         easy_install --install-dir=. nose
+    else
+        echo "Already Installed."
     fi
 
     cd $_savedir
+}
+
+buildInstallWerkzeug() {
+    echo
+    echo "Downloading and configuring Werkzeug..."
+    echo
+
+    local _savedir=`pwd`
+
+    cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+    easy_install --install-dir=. Werkzeug
+
+    cd $_savedir
+}
+
+buildInstallTileLite() {
+    echo
+    echo "Downloading and configuring TileLite..."
+    echo
+
+    local _savedir=`pwd`
+    local _project="tilelite*"
+
+    ad_decompress "$_project"
+
+    local _projectDir=$(ad_getDirFromWC "$_project")
+
+    cd $_project || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+
+    if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/liteserv.py ]; then
+         python setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
+    else
+        echo "Already Installed."
+    fi
+
+    cd $_savedir
+}
+
+buildInstallNode() {
+    buildInstallGeneric "node-v*" "" "xxx"
+}
+
+buildInstallNodeMapnik() {
+    buildInstallGeneric "node-mapnik*" "" "xxx"
 }
 
 buildInstallWAF() {
@@ -1245,7 +1326,7 @@ buildInstallPyCairo() {
 }
 
 buildInstallMapnik() {
-    local _project="mapnik-*"
+    local _project="mapnik-v*"
 
     ad_decompress "$_project"
 
@@ -1261,9 +1342,52 @@ buildInstallMapnik() {
 
     cd ..
 
-    buildInstallGeneric "mapnik-*" "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
+    buildInstallGeneric "mapnik-*" "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
+}
+
+buildInstallMapnikStylesheets() {
+    local _project="mapnik-stylesheets*"
+
+    ad_decompress "$_project"
+
+    local _projectdir=$(ad_getDirFromWC $_project)
+
+    cd "$_projectdir"
+
+    if [ ! -e "world_boundaries-spherical.tgz" ];then
+        wget http://tile.openstreetmap.org/world_boundaries-spherical.tgz
+        tar xzf world_boundaries-spherical.tgz
+    fi
+
+    if [ ! -e "processed_p.tar.bz2" ];then
+        wget http://tile.openstreetmap.org/processed_p.tar.bz2
+        tar xjf processed_p.tar.bz2 -C world_boundaries
+    fi
+
+    if [ ! -e "shoreline_300.tar.bz2" ];then
+        wget http://tile.openstreetmap.org/shoreline_300.tar.bz2
+        tar xjf shoreline_300.tar.bz2 -C world_boundaries
+    fi
+
+    if [ ! -e "ne_10m_populated_places.zip" ];then
+        wget http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/ne_10m_populated_places.zip
+        unzip -q ne_10m_populated_places.zip -d world_boundaries
+    fi
+
+    if [ ! -e "ne_110m_admin_0_boundary_lines_land.zip" ];then
+        wget http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_boundary_lines_land.zip
+        unzip -q ne_110m_admin_0_boundary_lines_land.zip -d world_boundaries
+    fi
+
+    # generate_xml.py --host=localhost --port=5432 --dbname osm --user osm --password osm --accept-none osm.xml ha-osm.xml generate_xml.py --host=localhost --port=5432 --dbname osm --user osm --password osm --accept-none osm.xml ha-osm.xml
+
+    # liteserv.py mapnik-xml/ha-osm.xml
+    # liteserv.py mapnik-xml/ha-osm.xml --processes=4 --caching
+    # liteserv.py mapnik-xml/ha-osm.xml --caching
+
+    cd ..
 }
 
 buildInstallPerl() {
@@ -1375,9 +1499,9 @@ ad_fix_shared_lib() {
 
 ad_preCleanEnv() {
     #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
-    export "CFLAGS=-I/mingw/include -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
+    export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "LDFLAGS=-L/mingw/lib"
-    export "CPPFLAGS=-I/mingw/include  -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO" 
+    export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO" 
     export "CRYPTO=POLARSSL"
 }
 
@@ -1454,8 +1578,10 @@ ad_configure() {
         echo "executing: ./configure $_options $_additionFlags"
         echo
 
-        ./configure $_options $_additionFlags 2>&1 | tee out.txt
-        while [ $? -eq 1 ]
+        local _newflags="$_options $_additionFlags"
+
+        ./configure $_newflags &>out.txt
+        while [ $? -ge 1 ]
         do
             if [ $_counter -gt $_retries ]; then
                 echo "Max configure retries reached. Build Failed!"
@@ -1465,10 +1591,13 @@ ad_configure() {
             local _test=`cat out.txt|grep "unrecognized option"|sed -e "s/^.*\(--.*\)'/\1/"`
 
             if [ -z "$_test" ]; then
-                exit 1
+                _test=`cat out.txt|grep "error: no such option:"|sed -e "s/^.*\(--.*\)/\1/"`
+                if [ -z "$_test" ]; then
+                    exit 1
+                fi
             fi
 
-            local _newflags=`echo $_options $_additionFlags|sed -e "s/$_test//"`
+            _newflags=`echo "$_newflags "|sed -e "s/$_test[^ ]* //"`
             _counter=$(( $_counter + 1 ))
 
             echo
@@ -1481,6 +1610,8 @@ ad_configure() {
             
             ./configure $_newflags &>out.txt
         done
+
+        cat out.txt
 
         if [ -e "out.txt" ]; then
             rm out.txt
@@ -1573,7 +1704,7 @@ ad_run_test() {
         echo "Executing $_exeToTest..."
         if ! $_exeToTest; then
             echo "Build Failed!"
-            exit 0;
+            exit -1;
         fi 
     fi    
 }
@@ -1609,6 +1740,8 @@ buildInstallGeneric() {
         ad_decompress "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
+
+        echo "_projectDir = $_projectDir"
 
         ad_configure "$_project" "$_additionFlags"
 
@@ -1698,12 +1831,17 @@ buildInstallGDAL
 buildInstallPython
 buildInstallSetupTools
 buildInstallNose
+buildInstallWerkzeug
+buildInstallTileLite
 buildInstallGDB
 buildInstallBoostJam
 buildInstallBoost
 buildInstallWAF
 buildInstallPyCairo
 buildInstallMapnik
+buildInstallMapnikStylesheets
+#buildInstallNode
+#buildInstallNodeMapnik
 #move swig before gdal
 #buildInstallPerl
 #buildInstallSwig
@@ -1716,3 +1854,5 @@ echo "Finished Building Modules."
 echo
 
 cd ..
+
+exit 0

@@ -715,28 +715,7 @@ diff -ruN Python-2.7.3//Lib/distutils/unixccompiler.py _Python-2.7.3/Lib/distuti
 diff -ruN Python-2.7.3//Lib/ntpath.py _Python-2.7.3/Lib/ntpath.py
 --- Python-2.7.3//Lib/ntpath.py	2012-04-09 19:07:30 -0400
 +++ _Python-2.7.3/Lib/ntpath.py	2013-01-17 17:57:31 -0500
-@@ -13,6 +13,8 @@
- 
- from genericpath import *
- 
-+mingwbuild = sys.platform == "win32" and sys.version.upper().find('GCC') >= 0
-+
- __all__ = ["normcase","isabs","join","splitdrive","split","splitext",
-            "basename","dirname","commonprefix","getsize","getmtime",
-            "getatime","getctime", "islink","exists","lexists","isdir","isfile",
-@@ -24,9 +26,9 @@
- curdir = '.'
- pardir = '..'
- extsep = '.'
--sep = '\\'
-+sep = '/'
- pathsep = ';'
--altsep = '/'
-+altsep = '\\'
- defpath = '.;C:\\bin'
- if 'ce' in sys.builtin_module_names:
-     defpath = '\\Windows'
-@@ -35,6 +37,48 @@
+@@ -35,6 +35,48 @@
      altsep = '/'
  devnull = 'nul'
  
@@ -748,15 +727,15 @@ diff -ruN Python-2.7.3//Lib/ntpath.py _Python-2.7.3/Lib/ntpath.py
 +
 +def _get_sep(path):
 +    if isinstance(path, bytes):
-+        return b'/'
-+    else:
-+        return '/'
-+
-+def _get_altsep(path):
-+    if isinstance(path, bytes):
 +        return b'\\'
 +    else:
 +        return '\\'
++
++def _get_altsep(path):
++    if isinstance(path, bytes):
++        return b'/'
++    else:
++        return '/'
 +
 +def _get_bothseps(path):
 +    if isinstance(path, bytes):
@@ -785,16 +764,7 @@ diff -ruN Python-2.7.3//Lib/ntpath.py _Python-2.7.3/Lib/ntpath.py
  # Normalize the case of a pathname and map slashes to backslashes.
  # Other normalizations (such as optimizing '../' away) are not done
  # (this is done by normpath).
-@@ -43,7 +87,7 @@
-     """Normalize case of pathname.
- 
-     Makes all characters lowercase and all slashes into backslashes."""
--    return s.replace("/", "\\").lower()
-+    return s.replace(altsep, sep).lower()
- 
- 
- # Return whether a path is absolute.
-@@ -64,54 +108,77 @@
+@@ -64,54 +106,77 @@
      """Join two or more pathname components, inserting "\\" as needed.
      If any component is an absolute path, all previous path components
      will be discarded."""
@@ -802,14 +772,14 @@ diff -ruN Python-2.7.3//Lib/ntpath.py _Python-2.7.3/Lib/ntpath.py
 +    seps = _get_bothseps(a)
 +    colon = _get_colon(a)
      path = a
-+
++    
      for b in p:
          b_wins = 0  # set to 1 iff b makes path irrelevant
 -        if path == "":
--            b_wins = 1
- 
++        
 +        if not path:
-+            b_wins = 1
+             b_wins = 1
+-
          elif isabs(b):
              # This probably wipes out path so far.  However, it's more
 -            # complicated if path begins with a drive letter:
@@ -894,240 +864,6 @@ diff -ruN Python-2.7.3//Lib/ntpath.py _Python-2.7.3/Lib/ntpath.py
  
      return path
  
-@@ -145,11 +212,11 @@
-         # \\machine\mountpoint\directories...
-         #           directory ^^^^^^^^^^^^^^^
-         normp = normcase(p)
--        index = normp.find('\\', 2)
-+        index = normp.find(sep, 2)
-         if index == -1:
-             ##raise RuntimeError, 'illegal UNC path: "' + p + '"'
-             return ("", p)
--        index = normp.find('\\', index + 1)
-+        index = normp.find(sep, index + 1)
-         if index == -1:
-             index = len(p)
-         return p[:index], p[index:]
-@@ -390,92 +457,142 @@
-         index = index + 1
-     return res
- 
-+if mingwbuild:
-+    import posixpath
-+    import subprocess
-+    def mingw_posix2win_path(posixPath):
-+        posixPath = posixPath.replace('\\','/')
-+
-+        p = subprocess.Popen(['bash', '-c', 'test -d %s' % posixPath], stdout=subprocess.PIPE)
-+        output, err = p.communicate()
-+        isdir = (p.returncode == 0)
-+
-+        p = subprocess.Popen(['bash', '-c', 'test -f %s' % posixPath], stdout=subprocess.PIPE)
-+        output, err = p.communicate()
-+        isfile = (p.returncode == 0)
-+
-+        dir = posixPath
-+
-+        if isdir:
-+            p = subprocess.Popen(['bash', '-c', 'cd %s && pwd -W' % dir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-+            output, err = p.communicate()
-+
-+            if p.returncode == 1:
-+                output = os.getcwd()
-+
-+            results=str(output).strip('\n')
-+        elif isfile:
-+            base=basename(posixPath)
-+            dir =dirname(posixPath)
-+            p = subprocess.Popen(['bash', '-c', 'cd %s && pwd -W' % dir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-+            output, err = p.communicate()
-+            
-+            if p.returncode == 1:
-+                output = os.getcwd()
- 
--# Normalize a path, e.g. A//B, A/./B and A/foo/../B all become A\B.
--# Previously, this function also truncated pathnames to 8+3 format,
--# but as this module is called "ntpath", that's obviously wrong!
--
--def normpath(path):
--    """Normalize path, eliminating double slashes, etc."""
--    # Preserve unicode (if path is unicode)
--    backslash, dot = (u'\\', u'.') if isinstance(path, unicode) else ('\\', '.')
--    if path.startswith(('\\\\.\\', '\\\\?\\')):
--        # in the case of paths with these prefixes:
--        # \\.\ -> device names
--        # \\?\ -> literal paths
--        # do not do any normalization, but return the path unchanged
--        return path
--    path = path.replace("/", "\\")
--    prefix, path = splitdrive(path)
--    # We need to be careful here. If the prefix is empty, and the path starts
--    # with a backslash, it could either be an absolute path on the current
--    # drive (\dir1\dir2\file) or a UNC filename (\\server\mount\dir1\file). It
--    # is therefore imperative NOT to collapse multiple backslashes blindly in
--    # that case.
--    # The code below preserves multiple backslashes when there is no drive
--    # letter. This means that the invalid filename \\\a\b is preserved
--    # unchanged, where a\\\b is normalised to a\b. It's not clear that there
--    # is any better behaviour for such edge cases.
--    if prefix == '':
--        # No drive letter - preserve initial backslashes
--        while path[:1] == "\\":
--            prefix = prefix + backslash
--            path = path[1:]
--    else:
--        # We have a drive letter - collapse initial backslashes
--        if path.startswith("\\"):
--            prefix = prefix + backslash
--            path = path.lstrip("\\")
--    comps = path.split("\\")
--    i = 0
--    while i < len(comps):
--        if comps[i] in ('.', ''):
--            del comps[i]
--        elif comps[i] == '..':
--            if i > 0 and comps[i-1] != '..':
--                del comps[i-1:i+1]
--                i -= 1
--            elif i == 0 and prefix.endswith("\\"):
--                del comps[i]
--            else:
--                i += 1
-+            results=str(output).strip('\n')
-+            results = join(results, base);
-         else:
--            i += 1
--    # If the path is now empty, substitute '.'
--    if not prefix and not comps:
--        comps.append(dot)
--    return prefix + backslash.join(comps)
-+            results = join(os.getcwd(),posixPath)
-+
-+        results=results.replace('\\','/')
- 
-+        return results
- 
--# Return an absolute path.
--try:
--    from nt import _getfullpathname
-+    def normpath(path):
-+        path = path.replace("\\", "/")
-+        return posixpath.normpath(path)
- 
--except ImportError: # not running on Windows - mock up something sensible
-     def abspath(path):
--        """Return the absolute version of a path."""
--        if not isabs(path):
--            if isinstance(path, unicode):
--                cwd = os.getcwdu()
--            else:
--                cwd = os.getcwd()
--            path = join(cwd, path)
-+        results = splitdrive(path)
-+        if results[0].find(':')==-1:
-+            path=mingw_posix2win_path(path)
-         return normpath(path)
-+else:
-+    # Normalize a path, e.g. A//B, A/./B and A/foo/../B all become A\B.
-+    # Previously, this function also truncated pathnames to 8+3 format,
-+    # but as this module is called "ntpath", that's obviously wrong!
-+
-+    def normpath(path):
-+        """Normalize path, eliminating double slashes, etc."""
-+        # Preserve unicode (if path is unicode)
-+        backslash, dot = (u'\\', u'.') if isinstance(path, unicode) else ('\\', '.')
-+        if path.startswith(('\\\\.\\', '\\\\?\\')):
-+            # in the case of paths with these prefixes:
-+            # \\.\ -> device names
-+            # \\?\ -> literal paths
-+            # do not do any normalization, but return the path unchanged
-+            return path
-+        path = path.replace("/", "\\")
-+        prefix, path = splitdrive(path)
-+        # We need to be careful here. If the prefix is empty, and the path starts
-+        # with a backslash, it could either be an absolute path on the current
-+        # drive (\dir1\dir2\file) or a UNC filename (\\server\mount\dir1\file). It
-+        # is therefore imperative NOT to collapse multiple backslashes blindly in
-+        # that case.
-+        # The code below preserves multiple backslashes when there is no drive
-+        # letter. This means that the invalid filename \\\a\b is preserved
-+        # unchanged, where a\\\b is normalised to a\b. It's not clear that there
-+        # is any better behaviour for such edge cases.
-+        if prefix == '':
-+            # No drive letter - preserve initial backslashes
-+            while path[:1] == "\\":
-+                prefix = prefix + backslash
-+                path = path[1:]
-+        else:
-+            # We have a drive letter - collapse initial backslashes
-+            if path.startswith("\\"):
-+                prefix = prefix + backslash
-+                path = path.lstrip("\\")
-+        comps = path.split("\\")
-+        i = 0
-+        while i < len(comps):
-+            if comps[i] in ('.', ''):
-+                del comps[i]
-+            elif comps[i] == '..':
-+                if i > 0 and comps[i-1] != '..':
-+                    del comps[i-1:i+1]
-+                    i -= 1
-+                elif i == 0 and prefix.endswith("\\"):
-+                    del comps[i]
-+                else:
-+                    i += 1
-+            else:
-+                i += 1
-+        # If the path is now empty, substitute '.'
-+        if not prefix and not comps:
-+            comps.append(dot)
-+        return prefix + backslash.join(comps)
- 
--else:  # use native Windows method on Windows
--    def abspath(path):
--        """Return the absolute version of a path."""
-+    # Return an absolute path.
-+    try:
-+        from nt import _getfullpathname
- 
--        if path: # Empty path must return current working directory.
--            try:
--                path = _getfullpathname(path)
--            except WindowsError:
--                pass # Bad path - return unchanged.
--        elif isinstance(path, unicode):
--            path = os.getcwdu()
--        else:
--            path = os.getcwd()
--        return normpath(path)
-+    except ImportError: # not running on Windows - mock up something sensible
-+        def abspath(path):
-+            """Return the absolute version of a path."""
-+            if not isabs(path):
-+                if isinstance(path, unicode):
-+                    cwd = os.getcwdu()
-+                else:
-+                    cwd = os.getcwd()
-+                path = join(cwd, path)
-+            return normpath(path)
-+
-+    else:  # use native Windows method on Windows
-+        def abspath(path):
-+            """Return the absolute version of a path."""
-+
-+            if path: # Empty path must return current working directory.
-+                try:
-+                    path = _getfullpathname(path)
-+                except WindowsError:
-+                    pass # Bad path - return unchanged.
-+            elif isinstance(path, unicode):
-+                path = os.getcwdu()
-+            else:
-+                path = os.getcwd()
-+            return normpath(path)
- 
- # realpath is a no-op on systems without islink support
- realpath = abspath
 diff -ruN Python-2.7.3//Lib/plat-generic/regen _Python-2.7.3/Lib/plat-generic/regen
 --- Python-2.7.3//Lib/plat-generic/regen	2012-04-09 19:07:30 -0400
 +++ _Python-2.7.3/Lib/plat-generic/regen	2013-01-16 20:06:55 -0500
@@ -50881,50 +50617,7 @@ diff -ruN Python-2.7.3/Modules/posixmodule.c _Python-2.7.3/Modules/posixmodule.c
  
  /* IsUNCRoot -- test whether the supplied path is of the form \\SERVER\SHARE\,
     where / can be used in place of \ and the trailing slash is optional.
-@@ -1977,6 +1994,7 @@
- static PyObject *
- posix_getcwd(PyObject *self, PyObject *noargs)
- {
-+	int i=0;
-     int bufsize_incr = 1024;
-     int bufsize = 0;
-     char *tmpbuf = NULL;
-@@ -2005,6 +2023,12 @@
-     if (res == NULL)
-         return posix_error();
- 
-+#ifdef __MINGW32__
-+	for (i = 0; i<strlen(tmpbuf); i++)
-+	    if (tmpbuf[i] == '\\')
-+	        tmpbuf[i] = '/';
-+#endif
-+
-     dynamic_return = PyString_FromString(tmpbuf);
-     free(tmpbuf);
- 
-@@ -2025,6 +2049,7 @@
- 
- #ifdef MS_WINDOWS
-     DWORD len;
-+    int i = 0;
-     wchar_t wbuf[1026];
-     wchar_t *wbuf2 = wbuf;
-     PyObject *resobj;
-@@ -2047,6 +2072,13 @@
-         if (wbuf2 != wbuf) free(wbuf2);
-         return win32_error("getcwdu", NULL);
-     }
-+
-+#ifdef __MINGW32__
-+	for (i = 0; i<wcslen(wbuf2); i++)
-+	    if (wbuf2[i] == L'\\')
-+	        wbuf2[i] = L'/';
-+#endif
-+
-     resobj = PyUnicode_FromWideChar(wbuf2, len);
-     if (wbuf2 != wbuf) free(wbuf2);
-     return resobj;
-@@ -6235,6 +6267,72 @@
+@@ -6235,6 +6252,72 @@
  "symlink(src, dst)\n\n\
  Create a symbolic link pointing to src named dst.");
  
@@ -50997,7 +50690,7 @@ diff -ruN Python-2.7.3/Modules/posixmodule.c _Python-2.7.3/Modules/posixmodule.c
  static PyObject *
  posix_symlink(PyObject *self, PyObject *args)
  {
-@@ -9251,7 +9349,7 @@
+@@ -9251,7 +9334,7 @@
  }
  
  
@@ -51005,7 +50698,7 @@ diff -ruN Python-2.7.3/Modules/posixmodule.c _Python-2.7.3/Modules/posixmodule.c
 +#if (defined(_MSC_VER) || defined (__MINGW32__) || defined(__WATCOMC__) || defined(__BORLANDC__)) && !defined(__QNX__)
  #define INITFUNC initnt
  #define MODNAME "nt"
-
+ 
 diff -ruN Python-2.7.3//Modules/readline.c _Python-2.7.3/Modules/readline.c
 --- Python-2.7.3//Modules/readline.c	2012-04-09 19:07:34 -0400
 +++ _Python-2.7.3/Modules/readline.c	2013-01-15 13:57:28 -0500
@@ -56766,9 +56459,9 @@ diff -ruN Python-2.7.3//pyconfig.h.in _Python-2.7.3/pyconfig.h.in
  /* Define to the address where bug reports for this package should be sent. */
  #undef PACKAGE_BUGREPORT
  
-diff -ruN Python-2.7.3/setup.py Python-2.7.3/setup.py.b
---- Python-2.7.3/setup.py	2012-04-09 19:07:36 -0400
-+++ Python-2.7.3/setup.py.b	2013-03-27 12:06:13 -0400
+diff -ruN Python-2.7.3//setup.py _Python-2.7.3/setup.py
+--- Python-2.7.3//setup.py	2012-04-09 19:07:36 -0400
++++ _Python-2.7.3/setup.py	2013-01-18 14:53:42 -0500
 @@ -7,6 +7,8 @@
  from glob import glob
  from platform import machine as platform_machine
@@ -57275,7 +56968,7 @@ diff -ruN Python-2.7.3/setup.py Python-2.7.3/setup.py.b
 +                                if (('--host=' in arg) or ('--build=' in arg))]
 +
 +                if host_platform in ['mingw', 'win32']:
-+                    srcdir=mingw_posix_path(ffi_srcdir)
++                    srcdir=self.mingw_posix_path(ffi_srcdir)
 +                    extra_cflags='-DX86_WIN64 -DFFI_BUILDING -DHAVE_CONFIG_H -DDLL_EXPORT -DPIC'
 +                    config_args += ["--srcdir={0}".format(srcdir)]
  
@@ -57313,59 +57006,4 @@ diff -ruN Python-2.7.3/setup.py Python-2.7.3/setup.py.b
                               sources=['_ctypes/_ctypes_test.c'])
          self.extensions.extend([ext, ext_test])
  
-diff -ruN Python-2.7.3/Includes/osdefs.h Python-2.7.3/Includes/osdefsb.h
---- Python-2.7.3/Include/osdefs.h	2012-04-09 19:07:30 -0400
-+++ Python-2.7.3/Include/osdefsb.h	2013-04-30 11:30:06 -0400
-@@ -10,7 +10,7 @@
- /* Mod by chrish: QNX has WATCOM, but isn't DOS */
- #if !defined(__QNX__)
- #if defined(MS_WINDOWS) || defined(__BORLANDC__) || defined(__WATCOMC__) || defined(__DJGPP__) || defined(PYOS_OS2)
--#if defined(PYOS_OS2) && defined(PYCC_GCC)
-+#if (defined(PYOS_OS2) && defined(PYCC_GCC)) || defined(__MINGW32__)
- #define MAXPATHLEN 260
- #define SEP '/'
- #define ALTSEP '\\'
-
-diff -ruN Python-2.7.3/Lib/traceback.py Python-2.7.3/Lib/tracebackb.py
---- Python-2.7.3/Lib/traceback.py	2012-04-09 19:07:32 -0400
-+++ Python-2.7.3/Lib/tracebackb.py	2013-05-13 17:33:39 -0400
-@@ -1,6 +1,5 @@
- """Extract, format and print information about Python stack traces."""
  
--import linecache
- import sys
- import types
- 
-@@ -51,6 +50,7 @@
-     'file' should be an open file or file-like object with a write()
-     method.
-     """
-+    import linecache
-     if file is None:
-         file = sys.stderr
-     if limit is None:
-@@ -63,8 +63,6 @@
-         co = f.f_code
-         filename = co.co_filename
-         name = co.co_name
--        _print(file,
--               '  File "%s", line %d, in %s' % (filename, lineno, name))
-         linecache.checkcache(filename)
-         line = linecache.getline(filename, lineno, f.f_globals)
-         if line: _print(file, '    ' + line.strip())
-@@ -86,6 +84,7 @@
-     leading and trailing whitespace stripped; if the source is not
-     available it is None.
-     """
-+    import linecache
-     if limit is None:
-         if hasattr(sys, 'tracebacklimit'):
-             limit = sys.tracebacklimit
-@@ -286,6 +285,7 @@
-     line number, function name, text), and the entries are in order
-     from oldest to newest stack frame.
-     """
-+    import linecache
-     if f is None:
-         try:
-             raise ZeroDivisionError
