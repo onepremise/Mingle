@@ -77,7 +77,7 @@ export AD_PYTHON_MINOR=.3
 export AD_PYTHON_VERSION=$AD_PYTHON_MAJOR$AD_PYTHON_MINOR
 export AD_SETUPTOOLS_VERSION=0.6c11
 export AD_NOSE_VERSION=1.2.1
-export AD_WAF_VERSION=1.7.8
+export AD_WAF_VERSION=1.7.10
 
 export AD_POSTGRES_VERSION=9.2.2
 
@@ -1246,6 +1246,22 @@ buildInstallNodeMapnik() {
 }
 
 buildInstallWAF() {
+
+    local _project="waf-*"
+
+    ad_decompress "$_project"
+
+    local _projectdir=$(ad_getDirFromWC $_project)
+
+    cd "$_projectdir"
+        
+    if [ ! -e waf-mingw.patch ]; then
+         cp /home/developer/patches/mapnik/$AD_WAF_VERSION/waf-mingw.patch .
+         ad_patch "waf-mingw.patch"
+    fi
+
+    cd ..
+
     buildInstallGeneric "waf-*" "" "waf" "" ""
 }
 

@@ -908,7 +908,7 @@ diff -ruN Python-2.7.3//Lib/ntpath.py _Python-2.7.3/Lib/ntpath.py
          if index == -1:
              index = len(p)
          return p[:index], p[index:]
-@@ -390,92 +457,142 @@
+@@ -390,92 +457,145 @@
          index = index + 1
      return res
  
@@ -916,6 +916,9 @@ diff -ruN Python-2.7.3//Lib/ntpath.py _Python-2.7.3/Lib/ntpath.py
 +    import posixpath
 +    import subprocess
 +    def mingw_posix2win_path(posixPath):
++        if not posixPath:
++            posixPath=os.getcwd()
++
 +        posixPath = posixPath.replace('\\','/')
 +
 +        p = subprocess.Popen(['bash', '-c', 'test -d %s' % posixPath], stdout=subprocess.PIPE)
