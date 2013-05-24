@@ -142,13 +142,20 @@ powershell -command "Set-ExecutionPolicy Restricted"
 REM ===========================================================================
 REM SETUP FSTAB
 REM ===========================================================================
-msys\bin\bash -l -c "grep '/mingw' /etc/fstab>/dev/null"
-IF %ERRORLEVEL% EQU 1 (
+IF NOT EXIST "msys/etc/fstab" (
     ECHO "Setup MSYS..."
     ECHO.
-
     msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
-    if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"
+    if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"  
+) ELSE (
+    msys\bin\bash -l -c "grep '/mingw' /etc/fstab>/dev/null"
+    IF %ERRORLEVEL% EQU 1 (
+        ECHO "Setup MSYS..."
+        ECHO.
+
+        msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
+        if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"
+    )
 )
 
 REM ===========================================================================
