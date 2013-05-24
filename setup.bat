@@ -36,16 +36,24 @@ IF %ERRORLEVEL% EQU 0 (
 
 if not exist "packages" mkdir packages
 
+REM ===========================================================================
+REM SET EXECUTION POLICY
+REM ===========================================================================
+
 ECHO "Set Execution Policy..."
 ECHO.
 
 powershell -command "Set-ExecutionPolicy Unrestricted"
 
+REM ===========================================================================
+REM DOWNLOAD TOOLS
+REM ===========================================================================
+
 set MSYSTOOLS="MSYS-20111123.zip"
 
 if not exist "packages\%MSYSTOOLS%" (
      ECHO "Downloading msys..."
-     powershell -command ". .\setuptools\Get-WebFile.ps1; Get-WebFile -url 'http://sourceforge.net/projects/mingw-w64/files/External binary packages (Win64 hosted)/MSYS (32-bit)/%MSYSTOOLS%/download' -fileName 'packages\\%MSYSTOOLS%'"
+     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url 'http://sourceforge.net/projects/mingw-w64/files/External binary packages (Win64 hosted)/MSYS (32-bit)/%MSYSTOOLS%/download' -fileName 'packages\\%MSYSTOOLS%'"
 )
 
 if not exist "packages\%MSYSTOOLS%" (
@@ -69,12 +77,12 @@ REM set GCCURL="'http://sourceforge.net/projects/mingwbuilds/files/host-windows/
 
 if not exist "packages\%GCCCOMPILER%" (
     ECHO "Downloading %GCCCOMPILER%..."
-    powershell -command ". .\setuptools\Get-WebFile.ps1; Get-WebFile -url %GCCURL% -fileName 'packages\\%GCCCOMPILER%'"
+    powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCURL% -fileName 'packages\\%GCCCOMPILER%'"
 )
 
 REM if not exist "packages\%GCCCOMPILERUPDATE%" (
 REM     ECHO "Downloading %GCCCOMPILERUPDATE%..."
-REM     powershell -command ". .\setuptools\Get-WebFile.ps1; Get-WebFile -url %GCCUPDATEURL% -fileName 'packages\\%GCCCOMPILERUPDATE%'"
+REM     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCUPDATEURL% -fileName 'packages\\%GCCCOMPILERUPDATE%'"
 REM )
 
 if not exist "packages\%GCCCOMPILER%" (
@@ -83,13 +91,21 @@ if not exist "packages\%GCCCOMPILER%" (
     EXIT /B 1
 )
 
-ECHO "Extracting base tools..."
-ECHO.
+REM ===========================================================================
+REM EXTRACTING TOOLS
+REM ===========================================================================
 
-if not exist "msys" setuptools\unzip packages\MSYS-20111123.zip
+if not exist "msys" (
+    ECHO "Extracting MSYS..."
+    ECHO.
+    mingle\unzip packages\MSYS-20111123.zip
+)
+
 if not exist "mingw64" (
-    setuptools\7za x packages\%GCCCOMPILER%
-REM     setuptools\7za x -y packages\%GCCCOMPILERUPDATE% -ir!*mingw64\x86_64-w64-mingw32*
+    ECHO "Extracting GCC..."
+    ECHO.
+    mingle\7za x packages\%GCCCOMPILER%
+REM     mingle\7za x -y packages\%GCCCOMPILERUPDATE% -ir!*mingw64\x86_64-w64-mingw32*
 )
 
 IF EXIST "mingw" (
@@ -108,27 +124,126 @@ IF EXIST "mingw64\bin\lib" (
     RMDIR /S /Q mingw64\bin\lib
 )
 
-
+IF NOT EXIST "msys.lnk" (
 ECHO "Creating shortcut..."
 ECHO.
+powershell -command ". .\mingle\createShortcut.ps1; createShortcut -TargetPath '%CD%\msys\msys.bat' -LinkPath '.\msys.lnk'" 
+)
 
-powershell -command ". .\setuptools\createShortcut.ps1; createShortcut -TargetPath '%CD%\msys\msys.bat' -LinkPath '.\msys.lnk'" 
+REM ===========================================================================
+REM RESET EXECUTION POLICY
+REM ===========================================================================
 
 ECHO "Reset Execution Policy..."
 ECHO.
 
 powershell -command "Set-ExecutionPolicy Restricted"
 
-ECHO "Setup MSYS..."
+REM ===========================================================================
+REM SETUP FSTAB
+REM ===========================================================================
+msys\bin\bash -l -c "grep '/mingw' /etc/fstab>/dev/null"
+IF %ERRORLEVEL% EQU 1 (
+    ECHO "Setup MSYS..."
+    ECHO.
+
+    msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
+    if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"
+)
+
+REM ===========================================================================
+REM GET BUILD SCRIPTS IN ORDER
+REM ===========================================================================
+ECHO.
+ECHO "Copy build scripts and configs..."
 ECHO.
 
-msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
-if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"
+XCOPY /Y /Q /D mingle\mingw.jam msys\home\developer\
+XCOPY /Y /Q /D mingle\mingle.sh mingw64\bin
+
+IF EXIST "mingw64\bin\mingle.sh" (
+MOVE /Y mingw64\bin\mingle.sh mingw64\bin\mingle
+)
+
+IF NOT EXIST "msys\home\developer\patches" MKDIR msys\home\developer\patches
+XCOPY /S /Y /Q /D patches msys\home\developer\patches
+
+REM ===========================================================================
+REM PROCESS ARGUMENTS
+REM ===========================================================================
+set MINGLE_SUITE=0
+:Loop
+IF "%1"=="" GOTO Continue
+IF "%1"=="-s" GOTO SUITE
+IF "%1"=="--suite" GOTO SUITE
+IF "%1"=="/?" (
+  GOTO HELP
+) ELSE (
+  GOTO INVALID
+)
+
+SHIFT
+GOTO Loop
+
+:HELP
+ECHO.
+ECHO ===========================================================================
+ECHO Mingle - HELP
+ECHO ===========================================================================
+ECHO.
+ECHO This is the Windoes command shell wrapper which deploys the MinGW 64bit 
+ECHO development environment. Please select from one of the following options:
+ECHO.
+ECHO Usage: setup.bat [--suite=#selection]
+ECHO.
+ECHO   -s, --suite Specify a reference number from one of the suites listed below.
+ECHO.
+
+msys\bin\bash -l -c "/mingw/bin/mingle -l"
+
+GOTO EXIT
+
+:INVALID
+
+ECHO.
+ECHO Invalid Option
+ECHO.
+
+GOTO HELP
+
+:SUITE
+
+set MINGLE_SUITE=%2
+
+ECHO.
+ECHO.
+ECHO Deploying selected development environment (%MINGLE_SUITE%):
+ECHO.
+
+msys\bin\bash -l -c "/mingw/bin/mingle -m %MINGLE_SUITE%"
+
+IF %MINGLE_SUITE% GTR %ERRORLEVEL% (
+ECHO.
+ECHO Invalid selection! You can only choose from one of the following:
+ECHO.
+msys\bin\bash -l -c "cd /mingw/bin;./mingle -l"
+GOTO EXIT
+)
+
+msys\bin\bash -l -c "/mingw/bin/mingle -k %MINGLE_SUITE%"
+ECHO.
+
+GOTO Continue
+
+REM ===========================================================================
+REM CONTINUE
+REM ===========================================================================
+:Continue
 
 ECHO "Make Sure Previous PYTHONPATH is cleared..."
 ECHO.
 
-COPY setuptools\profile msys\etc 
+COPY mingle\profile msys\etc 
 
 ECHO "Checking for Visual Studio 2012 Express for Windows Desktop..."
 ECHO.
@@ -227,20 +342,18 @@ move mingw64\win32bitlibs\ws2_32.dll mingw64\win32bitlibs\libws2_32.dll
 move mingw64\win32bitlibs\crypt32.dll mingw64\win32bitlibs\libcrypt32.dll
 move mingw64\win32bitlibs\Wldap32.dll mingw64\win32bitlibs\libwldap32.dll
 
+REM ===========================================================================
+REM STARTBUILD
+REM ===========================================================================
 ECHO.
-ECHO "Copy build scripts and configs..."
-ECHO.
-
-XCOPY /Y setuptools\mingw.jam msys\home\developer\
-XCOPY /Y setuptools\get-dependencies.sh msys\home\developer\
-
-IF NOT EXIST "msys\home\developer\patches" MKDIR msys\home\developer\patches
-XCOPY /S /Y patches msys\home\developer\patches
-
-ECHO "Build dependencies..."
+ECHO "Getting Started..."
 ECHO.
 
-msys\bin\mintty msys/bin/bash -l -c "cd /home/developer;./get-dependencies.sh 2>&1 | tee build.log"
+IF %MINGLE_SUITE% EQU 0 (
+msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle | tee /home/developer/build.log"
+) ELSE (
+msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle --suite=%MINGLE_SUITE% 2>&1 | tee /home/developer/build.log"
+)
 
 IF EXIST msys\home\developer\build.log (
     COPY /Y msys\home\developer\build.log .
@@ -249,3 +362,5 @@ IF EXIST msys\home\developer\build.log (
 ECHO.
 ECHO "Setup Complete."
 ECHO.
+
+:EXIT
