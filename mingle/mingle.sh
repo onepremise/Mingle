@@ -2156,10 +2156,11 @@ mingleProcessSelectionNum() {
     _len=${#OPTIONS[@]}
 
     if [ $_selection -lt 1 ] || [ $_selection -gt $_len ]; then
+        echo NONE
         mingleProcessSelection "NONE"
         return 1
     else
-        mingleProcessSelection ${OPTIONS[$((_selection-1))]}
+        mingleProcessSelection "${OPTIONS[$((_selection-1))]}"
     fi
 
     return 0
@@ -2171,6 +2172,10 @@ mingleProcessSelection() {
     if [ ! -z "$_suite" ] && [ "$_suite" != "NONE" ] && [ "$_suite" != "Quit" ]; then
         mingleInitialize
     fi
+
+    echo
+    echo "Preparing suite $_suite..."
+    echo
 
     case "$_suite" in
     "Quit")
