@@ -270,9 +270,20 @@ EXIT /B 1
 )
 
 if not exist "mingw64\bin\ml64.exe" (
+    set MLINSTALLED=false
     ECHO "Retrieve MASM..."
+  
+    IF exist "%VS110COMNTOOLS%..\..\VC\bin\x86_amd64" (
+        copy "%VS110COMNTOOLS%..\..\VC\bin\x86_amd64\*.*" mingw64\bin\
+        set MLINSTALLED=true
+    ) ELSE (
+        IF exist "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64" (
+            copy "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\*.*" mingw64\bin\
+            set MLINSTALLED=true
+        )
+    )
     
-    if not exist "%VS110COMNTOOLS%..\..\VC\bin\x86_amd64" (
+    if "%MLINSTALLED%" == "false" (
        ECHO.
        ECHO ##########################################################
        ECHO.
@@ -296,12 +307,6 @@ if not exist "mingw64\bin\ml64.exe" (
        PAUSE
        EXIT /B 1
     )
-
-    REM BUG!!!copy "%VS110COMNTOOLS%..\IDE\mspdb110.dll" mingw64\bin\
-    REM copy "%VS110COMNTOOLS%..\..\VC\bin\amd64\mspdbsrv.exe" mingw64\bin\
-    REM copy "%VS110COMNTOOLS%..\..\VC\bin\amd64\mspdbcore.dll" mingw64\bin\
-    REM copy "%VS110COMNTOOLS%..\..\VC\bin\amd64\mspdb110.dll" mingw64\bin\
-    REM copy "%VS110COMNTOOLS%..\..\VC\bin\x86_amd64\*.*" mingw64\bin\
 )
 
 ECHO.
