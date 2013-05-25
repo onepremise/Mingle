@@ -1,14 +1,14 @@
-MinGW-AD64S
+Mingle64
 ===========
 
-This scripts delpoys a 64bit build environment required by most open source geographic projects, osm2psql, mapnik. libgeos, etc...
+This scripts delpoys a 64bit build environment required by most open source geographic projects, osm2psql, mapnik. libgeos, etc... 
 
 Requirements
 ============
 
 * Currently Windows 64bit Professional
 * Powershell
-* Microsoft Visual Studio Express 12
+* Microsoft Visual Studio Express 12 - really only needs macro assembler
 
 The following projects are fully building in the environment setup:
 
@@ -44,7 +44,7 @@ The following projects are fully building in the environment setup:
 * libgdal
 * boostjam
 * boost
-* python2.7
+* python2.7.3
 * python3.3 (Very Experimental)
 * GDB w/python debugger
 * waf

@@ -574,7 +574,7 @@ installLibJPEG () {
 
     if [ ! -e /mingw/lib/libturbojpeg.a ]; then
         if [ ! -e "libjpeg-turbo.tar" ]; then
-            cmd /c "libjpeg-turbo-1.2.1-gcc64.exe /S /D=$DOSPATH"
+            cmd /c "$MINGLE_CACHE/libjpeg-turbo-1.2.1-gcc64.exe /S /D=$DOSPATH"
 
             if [ ! -e "$DOSPATH/uninstall_1.2.1.exe" ]; then
                 echo "Install failed, aborting"
@@ -609,9 +609,7 @@ installLibPNG() {
     echo
     
     if [ ! -e /mingw/bin/libpng15-15.dll ]; then
-        if ! ls -d libpng-*/ &> /dev/null; then
-            tar xzvf libpng-*.tar.gz
-        fi
+        mingleDecompress "libpng-*"
 
         cd libpng-*
 
@@ -795,9 +793,7 @@ buildInstallFreeType() {
     echo
     
     if [ ! -e /mingw/lib/libfreetype.a ]; then
-        if ! ls -d freetype-*/ &> /dev/null; then
-            tar xzvf freetype-*.tar.gz
-        fi
+        mingleDecompress "freetype-*"
 
         cd freetype-*
 
@@ -826,9 +822,7 @@ buildInstallICU() {
     echo
     
     if [ ! -e /mingw/lib/libicui18n.dll ]; then
-        if ! ls -d icu*/ &> /dev/null; then
-            tar xzvf icu4c-*-src.tgz
-        fi
+        mingleDecompress "icu4c-*"
 
         #Apply patch http://bugs.icu-project.org/trac/ticket/9728
         echo "Applying patch from http://bugs.icu-project.org/trac/ticket/9728..."
@@ -898,9 +892,7 @@ buildInstallProjDatumgrid() {
     echo
     
     if [ ! -e /mingw/share/proj/ntv1_can.dat ]; then
-        if ! ls -d proj-datumgrid*/ &> /dev/null; then
-            unzip -uo proj-datumgrid*.zip -d proj-datumgrid
-        fi
+        mingleDecompress "proj-datumgrid*"
 
         cd proj-datumgrid*
 
