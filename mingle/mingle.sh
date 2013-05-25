@@ -2002,11 +2002,11 @@ mingleInitialize() {
     STOREPATH=`pwd`
     
     if [ ! -e "$MINGLE_CACHE" ]; then
-        mkdir $MINGLE_CACHE
+        mkdir -p $MINGLE_CACHE
     fi
     
     if [ ! -e "$MINGLE_BUILD_DIR" ]; then
-        mkdir $MINGLE_BUILD_DIR
+        mkdir -p $MINGLE_BUILD_DIR
     fi
     
     if [ ! -e "/usr/local" ]; then
