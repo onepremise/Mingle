@@ -364,7 +364,7 @@ ECHO.
 IF %MINGLE_SUITE% EQU 0 (
 msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle | tee /home/developer/build.log"
 ) ELSE (
-msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle --suite=%MINGLE_SUITE% 2>&1 | tee /home/developer/build.log"
+msys\bin\bash -l -c "/mingw/bin/mingle --suite=%MINGLE_SUITE% 2>&1 | tee /home/developer/build.log"
 )
 
 IF EXIST msys\home\developer\build.log (
