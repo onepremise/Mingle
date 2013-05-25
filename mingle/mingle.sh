@@ -179,7 +179,13 @@ updateFindCommand() {
     echo "Update Find Command..."
     local _project="findutils-*"
 
-    mingleDecompress "$_project"
+    ls $MINGLE_CACHE/findutils-*-bin.tar.lzma
+
+    if ls $MINGLE_CACHE/findutils-*-bin.tar.lzma &> /dev/null; then
+        lzma -d $MINGLE_CACHE/findutils-*-bin.tar.lzma
+    fi
+        
+    tar xvf $MINGLE_CACHE/findutils-*-bin.tar
     
     cp bin/find.exe /bin
     cp bin/xargs.exe /bin
