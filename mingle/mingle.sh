@@ -1729,8 +1729,8 @@ suiteFonts() {
 
     suiteXML
 
-    buildInstallFontConfig
     buildInstallFreeType
+    buildInstallFontConfig
 }
 
 suiteEncryption() {
