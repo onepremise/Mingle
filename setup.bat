@@ -1,5 +1,6 @@
 @ECHO off
 @setlocal enableextensions
+@setlocal enabledelayedexpansion
 @cd /d "%~dp0"
 
 REM http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
@@ -274,10 +275,12 @@ if not exist "mingw64\bin\ml64.exe" (
     ECHO "Retrieve MASM..."
   
     IF exist "%VS110COMNTOOLS%..\..\VC\bin\x86_amd64" (
+        copy "%VS110COMNTOOLS%..\IDE\mspdb110.dll" mingw64\bin\
         copy "%VS110COMNTOOLS%..\..\VC\bin\x86_amd64\*.*" mingw64\bin\
         set MLINSTALLED=true
     ) ELSE (
         IF exist "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64" (
+            copy "C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\mspdb110.dll" mingw64\bin\
             copy "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\*.*" mingw64\bin\
             set MLINSTALLED=true
         )
@@ -330,7 +333,7 @@ COPY %WINDIR%\System32\Wldap32.dll mingw64\win64bitlibs /y
 move mingw64\win64bitlibs\gdi32.dll mingw64\win64bitlibs\libgdi32.dll
 move mingw64\win64bitlibs\msimg32.dll mingw64\win64bitlibs\libmsimg32.dll
 move mingw64\win64bitlibs\ws2_32.dll mingw64\win64bitlibs\libws2_32.dll
-move mingw64\win64bitlibs\crypt32.dll mingw64\win64bitlibs\libcrypt32.dll
+move mingw64\win64bitlibs\crypt32.dll minsdgw64\win64bitlibs\libcrypt32.dll
 move mingw64\win64bitlibs\Wldap32.dll mingw64\win64bitlibs\libwldap32.dll
 
 
@@ -362,9 +365,15 @@ ECHO "Getting Started..."
 ECHO.
 
 IF %MINGLE_SUITE% EQU 0 (
-msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle | tee /home/developer/build.log"
+    msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle | tee /home/developer/build.log"
 ) ELSE (
-msys\bin\bash -l -c "/mingw/bin/mingle --suite=%MINGLE_SUITE% 2>&1 | tee /home/developer/build.log"
+    msys\bin\bash -l -c "/mingw/bin/mingle --suite=%MINGLE_SUITE% 2>&1 | tee /home/developer/build.log"
+    IF NOT ERRORLEVEL 0 (
+        SET ERROR="%ERRORLEVEL%"
+        ECHO.
+        ECHO "Error: %ERROR%. Failed to execute mingle!"
+        EXIT /B %ERROR%
+    )
 )
 
 IF EXIST msys\home\developer\build.log (

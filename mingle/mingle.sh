@@ -750,6 +750,8 @@ buildInstallFontConfig() {
     echo
     
     ad_preCleanEnv
+ 
+    export "FREETYPE_LIBS=`freetype-config --libs`"
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
