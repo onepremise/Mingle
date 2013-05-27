@@ -664,9 +664,9 @@ buildInstallPolarSSL() {
     
     ad_preCleanEnv
     
+    export SHARED=1
+    export "WINDOWS=1"
     export "CC=gcc"
-    export "LDFLAGS=$LDFLAGS -lws2_32 -L/mingw/win64bitlibs"
-    export "CFLAGS=$CFLAGS -I/mingw/include -DZLIB"
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -1997,6 +1997,19 @@ suiteMapnikTools() {
 #buildInstallAPR
 #buildInstallSVN
 #buildInstallGit
+
+mingleError() {
+    local _errorNum=$1
+    local _errorMsg="$2"
+
+    if [ -n "$_errorMsg" ]; then
+        echo $_errorMsg
+    else
+        echo "The build failed."
+    fi
+
+    exit $_errorNum
+}
 
 mingleInitialize() {
     STOREPATH=`pwd`
