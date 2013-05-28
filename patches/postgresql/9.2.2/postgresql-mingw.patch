@@ -1,0 +1,13 @@
+--- postgresql-9.2.2/configure.in	2012-12-03 15:16:10 -0500
++++ postgresql-9.2.2/configure.in.b	2013-05-28 12:52:52 -0400
+@@ -19,10 +19,6 @@
+ 
+ AC_INIT([PostgreSQL], [9.2.2], [pgsql-bugs@postgresql.org])
+ 
+-m4_if(m4_defn([m4_PACKAGE_VERSION]), [2.63], [], [m4_fatal([Autoconf version 2.63 is required.
+-Untested combinations of 'autoconf' and PostgreSQL versions are not
+-recommended.  You can remove the check from 'configure.in' but it is then
+-your responsibility whether the result works or not.])])
+ AC_COPYRIGHT([Copyright (c) 1996-2012, PostgreSQL Global Development Group])
+ AC_CONFIG_SRCDIR([src/backend/access/common/heaptuple.c])
+ AC_CONFIG_AUX_DIR(config)

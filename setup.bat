@@ -1,6 +1,5 @@
 @ECHO off
 @setlocal enableextensions
-@setlocal enabledelayedexpansion
 @cd /d "%~dp0"
 
 REM http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
@@ -364,16 +363,31 @@ ECHO.
 ECHO "Getting Started..."
 ECHO.
 
+SET ERRL=0
+SET ERROR_CHECK=0
+
 IF %MINGLE_SUITE% EQU 0 (
     msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle | tee /home/developer/build.log"
 ) ELSE (
     msys\bin\bash -l -c "/mingw/bin/mingle --suite=%MINGLE_SUITE% 2>&1 | tee /home/developer/build.log"
-    IF NOT ERRORLEVEL 0 (
-        SET ERROR="%ERRORLEVEL%"
-        ECHO.
-        ECHO "Error: %ERROR%. Failed to execute mingle!"
-        EXIT /B %ERROR%
+)
+
+set ERRL=%ERRORLEVEL%
+set ERR_MSG="Error: %ERRL%, Failed to execute mingle!"
+
+IF %ERRL% NEQ 0 set ERROR_CHECK=1
+IF EXIST "msys\home\developer\mingle_error.log" (
+    set ERROR_CHECK=1
+    FOR /F "eol=; tokens=1,2* delims=," %%i in (msys\home\developer\mingle_error.log) do (
+        set ERRL=%%i
+        set ERR_MSG=%%j
     )
+)
+
+IF %ERROR_CHECK% EQU 1 (
+    ECHO %ERRL% %ERR_MSG%
+    EXIT /B 55
+   
 )
 
 IF EXIST msys\home\developer\build.log (

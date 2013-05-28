@@ -171,7 +171,7 @@ updateGCC() {
     echo "Updating GCC..."
 
     sed 's/\(template<class Q>\)/\/\/\1/g' /mingw/x86_64-w64-mingw32/include/unknwn.h > unknwn.h
-    mv unknwn.h /mingw/x86_64-w64-mingw32/include/unknwn.h || { stat=$?; echo "Move failed, aborting" >&2; exit $stat; }
+    mv unknwn.h /mingw/x86_64-w64-mingw32/include/unknwn.h || mingleError $? "build failed, aborting!"
 }
 
 updateFindCommand() {
@@ -277,7 +277,7 @@ buildInstallGDB() {
 
         local _projectDir=$(ad_getDirFromWC "$_project")
 
-        cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+        cd $_projectDir || mingleError $? "build failed, aborting!"
         
         if [ ! -e gdb-mingw.patch ]; then
             cp /home/developer/patches/gdb/$AD_GDB_VERSION/gdb-mingw.patch .
@@ -336,7 +336,7 @@ buildInstallTCL() {
 
         ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
 
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        make || mingleError $? "build failed, aborting!"
 
         local _savedir=`pwd`
 
@@ -346,7 +346,7 @@ buildInstallTCL() {
 
         cd $_savedir
         
-        make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        make install || mingleError $? "build failed, aborting!"
 
         cd /mingw/bin
 
@@ -391,8 +391,8 @@ buildInstallTk() {
 
         ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
 
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        make || mingleError $? "build failed, aborting!"
+        make install || mingleError $? "build failed, aborting!"
 
         cd ../..
         
@@ -420,7 +420,7 @@ buildInstallZlib() {
     
         cd $_projectdir
 
-        make -f win32/Makefile.gcc || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        make -f win32/Makefile.gcc || mingleError $? "build failed, aborting!"
 
         cp zlib1.dll /mingw/bin
         cp zconf.h zlib.h /mingw/include
@@ -454,7 +454,7 @@ buildInstallBzip2() {
     
         cd $_projectdir
 
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        make || mingleError $? "build failed, aborting!"
 
         cp -f bzip2 /mingw/bin
         cp -f bzip2recover /mingw/bin
@@ -485,8 +485,8 @@ buildInstallLibiconv() {
         echo "Building Dynamic lib..."
         ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw
         make clean
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
-        make install-strip || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
+        make || mingleError $? "build failed, aborting!"
+        make install-strip || mingleError $? "build failed, aborting!"
 
         if ! iconv --version; then
              echo "Build Failed!"
@@ -500,8 +500,8 @@ buildInstallLibiconv() {
         echo "Building Static lib..."
         make clean
         ./configure --build=x86_64-w64-mingw32 --disable-shared --prefix=/mingw
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
-        make install-strip || { stat=$?; echo "make failed, aborting" >&2; exit $stat; } 
+        make || mingleError $? "build failed, aborting!"
+        make install-strip || mingleError $? "build failed, aborting!"
         
         if ! iconv --version; then
              echo "Build Failed!"
@@ -620,8 +620,8 @@ installLibPNG() {
             ./configure --host=x86_64-w64-mingw32 --prefix=/mingw
         fi
 
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        make || mingleError $? "build failed, aborting!"
+        make install || mingleError $? "build failed, aborting!"
 
         cd ..
     else
@@ -803,8 +803,8 @@ buildInstallFreeType() {
         ./configure --host=x86_64-w64-mingw32 --prefix=/mingw
         mkdir objs/.libs
 
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        make install -i || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        make || mingleError $? "build failed, aborting!"
+        make install -i || mingleError $? "build failed, aborting!"
 
         cd ..
     else
@@ -843,8 +843,8 @@ buildInstallICU() {
 
         ./runConfigureICU MinGW  --prefix=/mingw
 
-        make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-        make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        make || mingleError $? "build failed, aborting!"
+        make install || mingleError $? "build failed, aborting!"
         
         cp -f /mingw/lib/icu*.dll /mingw/bin
         
@@ -853,10 +853,10 @@ buildInstallICU() {
         ad_rename "./icu.*.dll" "s/^icu/libicu/g"
         cd "$_origPath"
         
-        cp /mingw/lib/libicuuc50.dll /mingw/bin/icuuc50.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
-        cp /mingw/lib/libicudt50.dll /mingw/bin/icudt50.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
-        cp /mingw/lib/libicuin.dll /mingw/lib/libicui18n.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
-        cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll || { stat=$?; echo "copy failed, aborting" >&2; exit $stat; }
+        cp /mingw/lib/libicuuc50.dll /mingw/bin/icuuc50.dll || mingleError $? "build failed, aborting!"
+        cp /mingw/lib/libicudt50.dll /mingw/bin/icudt50.dll || mingleError $? "build failed, aborting!"
+        cp /mingw/lib/libicuin.dll /mingw/lib/libicui18n.dll || mingleError $? "build failed, aborting!"
+        cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll || mingleError $? "build failed, aborting!"
         
         cd ..
         cd ..
@@ -873,6 +873,11 @@ buildInstallICU() {
 }
 
 buildInstallPostgres() {
+    if [ ! -e postgresql-mingw.patch ]; then
+        cp /home/developer/patches/postgresql/$AD_POSTGRES_VERSION/postgresql-mingw.patch .
+        ad_patch "postgresql-mingw.patch"
+    fi
+
     buildInstallGeneric "postgresql-*" true "" "postgres" "" "postgres --version"
     
     if [ -e /mingw/lib/libpq.dll ]; then
@@ -1019,7 +1024,7 @@ buildInstallSetupTools() {
 
     local _projectDir=$(ad_getDirFromWC "$_project")
 
-    cd $_project || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    cd $_project || mingleError $? "build failed, aborting!"
         
     if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/easy_install.exe ]; then
         setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
@@ -1079,7 +1084,7 @@ buildInstallTileLite() {
 
     local _projectDir=$(ad_getDirFromWC "$_project")
 
-    cd $_project || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    cd $_project || mingleError $? "build failed, aborting!"
 
     if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/liteserv.py ]; then
          python setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
@@ -1129,7 +1134,7 @@ buildInstallBoost() {
 
     local _projectDir=$(ad_getDirFromWC "$_project")
 
-    cd $_project || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    cd $_project || mingleError $? "build failed, aborting!"
         
     if [ ! -e boost-mingw.patch ]; then
         # Apply patch for https://svn.boost.org/trac/boost/ticket/5023
@@ -1322,9 +1327,7 @@ ad_getArchiveFromWC() {
     local _result=`find $MINGLE_CACHE -maxdepth 1 -name "$_project" -prune -type f -print | head -1`
 
     if [ -z "$_result" ]; then
-        stat=$?
-        echo "ad_getArchiveFromWC failed, aborting" >&2
-        exit $stat
+        mingleError $? "ad_getArchiveFromWC failed, aborting"
     fi
 
     echo "$_result"
@@ -1352,7 +1355,7 @@ ad_relocate_bin_dlls() {
 
     find /mingw/lib -regex "/mingw/lib/$_dllPrefix.*\.dll" | while read line; do
         echo "Copying ${line} to /mingw/bin..."
-        cp -u ${line} "/mingw/bin" || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+        cp -u ${line} "/mingw/bin" || mingleError $? "build failed, aborting"
     done
 }
 
@@ -1365,7 +1368,7 @@ ad_fix_pkg_cfg() {
 
 ad_fix_shared_lib() {  
     local _origPath=`pwd`
-    cd /mingw/lib || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    cd /mingw/lib || mingleError $? "build failed, aborting"
     
     local _libraryName=`ls $1*.a|head -1|sed -e 's/dll\.a//' -e 's/\.a//'`
     
@@ -1428,14 +1431,14 @@ ad_configure() {
     
     local _projectDir=$(ad_getDirFromWC "$_project")
 
-    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    cd $_projectDir || mingleError $? "build failed, aborting!"
 
     if [ -e "configure.ac" ] || [ -e "configure.in" ]; then
         if [ -e "/mingw/bin/autoconf" ];then
             echo
             echo "Executing autoconf..."
 
-            autoconf || { stat=$?; echo "autoconf failed, aborting" >&2; exit $stat; }
+            autoconf || mingleError $? "build failed, aborting!"
         fi
         
         if [ -e "/mingw/bin/autoheader" ];then
@@ -1511,7 +1514,7 @@ ad_make_clean() {
     
     local _projectDir=$(ad_getDirFromWC "$_project")
 
-    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    cd $_projectDir || mingleError $? "build failed, aborting"
     
     make distclean || make clean
 
@@ -1526,10 +1529,10 @@ ad_make() {
     local _project=$1
     
     local _projectDir=$(ad_getDirFromWC "$_project")
-    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    cd $_projectDir || mingleError $? "build failed, aborting"
     
-    make || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
-    make install || { stat=$?; echo "make failed, aborting" >&2; exit $stat; }
+    make || mingleError $? "build failed, aborting!"
+    make install || mingleError $? "build failed, aborting"
     
     cd ..
 }
@@ -1538,15 +1541,15 @@ ad_boost_jam() {
     local _project=$1
     
     local _projectDir=$(ad_getDirFromWC "$_project")
-    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    cd $_projectDir || mingleError $? "build failed, aborting!"
     
     #this is needed for boost https://svn.boost.org/trac/boost/ticket/6350
     cp /home/developer/mingw.jam tools/build/v2/tools
 
     
-   ./bootstrap.sh --with-icu --prefix=/mingw --with-toolset=mingw|| { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+   ./bootstrap.sh --with-icu --prefix=/mingw --with-toolset=mingw || mingleError $? "build failed, aborting"
    
-    bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 threadapi=win32 variant=debug,release link=static,shared threading=multi define=MS_WIN64 define=BOOST_USE_WINDOWS_H --define=__MINGW32__ --define=_WIN64 --define=MS_WIN64 install
+    bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 threadapi=win32 variant=debug,release link=static,shared threading=multi define=MS_WIN64 define=BOOST_USE_WINDOWS_H --define=__MINGW32__ --define=_WIN64 --define=MS_WIN64 install || mingleError $? "build failed, aborting"
     
     cd ..
 }
@@ -1555,9 +1558,9 @@ ad_build() {
     local _project=$1
     
     local _projectDir=$(ad_getDirFromWC "$_project")
-    cd $_projectDir || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    cd $_projectDir || mingleError $? "build failed, aborting"
     
-    ./build.sh  || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+    ./build.sh  || mingleError $? "build failed, aborting"
     
     cd ..
 }
@@ -2002,11 +2005,16 @@ mingleError() {
     local _errorNum=$1
     local _errorMsg="$2"
 
-    if [ -n "$_errorMsg" ]; then
-        echo $_errorMsg
-    else
-        echo "The build failed."
+    if [ -z "$_errorMsg" ]; then
+        _errorMsg="The build failed."
     fi
+
+    if [ $_errorNum -eq 0 ]; then
+        _errorNum=9999
+    fi
+
+    echo "$_errorNum, $_errorMsg"
+    echo "\"$_errorNum\",\"$_errorMsg\"">$MINGLE_BUILD_DIR/../mingle_error.log
 
     exit $_errorNum
 }
@@ -2039,6 +2047,10 @@ mingleInitialize() {
     fi
 
     cd $MINGLE_BUILD_DIR
+
+    if [ -e "../mingle_error.log" ]; then
+        rm ../mingle_error.log
+    fi
 }
 
 mingleDownload() {
@@ -2071,9 +2083,9 @@ mingleDownload() {
 
     if ! $_alreadyDownloaded; then
         if echo $_url|grep -i 'https://'; then
-            wget  --no-check-certificate $_url -O $_outputFile || { stat=$?; echo "Download failed for $_file, aborting!" >&2; exit $stat; }
+            wget  --no-check-certificate $_url -O $_outputFile || mingleError $? "Download failed for $_file, aborting!"
         else
-            wget $_url -O $_outputFile || { stat=$?; echo "Download failed for $_file, aborting!" >&2; exit $stat; }
+            wget $_url -O $_outputFile || mingleError $? "Download failed for $_file, aborting!"
         fi
     else
         echo "$_outputFile has already been downloaded."
@@ -2094,19 +2106,19 @@ mingleDecompress() {
         echo "Decompressing $_decompFile"...
             
         if [ ${_decompFile: -4} == ".tgz" ]; then
-            tar xzvf "$_decompFile" || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+            tar xzvf "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -3} == ".gz" ]; then
-            gzip -d "$_decompFile" || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+            gzip -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -3} == ".xz" ]; then
-            xz -d "$_decompFile" || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+            xz -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -4} == ".bz2" ]; then
-            bzip2 -d "$_decompFile" || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+            bzip2 -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -3} == ".7z" ]; then
-            7za x "$_decompFile" || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+            7za x "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -4} == ".zip" ]; then
-            unzip "$_decompFile" || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+            unzip "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -5} == ".lzma" ]; then
-            lzma -d "$_decompFile" || { stat=$?; echo "build failed, aborting" >&2; exit $stat; }
+            lzma -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         fi
         
         _decompFile=$(ad_getArchiveFromWC $_project)
@@ -2182,9 +2194,7 @@ mingleProcessSelectionNum() {
 mingleProcessSelection() {
     local _suite="$1"
 
-    if [ ! -z "$_suite" ] && [ "$_suite" != "NONE" ] && [ "$_suite" != "Quit" ]; then
-        mingleInitialize
-    fi
+    mingleInitialize
 
     echo
     echo "Preparing suite $_suite..."
