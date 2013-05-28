@@ -2194,6 +2194,8 @@ mingleProcessSelectionNum() {
 mingleProcessSelection() {
     local _suite="$1"
 
+    echo "suite = $suite"
+
     mingleInitialize
 
     echo
@@ -2299,7 +2301,7 @@ mingleMenu() {
     mingleGetSelections
 
     select _s in "${OPTIONS[@]}"; do
-        mingleProcessSelection $_s
+        mingleProcessSelection "$_s"
     done
 }
 
