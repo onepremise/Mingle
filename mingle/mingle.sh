@@ -2194,8 +2194,6 @@ mingleProcessSelectionNum() {
 mingleProcessSelection() {
     local _suite="$1"
 
-    echo "suite = $suite"
-
     mingleInitialize
 
     echo
