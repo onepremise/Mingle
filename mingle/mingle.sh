@@ -873,12 +873,22 @@ buildInstallICU() {
 }
 
 buildInstallPostgres() {
+    local _project="postgresql-*"
+
+    mingleDecompress "$_project"
+
+    local _projectDir=$(ad_getDirFromWC "$_project")
+
+    cd "$_projectDir" || mingleError $? "build failed, aborting!"
+
     if [ ! -e postgresql-mingw.patch ]; then
         cp /home/developer/patches/postgresql/$AD_POSTGRES_VERSION/postgresql-mingw.patch .
         ad_patch "postgresql-mingw.patch"
     fi
 
-    buildInstallGeneric "postgresql-*" true "" "postgres" "" "postgres --version"
+    cd ..
+
+    buildInstallGeneric "$_project" true "" "postgres" "" "postgres --version"
     
     if [ -e /mingw/lib/libpq.dll ]; then
         cp -rf /mingw/lib/libpq.dll /mingw/bin
@@ -2013,6 +2023,7 @@ mingleError() {
         _errorNum=9999
     fi
 
+    echo
     echo "$_errorNum, $_errorMsg"
     echo "\"$_errorNum\",\"$_errorMsg\"">$MINGLE_BUILD_DIR/../mingle_error.log
 
@@ -2101,7 +2112,7 @@ mingleDecompress() {
     local _projectDir=$(ad_getDirFromWC "$_project")
 
     if [ -z "$_projectDir" ]; then
-        local _decompFile=$(ad_getArchiveFromWC $_project)
+        local _decompFile=$(ad_getArchiveFromWC "$_project")
             
         echo "Decompressing $_decompFile"...
             
@@ -2121,7 +2132,7 @@ mingleDecompress() {
             lzma -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         fi
         
-        _decompFile=$(ad_getArchiveFromWC $_project)
+        _decompFile=$(ad_getArchiveFromWC "$_project")
         
         if [ ${_decompFile: -4} == ".tar" ]; then
             tar xvf "$_decompFile"
