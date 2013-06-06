@@ -442,7 +442,7 @@ diff -ruN Python-2.7.3//Lib/distutils/cygwinccompiler.py _Python-2.7.3/Lib/distu
      def _compile(self, obj, src, ext, cc_args, extra_postargs, pp_opts):
          if ext == '.rc' or ext == '.res':
              # gcc needs '.res' and '.rc' compiled to object files !!!
-@@ -271,12 +294,20 @@
+@@ -271,14 +294,20 @@
          if output_dir is None: output_dir = ''
          obj_names = []
          for src_name in source_filenames:
@@ -453,6 +453,7 @@ diff -ruN Python-2.7.3//Lib/distutils/cygwinccompiler.py _Python-2.7.3/Lib/distu
 +            #BOGUS## use normcase to make sure '.rc' is really '.rc' and not '.RC'
 +            #BOGUS#base, ext = os.path.splitext(os.path.normcase(src_name))
 +            base, ext = os.path.splitext (src_name)
++            base  = os.path.relpath(base)
 +            ext_normcase = os.path.normcase(ext)
 +            if ext_normcase in ['.rc','.res']:
 +                ext = ext_normcase
@@ -460,12 +461,13 @@ diff -ruN Python-2.7.3//Lib/distutils/cygwinccompiler.py _Python-2.7.3/Lib/distu
                  raise UnknownFileError, \
                        "unknown file type '%s' (from '%s')" % \
                        (ext, src_name)
-+            base = os.path.splitdrive(base)[1] # Chop off the drive
-+            base = base[os.path.isabs(base):]  # If abs, chop off leading /
-             if strip_dir:
-                 base = os.path.basename (base)
+-            if strip_dir:
+-                base = os.path.basename (base)
++
              if ext == '.res' or ext == '.rc':
-@@ -305,24 +336,31 @@
+                 # these need to be compiled to object files
+                 obj_names.append (os.path.join (output_dir,
+@@ -305,24 +334,31 @@
  
          CygwinCCompiler.__init__ (self, verbose, dry_run, force)
  
@@ -51273,8 +51275,6 @@ diff -ruN Python-2.7.3//PC/_winreg.c _Python-2.7.3/PC/_winreg.c
 diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 --- Python-2.7.3//PC/getpathp.c	2012-04-09 19:07:36 -0400
 +++ _Python-2.7.3/PC/getpathp.c	2013-01-21 11:39:48 -0500
---- Python-2.7.3/PC/getpathp.c	2012-04-09 19:07:36 -0400
-+++ Python-2.7.3/PC/getpathpb.c	2013-06-05 20:05:31 -0400
 @@ -72,6 +72,8 @@
  
  #include <string.h>
@@ -51292,7 +51292,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  static char *module_search_path = NULL;
  
  
-@@ -200,6 +203,67 @@
+@@ -200,6 +203,76 @@
      return 0;
  }
  
@@ -51301,8 +51301,12 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 +    char *p = PYTHONPATH;
 +    char *q = NULL;
 +    size_t n=0;
-+    size_t length=MIN(strlen(pythonhome), MAXPATHLEN);
++    size_t length=0;
 +    char *result = NULL;
++    char *newalloc = NULL;
++
++    if (pythonhome)
++        length=MIN(strlen(pythonhome), MAXPATHLEN);
 +
 +    for (;;) {
 +        q = strchr(p, DELIM);
@@ -51319,16 +51323,19 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 +        size_t resize=MIN(length+n+1,MAXPATHLEN);
 +
 +        if (result==NULL) {
-+            result=(char*)malloc(resize);
-+            memset(result, '\0', resize);
++            newalloc=(char*)malloc(resize);
++            memset(newalloc, '\0', resize);
 +        } else {
 +            resize+=strlen(result);
-+            result=(char*)realloc(result,resize);
-+            memset(result+length, '\0', (resize-length));
++            newalloc=(char*)realloc(result,resize);
++            memset(newalloc+length, '\0', (resize-length));
 +        }
 +
-+        if (result) {
-+            strcat(result, pythonhome);
++        if (newalloc) {
++			result=newalloc;
++
++			if (pythonhome)
++                strcat(result, pythonhome);
 +
 +            strncat(result, p,n);
 +
@@ -51337,7 +51344,9 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 +            result[length+1]='\0';
 +            length=resize;
 +        } else {
-+            printf("Error allocating memory!");
++			result=NULL;
++            fprintf(stderr,"Error allocating memory!");
++            return 0;
 +        }
 +
 +        if (q == NULL)
@@ -51348,7 +51357,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 +
 +    length=strlen(result);
 +
-+    if (buf!=NULL) {
++    if (buf!=NULL && !countOnly) {
 +        strcpy(buf, result);
 +    }
 +
@@ -51360,7 +51369,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  #ifdef MS_WINDOWS
  #ifdef Py_ENABLE_SHARED
  
-@@ -237,6 +301,8 @@
+@@ -237,6 +310,8 @@
      TCHAR *keyBufPtr;
      TCHAR **ppPaths = NULL;
  
@@ -51369,7 +51378,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
      /* Tried to use sysget("winver") but here is too early :-( */
      versionLen = _tcslen(PyWin_DLLVersionString);
      /* Space for all the chars, plus one \0 */
-@@ -459,6 +525,118 @@
+@@ -459,6 +534,118 @@
          progpath[0] = '\0';
  }
  
@@ -51395,7 +51404,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 +    } else {
 +        /* Read the output a line at a time - output it. */
 +        while (fgets(results, sizeof(results)-1, fp) != NULL) {
-+            if (strstr(results, L"No such file")==NULL) {
++            if (strstr(results, "No such file")==NULL) {
 +                results[strlen(results)-1]='\0';
 +                strncat(destination, results, size);
 +            } else {
@@ -51488,7 +51497,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  static void
  calculate_path(void)
  {
-@@ -467,6 +645,7 @@
+@@ -467,6 +654,7 @@
      size_t bufsz;
      char *pythonhome = Py_GetPythonHome();
      char *envpath = Py_GETENV("PYTHONPATH");
@@ -51496,7 +51505,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  
  #ifdef MS_WINDOWS
      int skiphome, skipdefault;
-@@ -480,8 +659,11 @@
+@@ -480,8 +668,11 @@
      /* progpath guaranteed \0 terminated in MAXPATH+1 bytes. */
      strcpy(argv0_path, progpath);
      reduce(argv0_path);
@@ -51509,7 +51518,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
              pythonhome = prefix;
          else
              pythonhome = NULL;
-@@ -511,6 +693,20 @@
+@@ -511,6 +702,20 @@
      }
  
      skiphome = pythonhome==NULL ? 0 : 1;
@@ -51530,7 +51539,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  #ifdef Py_ENABLE_SHARED
      machinepath = getpythonregpath(HKEY_LOCAL_MACHINE, skiphome);
      userpath = getpythonregpath(HKEY_CURRENT_USER, skiphome);
-@@ -518,7 +714,8 @@
+@@ -518,7 +723,8 @@
      /* We only use the default relative PYTHONPATH if we havent
         anything better to use! */
      skipdefault = envpath!=NULL || pythonhome!=NULL || \
@@ -51540,7 +51549,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  #endif
  
      /* We need to construct a path from the following parts.
-@@ -555,9 +752,21 @@
+@@ -555,9 +761,21 @@
          bufsz += strlen(machinepath) + 1;
      bufsz += strlen(zip_path) + 1;
  #endif
@@ -51562,7 +51571,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
      module_search_path = buf = malloc(bufsz);
      if (buf == NULL) {
          /* We can't exit, so print a warning and limp along */
-@@ -608,6 +817,35 @@
+@@ -608,6 +826,35 @@
              buf = strchr(buf, '\0');
          }
      }
@@ -51598,7 +51607,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  #else
      if (pythonhome == NULL) {
          strcpy(buf, PYTHONPATH);
-@@ -615,27 +853,15 @@
+@@ -615,27 +862,15 @@
      }
  #endif /* MS_WINDOWS */
      else {
@@ -51623,7 +51632,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 -                break;
 +        //Really don't like how strings are being maintained in
 +        //this file. However, I don't have time to refactor all.
-+        search_for_lib(1,pythonhome,buf);
++        search_for_lib(0,pythonhome,buf);
 +        buf = strchr(buf, '\0');
 +
 +        if (exists(build_dir)) {
@@ -51634,7 +51643,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
          }
      }
      if (argv0_path) {
-@@ -702,6 +928,8 @@
+@@ -702,6 +937,8 @@
  char *
  Py_GetExecPrefix(void)
  {
@@ -51642,7 +51651,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 +        return mingw_dynload_path;
      return Py_GetPrefix();
  }
- 
+
 diff -ruN Python-2.7.3//PC/msvcrtmodule.c _Python-2.7.3/PC/msvcrtmodule.c
 --- Python-2.7.3//PC/msvcrtmodule.c	2012-04-09 19:07:36 -0400
 +++ _Python-2.7.3/PC/msvcrtmodule.c	2013-01-15 13:57:28 -0500
