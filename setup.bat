@@ -332,7 +332,7 @@ COPY %WINDIR%\System32\Wldap32.dll mingw64\win64bitlibs /y
 move mingw64\win64bitlibs\gdi32.dll mingw64\win64bitlibs\libgdi32.dll
 move mingw64\win64bitlibs\msimg32.dll mingw64\win64bitlibs\libmsimg32.dll
 move mingw64\win64bitlibs\ws2_32.dll mingw64\win64bitlibs\libws2_32.dll
-move mingw64\win64bitlibs\crypt32.dll minsdgw64\win64bitlibs\libcrypt32.dll
+move mingw64\win64bitlibs\crypt32.dll mingw64\win64bitlibs\libcrypt32.dll
 move mingw64\win64bitlibs\Wldap32.dll mingw64\win64bitlibs\libwldap32.dll
 
 
