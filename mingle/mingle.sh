@@ -296,7 +296,11 @@ buildInstallGDB() {
         
         cd ..
 
-        buildInstallGeneric "$_project" true "--with-gmp --with-mpfr --with-mpc --with-python --enable-shared" "x" "" "gdb --version"
+        export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64"
+        export "LDFLAGS=-L/mingw/lib"
+        export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64"
+
+        buildInstallGeneric "$_project" false "--with-gmp --with-mpfr --with-mpc --with-python --enable-shared" "x" "" "gdb --version"
 
         cd $_projectDir/gdb
 
