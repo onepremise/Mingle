@@ -1119,12 +1119,12 @@ buildInstallWAF() {
 
     mingleDecompress "$_project"
 
-    local _projectdir=$(ad_getDirFromWC $_project)
+    local _projectdir=$(ad_getDirFromWC "$_project")
 
     cd "$_projectdir"
         
     if [ ! -e waf-mingw.patch ]; then
-         cp /home/developer/patches/mapnik/$AD_WAF_VERSION/waf-mingw.patch .
+         cp /home/developer/patches/waf/$AD_WAF_VERSION/waf-mingw.patch .
          ad_patch "waf-mingw.patch"
     fi
 
