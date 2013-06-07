@@ -288,10 +288,15 @@ buildInstallGDB() {
             cp /home/developer/patches/gdb/$AD_GDB_VERSION/gdb-python.patch .
             ad_patch "gdb-python.patch"
         fi
+
+        echo
+        echo "Remove any old config.cache files..."
+        echo
+        find . -name 'config.cache' -exec rm {} \;
         
         cd ..
 
-        buildInstallGeneric "$_project" true "--with-python --enable-shared" "x" "" "gdb --version"
+        buildInstallGeneric "$_project" true "--with-gmp --with-mpfr --with-mpc --with-python --enable-shared" "x" "" "gdb --version"
 
         cd $_projectDir/gdb
 
