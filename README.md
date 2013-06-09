@@ -1,28 +1,22 @@
 Mingle64
 ===========
 
-----------
-
-
 This scripts delpoys a 64bit build environment required by most open source geographic projects, osm2psql, mapnik. libgeos, etc... 
 
 Requirements
 ============
-
-----------
-
 
 * Windows 7 64bit Professional, Windows Server 2008 64bit
 * Powershell
 * Microsoft Visual Studio Express 12 - really only needs macro assembler
 
 Features
-
-----------
+============
 
 * Full 64 bit environment
 * Automatically sets up  build environment for Windows 7+ and Server 2008+
 * Integrates with Eclipse
+* Log details how to build open source projects using a MinGW 64bit environment
 
 The following projects are fully building in the environment setup:
 
@@ -89,15 +83,13 @@ Type "help", "copyright", "credits" or "license" for more information.
 ```
 
 Setup
-=====
-----------
+============
 
 Download this source as an archive. Extract the contents to disk. Run the setup.bat script in a command prompt with administrative priveleges. Click on the msys shortcut to open a terminal.
 
 Installing Packages
--------------------
+============
 
-----------
 
 You can install more packages at anytime by running mingle in the msys terminal:
 
