@@ -579,15 +579,21 @@ installLibJPEG () {
 
     DOSPATH=`cmd /c 'echo %CD%'`
 
+
+    cd $MINGLE_CACHE
+
+    EXECPATH=`pwd -W`
+
     cd $STOREPATH
 
     if [ ! -e /mingw/lib/libturbojpeg.a ]; then
         if [ ! -e "libjpeg-turbo.tar" ]; then
-            cmd /c "$MINGLE_CACHE/libjpeg-turbo-1.2.1-gcc64.exe /S /D=$DOSPATH"
+            echo MINGLE_CACHE = $MINGLE_CACHE...
+            echo DOSPATH = $DOSPATH...
+            cmd /c "$EXECPATH/libjpeg-turbo-1.2.1-gcc64.exe /S /D=$DOSPATH"
 
             if [ ! -e "$DOSPATH/uninstall_1.2.1.exe" ]; then
-                echo "Install failed, aborting"
-                exit
+                mingleError -1 "Failed to install libturbo, aborting!"
             fi
 
             tar cvf libjpeg-turbo.tar libjpeg-turbo --exclude=uninstall*
