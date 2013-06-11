@@ -94,10 +94,6 @@ export AD_SWIG_VERSION=2.0.9
 export AD_PERL_VERSION=5.16.2
 export AD_PERL_SHRT_VERSION=5.0
 
-MINGLE_BUILD_DIR=/home/developer/build
-#MINGLE_BUILD_DIR=/home/developer/dependencies
-MINGLE_CACHE=$ALLUSERSPROFILE/Mingle/packages
-
 mingleDownloadPackages () {
     echo "Checking Downloads..."
 
@@ -178,8 +174,6 @@ updateFindCommand() {
     echo
     echo "Update Find Command..."
     local _project="findutils-*"
-
-    ls $MINGLE_CACHE/findutils-*-bin.tar.lzma
 
     if ls $MINGLE_CACHE/findutils-*-bin.tar.lzma &> /dev/null; then
         lzma -d $MINGLE_CACHE/findutils-*-bin.tar.lzma
@@ -327,7 +321,7 @@ buildInstallTCL() {
     echo "Building $_project..."
     echo
     
-    ad_preCleanEnv
+    ad_setDefaultEnv
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -387,7 +381,7 @@ buildInstallTk() {
     echo
     
     if $_cleanEnv; then
-        ad_preCleanEnv
+        ad_setDefaultEnv
     fi
     
     echo "Checking for binary $_binCheck..."
@@ -607,7 +601,7 @@ installLibJPEG () {
             rmdir libjpeg-turbo
         fi
 
-        tar xvf libjpeg-turbo.tar
+        tar xvf libjpeg-turbo.tarcd
         cp -rf libjpeg-turbo/* /mingw
     else
         echo "libjpeg-turbo already installed."
@@ -621,7 +615,7 @@ installLibPNG() {
     echo "Installing libPNG..."
     echo
     
-    if [ ! -e /mingw/bin/libpng15-15.dll ]; then
+    if [ ! -e /mingw/bin/libpng*.dll ]; then
         mingleDecompress "libpng-*"
 
         cd libpng-* || mingleError $? "cd failed, aborting!"
@@ -675,7 +669,7 @@ buildInstallPolarSSL() {
     echo "Building $_project..."
     echo
     
-    ad_preCleanEnv
+    ad_setDefaultEnv
     
     export SHARED=1
     export "WINDOWS=1"
@@ -710,7 +704,7 @@ buildInstallLOpenSSL() {
     echo "Building $_project..."
     echo
     
-    ad_preCleanEnv
+    ad_setDefaultEnv
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -762,7 +756,7 @@ buildInstallFontConfig() {
     echo "Building $_project..."
     echo
     
-    ad_preCleanEnv
+    ad_setDefaultEnv
  
     export "FREETYPE_LIBS=`freetype-config --libs`"
     
@@ -947,7 +941,38 @@ buildInstallLibgeos() {
 }
 
 buildInstallGDAL() {
-    buildInstallGeneric "gdal-*" true "" "libgdal-1.dll" "" "gdal_grid --version"
+    local _project="gdal-*"
+    local _configureFlags=""
+    local _binCheck="libgdal-1.dll"
+    local _exeToTest="gdal_grid --version"
+    
+    echo
+    echo "Building $_project..."
+    echo
+
+    cd $MINGLE_BUILD_DIR
+    
+    ad_setDefaultEnv
+    
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        mingleDecompress "$_project"
+
+        local _projectDir=$(ad_getDirFromWC "$_project")
+
+        ad_configure "$_project" "$_configureFlags"
+
+        #Not sure why but libtool crashes in bash if you have CPPFLAGS set
+        ad_clearEnv
+
+        ad_make "$_project"
+    else
+        echo "Already Installed."
+    fi
+    
+    ad_run_test "$_exeToTest"
+    
+    echo    
 }
 
 buildInstallPython() {
@@ -959,7 +984,7 @@ buildInstallPython() {
     echo "Building $_project..."
     echo
     
-    $ad_preCleanEnv
+    $ad_setDefaultEnv
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$ _binCheck" ] );then
@@ -1184,7 +1209,7 @@ buildInstallPyCairo() {
     echo "Building $_project..."
     echo
     
-    ad_preCleanEnv
+    ad_setDefaultEnv
 
     export "PYTHON_CONFIG=/mingw/bin/python2.7-config"
     export "CFLAGS=$CFLAGS -I/mingw/include/Python2.7"
@@ -1248,18 +1273,6 @@ buildInstallMapnikDev() {
     local _project="mapnik-latest*"
 
     mingleDecompress "$_project"
-
-    local _projectdir=$(ad_getDirFromWC $_project)
-
-    cd "$_projectdir" || mingleError $? "cd failed, aborting!"
-        
-    if [ ! -e mapnik-mingw.patch ]; then
-         #my update
-         cp /home/developer/patches/mapnik/$AD_MAPNIK_VERSION/mapnik-mingw.patch .
-         ad_patch "mapnik-mingw.patch"
-    fi
-
-    cd ..
 
     buildInstallGeneric "mapnik-*" true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
 
@@ -1418,9 +1431,19 @@ ad_fix_shared_lib() {
     cd "$_origPath" || mingleError $? "ad_fix_shared_lib cd failed, aborting"
 }
 
-ad_preCleanEnv() {
+ad_clearEnv() {
     echo
     echo "Resetting environment flags..."
+    echo
+    export "CFLAGS="
+    export "LDFLAGS="
+    export "CPPFLAGS=" 
+    export "CRYPTO="
+}
+
+ad_setDefaultEnv() {
+    echo
+    echo "Resetting environment flags to default..."
     echo
     #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
     export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
@@ -1639,7 +1662,7 @@ buildInstallGeneric() {
     cd $MINGLE_BUILD_DIR
     
     if $_cleanEnv; then
-        ad_preCleanEnv
+        ad_setDefaultEnv
     fi
     
     echo "Checking for binary $_binCheck..."
@@ -2032,39 +2055,73 @@ mingleError() {
     fi
 
     echo
-    echo "$_errorNum, $_errorMsg"
-    echo "\"$_errorNum\",\"$_errorMsg\"">$MINGLE_BUILD_DIR/../mingle_error.log
     echo "Current Project Dir: `pwd`"
+    echo
+    echo "`date +%m-%d-%y\ %T`, $_errorNum $_errorMsg"
+    echo "`date +%m-%d-%y\ %T`, \"$_errorNum\" \"$_errorMsg\"">$MINGLE_BUILD_DIR/../mingle_error.log
     echo
 
     exit $_errorNum
 }
 
+mingleReportToolVersions() {
+    echo
+    echo "Running Bash Version:"
+    echo
+    bash --version
+    echo
+}
+
+MINGLE_INITIALIZE=false
+
 mingleInitialize() {
-    STOREPATH=`pwd`
-    
-    if [ ! -e "$MINGLE_CACHE" ]; then
-        mkdir -p $MINGLE_CACHE
-    fi
-    
-    if [ ! -e "$MINGLE_BUILD_DIR" ]; then
-        mkdir -p $MINGLE_BUILD_DIR
-    fi
-    
-    if [ ! -e "/usr/local" ]; then
-        mkdir /usr/local
-    fi
-    
-    if [ ! -e "/usr/local/bin" ]; then
-        mkdir /usr/local/bin
-    fi
-    
-    if [ ! -e "/usr/local/include" ]; then
-        mkdir /usr/local/include
-    fi
-    
-    if [ ! -e "/usr/local/lib" ]; then
-        mkdir /usr/local/lib
+    if ! $MINGLE_INITIALIZE; then
+        config="/mingw/etc/mingle.cfg"
+        STOREPATH=`pwd`
+
+        mingleReportToolVersions
+
+        echo "Configuration:"
+
+        while read line
+        do
+            LINE="$line"
+            if [ "${LINE:0:1}" = "#" ] ; then
+                echo "Skipping disabled variable: $LINE"
+            else
+                BASHEXPORT=`echo $LINE|sed -e '0,/RE/s/\%/\$/' -e 's/\%//'`
+                echo "Exporting: $BASHEXPORT"
+                export "`eval echo $BASHEXPORT`"
+            fi
+        done <"$config"
+
+        echo MINGLE_CACHE=$MINGLE_CACHE
+
+        if [ ! -e "$MINGLE_CACHE" ]; then
+            mkdir -p $MINGLE_CACHE || mingleError $? "failed to create cache directory, aborting!"
+        fi
+
+        if [ ! -e "$MINGLE_BUILD_DIR" ]; then
+            mkdir -p $MINGLE_BUILD_DIR || mingleError $? "failed to create build directory, aborting!"
+        fi
+
+        if [ ! -e "/usr/local" ]; then
+            mkdir /usr/local || mingleError $? "failed to create directory, aborting!"
+        fi
+
+        if [ ! -e "/usr/local/bin" ]; then
+            mkdir /usr/local/bin || mingleError $? "failed to create directory, aborting!"
+        fi
+
+        if [ ! -e "/usr/local/include" ]; then
+            mkdir /usr/local/include || mingleError $? "failed to create directory, aborting!"
+        fi
+
+        if [ ! -e "/usr/local/lib" ]; then
+            mkdir /usr/local/lib || mingleError $? "failed to create directory, aborting!"
+        fi
+
+        MINGLE_INITIALIZE=true
     fi
 
     cd $MINGLE_BUILD_DIR
@@ -2337,6 +2394,10 @@ do
     case "$1" in
     -h | --help | -\?)
         mingle_show_help
+        exit 0
+        ;;
+    -i | --initialize)
+        mingleInitialize
         exit 0
         ;;
     -s | --suite=*)

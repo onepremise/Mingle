@@ -34,7 +34,23 @@ IF %ERRORLEVEL% EQU 0 (
    EXIT /B 1
 )
 
-if not exist "packages" mkdir packages
+REM ===========================================================================
+REM SET Environment Variables and create the package cache directory
+REM ===========================================================================
+for /f "delims=" %%i in (mingle\mingle.cfg) do @echo set %%i>>mingle_config.bat
+
+if exist mingle_config.bat (
+    call mingle_config.bat
+    del mingle_config.bat
+) else (
+    ECHO "Failed to set configuration!"
+    ECHO.
+    EXIT /B 1
+)
+
+if not exist "%MINGLE_CACHE%" (
+    mkdir %MINGLE_CACHE%
+)
 
 REM ===========================================================================
 REM SET EXECUTION POLICY
@@ -51,12 +67,12 @@ REM ===========================================================================
 
 set MSYSTOOLS="MSYS-20111123.zip"
 
-if not exist "packages\%MSYSTOOLS%" (
+if not exist "%MINGLE_CACHE%\%MSYSTOOLS%" (
      ECHO "Downloading msys..."
-     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url 'http://sourceforge.net/projects/mingw-w64/files/External binary packages (Win64 hosted)/MSYS (32-bit)/%MSYSTOOLS%/download' -fileName 'packages\\%MSYSTOOLS%'"
+     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url 'http://sourceforge.net/projects/mingw-w64/files/External binary packages (Win64 hosted)/MSYS (32-bit)/%MSYSTOOLS%/download' -fileName '%MINGLE_CACHE%\\%MSYSTOOLS%'"
 )
 
-if not exist "packages\%MSYSTOOLS%" (
+if not exist "%MINGLE_CACHE%\%MSYSTOOLS%" (
     ECHO "Failed to download MSYS!"
     ECHO.
     EXIT /B 1
@@ -75,21 +91,24 @@ REM set GCCURL="'http://www.drangon.org/mingw/mirror.php?num=2&fname=mingw-w64-b
 REM set GCCCOMPILER=x64-4.7.2-release-posix-sjlj-rev9.7z
 REM set GCCURL="'http://sourceforge.net/projects/mingwbuilds/files/host-windows/releases/4.7.2/64-bit/threads-posix/sjlj/%GCCCOMPILER%/download'"
 
-if not exist "packages\%GCCCOMPILER%" (
+if not exist "%MINGLE_CACHE%\%GCCCOMPILER%" (
     ECHO "Downloading %GCCCOMPILER%..."
-    powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCURL% -fileName 'packages\\%GCCCOMPILER%'"
+    powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCURL% -fileName '%MINGLE_CACHE%\\%GCCCOMPILER%'"
 )
 
 REM if not exist "packages\%GCCCOMPILERUPDATE%" (
 REM     ECHO "Downloading %GCCCOMPILERUPDATE%..."
-REM     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCUPDATEURL% -fileName 'packages\\%GCCCOMPILERUPDATE%'"
+REM     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCUPDATEURL% -fileName '%MINGLE_CACHE%\\%GCCCOMPILERUPDATE%'"
 REM )
 
-if not exist "packages\%GCCCOMPILER%" (
+if not exist "%MINGLE_CACHE%\%GCCCOMPILER%" (
     ECHO "Failed to download compiler!"
     ECHO.
     EXIT /B 1
 )
+
+REM Command tool updates from MSYS2
+
 
 REM ===========================================================================
 REM EXTRACTING TOOLS
@@ -98,14 +117,14 @@ REM ===========================================================================
 if not exist "msys" (
     ECHO "Extracting MSYS..."
     ECHO.
-    mingle\unzip packages\MSYS-20111123.zip
+    mingle\unzip %MINGLE_CACHE%\MSYS-20111123.zip
 )
 
 if not exist "mingw64" (
     ECHO "Extracting GCC..."
     ECHO.
-    mingle\7za x packages\%GCCCOMPILER%
-REM     mingle\7za x -y packages\%GCCCOMPILERUPDATE% -ir!*mingw64\x86_64-w64-mingw32*
+    mingle\7za x %MINGLE_CACHE%\%GCCCOMPILER%
+REM     mingle\7za x -y %MINGLE_CACHE%\%GCCCOMPILERUPDATE% -ir!*mingw64\x86_64-w64-mingw32*
 )
 
 IF EXIST "mingw" (
@@ -167,6 +186,7 @@ ECHO.
 
 XCOPY /Y /Q /D mingle\mingw.jam msys\home\developer\
 XCOPY /Y /Q /D mingle\mingle.sh mingw64\bin
+XCOPY /Y /Q /D mingle\mingle.cfg mingw64\etc
 
 IF EXIST "mingw64\bin\mingle.sh" (
 MOVE /Y mingw64\bin\mingle.sh mingw64\bin\mingle
