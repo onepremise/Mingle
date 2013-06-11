@@ -1,0 +1,41 @@
+--- waflib/Node.py	2013-06-11 12:37:06 -0400
++++ waflib/Nodeb.py	2013-06-11 12:52:44 -0400
+@@ -222,17 +222,31 @@
+ 		lst.reverse()
+ 		return os.sep.join(lst)or'.'
+ 	def abspath(self):
++		"""
++		Absolute path. A cache is kept in the context as ``cache_node_abspath``
++		"""
+ 		try:
+ 			return self.cache_abspath
+-		except:
++		except AttributeError:
+ 			pass
+-		if not self.parent:
+-			val=os.sep=='/'and os.sep or''
+-		elif not self.parent.name:
+-			val=(os.sep=='/'and os.sep or'')+self.name
++		# think twice before touching this (performance + complexity + correctness)
++
++		if os.name == 'posix':
++			if not self.parent:
++				val = os.sep
++			elif not self.parent.name:
++				val = os.sep + self.name
++			else:
++				val = self.parent.abspath() + os.sep + self.name
+ 		else:
+-			val=self.parent.abspath()+os.sep+self.name
+-		self.cache_abspath=val
++			if not self.parent:
++				val = ''
++			elif not self.parent.name:
++				val = self.name + os.sep
++			else:
++				val = self.parent.abspath().rstrip(os.sep) + os.sep + self.name
++
++		self.cache_abspath = val
+ 		return val
+ 	def is_child_of(self,node):
+ 		p=self

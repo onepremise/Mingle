@@ -1,0 +1,12 @@
+ff -ru waf-1.7.10/waflib/Node.py waf-1.7.10_b/waflib/Node.py
+--- waf-1.7.10/waflib/Node.py	2013-03-13 06:52:08 -0400
++++ waf-1.7.10_b/waflib/Node.py	2013-05-20 14:56:31 -0400
+@@ -399,7 +399,7 @@
+ 			pass
+ 		# think twice before touching this (performance + complexity + correctness)
+ 
+-		if os.sep == '/':
++		if os.name == 'posix':
+ 			if not self.parent:
+ 				val = os.sep
+ 			elif not self.parent.name:

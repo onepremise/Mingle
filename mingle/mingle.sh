@@ -75,7 +75,7 @@ export AD_GDAL_VERSION=1.9.2
 export AD_GEOS_VERSION=3.3.6
 
 export AD_PIXMAN_VERSION=0.28.2
-export AD_CAIRO_VERSION=1.12.8
+export AD_CAIRO_VERSION=1.12.14
 export AD_CAIROMM_VERSION=1.10.0
 export AD_PYCAIRO_VERSION=1.10.0
 
@@ -84,7 +84,7 @@ export AD_PYTHON_MINOR=.3
 export AD_PYTHON_VERSION=$AD_PYTHON_MAJOR$AD_PYTHON_MINOR
 export AD_SETUPTOOLS_VERSION=0.6c11
 export AD_NOSE_VERSION=1.2.1
-export AD_WAF_VERSION=1.7.10
+export AD_WAF_VERSION=1.7.11
 
 export AD_POSTGRES_VERSION=9.2.2
 
@@ -175,14 +175,28 @@ updateFindCommand() {
     echo "Update Find Command..."
     local _project="findutils-*"
 
+    mingleDecompress "$_project"
+    
+    cp bin/find.exe /bin || mingleError $? "failed to copy find, aborting!"
+    cp bin/xargs.exe /bin || mingleError $? "failed to xargs find, aborting!"
+
+    echo
+}
+
+updateFindCommand() {
+    echo
+    echo "Update Find Command..."
+    local _project="findutils-*"
+
+    # Don't use mingle decomp until the find command has been updated.
     if ls $MINGLE_CACHE/findutils-*-bin.tar.lzma &> /dev/null; then
-        lzma -d $MINGLE_CACHE/findutils-*-bin.tar.lzma
+        lzma -d $MINGLE_CACHE/findutils-*-bin.tar.lzma || mingleError $? "failed to decompress find, aborting!"
     fi
         
-    tar xvf $MINGLE_CACHE/findutils-*-bin.tar
+    tar xvf $MINGLE_CACHE/findutils-*-bin.tar || mingleError $? "failed to unarchive find, aborting!"
     
-    cp bin/find.exe /bin
-    cp bin/xargs.exe /bin
+    cp bin/find.exe /bin || mingleError $? "failed to copy find, aborting!"
+    cp bin/xargs.exe /bin || mingleError $? "failed to xargs find, aborting!"
 
     echo
 }
@@ -651,7 +665,31 @@ buildInstallPixman() {
 }
 
 buildInstallCairo() {
-    buildInstallGeneric "cairo-$AD_CAIRO_VERSION*" true "" "libcairo.a"
+    local _project="cairo-$AD_CAIRO_VERSION*"
+
+    buildInstallGeneric "$_project" true "" "libcairo.a"
+
+    if ! ( [ -e "/mingw/lib/libcairo.dll" ] && [ -e "/mingw/bin/libcairo.dll" ] );then
+        echo "Manually generating libcairo DLL..."
+
+        local _projectdir=$(ad_getDirFromWC $_project)
+
+        cd $_projectdir || mingleError $? "cd failed, aborting!"
+
+        x86_64-w64-mingw32-gcc.exe -o libcairo.dll -s -shared -Wl,--out-implib=libcairo.dll.a  -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive src/.libs/libcairo.a -Wl,--no-whole-archive -L/mingw/lib -lpixman-1 -lz -lgdi32 -lpng -lfontconfig -lfreetype -lmsimg32 || mingleError $? "Failed to generate dll, aborting!"
+
+        cp libcairo.dll /mingw/lib || mingleError $? "Failed to copy dll, aborting!"
+        cp libcairo.dll /mingw/bin || mingleError $? "Failed to copy dll, aborting!"
+        cp libcairo.dll.a /mingw/lib || mingleError $? "Failed to copy lib, aborting!"
+
+        local _shortProjectName=$(ad_getShortLibName $_project)
+
+        echo "Short Name: $_shortProjectName"
+
+        ad_fix_shared_lib "$_shortProjectName"
+
+        cd ..
+    fi
 }
 
 buildInstallCairomm() {
@@ -1120,6 +1158,19 @@ buildInstallWerkzeug() {
     cd $_savedir
 }
 
+buildInstallPyTest() {
+    echo
+    echo "Downloading and configuring Werkzeug..."
+    echo
+
+    local _savedir=`pwd`
+
+    cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+    easy_install --install-dir=. pytest
+
+    cd $_savedir
+}
+
 buildInstallTileLite() {
     echo
     echo "Downloading and configuring TileLite..."
@@ -1169,6 +1220,12 @@ buildInstallWAF() {
     cd ..
 
     buildInstallGeneric "waf-*" true "" "waf" "" ""
+
+    cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+
+    cp waf /mingw/bin || mingleError $? "failed to install waf, aborting!"
+
+    cd ..
 }
 
 buildInstallBoostJam() {
@@ -1213,6 +1270,7 @@ buildInstallPyCairo() {
 
     export "PYTHON_CONFIG=/mingw/bin/python2.7-config"
     export "CFLAGS=$CFLAGS -I/mingw/include/Python2.7"
+    export "LDFLAGS=$LDFLAGS -lpixman-1"
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -1220,11 +1278,27 @@ buildInstallPyCairo() {
 
         local _projectDir=$(ad_getDirFromWC "$_project")
         
-        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+        cd "$_projectDir" || mingleError $? "cd failed, aborting!"
         
-        ./waf configure --target=x86_64-w64-mingw32 --prefix=/mingw --libdir=/mingw/lib --check-c-compiler=gcc
-        ./waf build
-        ./waf install
+        #Expand waflib
+        ./waf --version
+
+        #patch waflib
+        cd waf-*/waflib
+
+        if [ ! -e waf-mingw.patch ]; then
+            cp /home/developer/patches/py2cairo/$AD_PYCAIRO_VERSION/waf-mingw.patch .
+            ad_patch "waf-mingw.patch"
+            rm Node.pyc
+        fi
+
+        cd ../..
+
+        ./waf --version 2>&1|| mingleError $? "failed to patch pycairo, aborting!"
+
+        ./waf configure --target=x86_64-w64-mingw32 --prefix=/mingw --libdir=/mingw/lib --check-c-compiler=gcc 2>&1 || mingleError $? "failed to configure pycairo, aborting!"
+        ./waf build 2>&1 || mingleError $? "failed to build pycairo, aborting!"
+        ./waf install 2>&1 || mingleError $? "failed to install pycairo, aborting!"
 
         if [ -e "/mingw/bin/pkgconfig/pycairo.pc" ]; then
             mv /mingw/bin/pkgconfig/pycairo.pc /mingw/lib/pkgconfig
@@ -1436,6 +1510,7 @@ ad_clearEnv() {
     echo "Resetting environment flags..."
     echo
 
+    unset PKG_CONFIG_PATH
     unset CFLAGS
     unset LDFLAGS
     unset CPPFLAGS
@@ -1447,6 +1522,7 @@ ad_setDefaultEnv() {
     echo "Resetting environment flags to default..."
     echo
 
+    export "PKG_CONFIG_PATH=/mingw/lib/pkgconfig"
     #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
     export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "LDFLAGS=-L/mingw/lib"
@@ -2098,6 +2174,8 @@ mingleInitialize() {
             fi
         done <"$config"
 
+        MINGLE_CACHE=`echo "$MINGLE_CACHE" | sed -e 's/[a-xA-X]:\\\/\/c\//' -e 's/\\\/\//'`
+
         echo MINGLE_CACHE=$MINGLE_CACHE
 
         if [ ! -e "$MINGLE_CACHE" ]; then
@@ -2205,7 +2283,7 @@ mingleDecompress() {
         _decompFile=$(ad_getArchiveFromWC "$_project")
         
         if [ ${_decompFile: -4} == ".tar" ]; then
-            tar xvf "$_decompFile"
+            tar xvf "$_decompFile" || mingleError $? "Failed to unarchive $_decompFile, aborting!"
         fi
     fi
 }
@@ -2386,8 +2464,6 @@ mingleMenu() {
 
 
 # Initialize our own variables:
-MINGLE_CACHE=`echo "$MINGLE_CACHE" | sed -e 's/[a-xA-X]:\\\/\/c\//' -e 's/\\\/\//'`
-output_file=""
 verbose=0
 suite=""
 
