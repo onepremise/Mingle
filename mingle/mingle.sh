@@ -1435,16 +1435,18 @@ ad_clearEnv() {
     echo
     echo "Resetting environment flags..."
     echo
-    export "CFLAGS="
-    export "LDFLAGS="
-    export "CPPFLAGS=" 
-    export "CRYPTO="
+
+    unset CFLAGS
+    unset LDFLAGS
+    unset CPPFLAGS
+    unset CRYPTO
 }
 
 ad_setDefaultEnv() {
     echo
     echo "Resetting environment flags to default..."
     echo
+
     #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
     export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "LDFLAGS=-L/mingw/lib"
@@ -1498,6 +1500,7 @@ ad_configure() {
 
         echo
         echo "Using CFLAGS: $CFLAGS"
+        echo "Using CPPFLAGS: $CPPFLAGS"
         echo "Using LDFLAGS: $LDFLAGS"
 
         echo

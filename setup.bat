@@ -184,6 +184,10 @@ ECHO.
 ECHO "Copy build scripts and configs..."
 ECHO.
 
+IF NOT EXIST "mingw64\etc" (
+    mkdir mingw64\etc
+)
+
 XCOPY /Y /Q /D mingle\mingw.jam msys\home\developer\
 XCOPY /Y /Q /D mingle\mingle.sh mingw64\bin
 XCOPY /Y /Q /D mingle\mingle.cfg mingw64\etc
