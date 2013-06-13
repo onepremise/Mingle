@@ -98,6 +98,7 @@ mingleDownloadPackages () {
     echo "Checking Downloads..."
 
     mingleDownload "http://sourceforge.net/projects/mingw/files/MSYS/Base/findutils/findutils-4.4.2-2/findutils-4.4.2-2-msys-1.0.13-bin.tar.lzma/download" "findutils-4.4.2-2-msys-1.0.13-bin.tar.lzma"
+    mingleDownload "http://ftp.gnu.org/gnu/tar/tar-1.26.tar.gz"    
     mingleDownload "http://sourceforge.net/projects/sevenzip/files/7-Zip/$AD_SEVENZIPPATH/7za$AD_SEVENZIP.zip/download" "7za$AD_SEVENZIP.zip"
 #   mingleDownload "http://sourceforge.net/projects/mingw-w64/files/External%20binary%20packages%20%28Win64%20hosted%29/make/make-$MAKE.zip/download" "make-$MAKE.zip"
     mingleDownload "http://ftp.gnu.org/gnu/m4/m4-$AD_MFOUR.tar.xz"
@@ -143,7 +144,7 @@ mingleDownloadPackages () {
     mingleDownload "http://download.osgeo.org/gdal/gdal-$AD_GDAL_VERSION.tar.gz"
     mingleDownload "http://www.sqlite.org/sqlite-autoconf-$AD_SQLITE_VERSION.tar.gz"
     mingleDownload "http://download.osgeo.org/proj/proj-$AD_PROJ_VERSION.tar.gz"
-    mingleDownload "ftp://ftp.remotesensing.org/pub/geotiff/libgeotiff/libgeotiff-$AD_GEOTIFF_VERSION.tar.gz"
+    mingleDownload "ftp://ftp.remotesensing.org/pub/geotiff/libgeotiff/libgeotiff-$AD_GEOTIFF_VERSION.zip"
     mingleDownload "http://download.osgeo.org/proj/proj-datumgrid-$AD_PROJ_GRIDS_VERSION.zip"
     mingleDownload "http://www.python.org/ftp/python/$AD_PYTHON_VERSION/Python-$AD_PYTHON_VERSION.tgz"
     mingleDownload "https://pypi.python.org/packages/source/s/setuptools/setuptools-0.6c11.tar.gz"
@@ -175,19 +176,6 @@ updateFindCommand() {
     echo "Update Find Command..."
     local _project="findutils-*"
 
-    mingleDecompress "$_project"
-    
-    cp bin/find.exe /bin || mingleError $? "failed to copy find, aborting!"
-    cp bin/xargs.exe /bin || mingleError $? "failed to xargs find, aborting!"
-
-    echo
-}
-
-updateFindCommand() {
-    echo
-    echo "Update Find Command..."
-    local _project="findutils-*"
-
     # Don't use mingle decomp until the find command has been updated.
     if ls $MINGLE_CACHE/findutils-*-bin.tar.lzma &> /dev/null; then
         lzma -d $MINGLE_CACHE/findutils-*-bin.tar.lzma || mingleError $? "failed to decompress find, aborting!"
@@ -199,6 +187,19 @@ updateFindCommand() {
     cp bin/xargs.exe /bin || mingleError $? "failed to xargs find, aborting!"
 
     echo
+}
+
+#experimental
+updateTarCommand() {
+    if ad_isDateNewerThanFileModTime "2013-01-01" "/mingw/bin/tar.exe"; then
+        #export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64"
+        #export "LDFLAGS=-L/mingw/lib"
+        #export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64"
+
+        buildInstallGeneric "tar-*" true "" "tarzzz" "" "tar --version"
+    else
+        echo "TAR is up to date."
+    fi
 }
 
 
@@ -687,6 +688,7 @@ buildInstallCairo() {
         echo "Short Name: $_shortProjectName"
 
         ad_fix_shared_lib "$_shortProjectName"
+        ad_fix_shared_lib "libcairo-script-interpreter"
 
         cd ..
     fi
@@ -954,9 +956,13 @@ buildInstallProjDatumgrid() {
     echo
     
     if [ ! -e /mingw/share/proj/ntv1_can.dat ]; then
-        mingleDecompress "proj-datumgrid*"
+        if [ ! -e proj-datumgrid ]; then
+            mkdir proj-datumgrid
+        fi
 
-        cd proj-datumgrid*
+        cd proj-datumgrid
+
+        mingleDecompress "proj-datumgrid*"
 
         cp -f * /mingw/share/proj
 
@@ -1477,7 +1483,7 @@ ad_fix_shared_lib() {
     local _origPath=`pwd`
     cd /mingw/lib || mingleError $? "ad_fix_shared_lib cd failed, aborting"
     
-    local _libraryName=`ls $1*.a|head -1|sed -e 's/dll\.a//' -e 's/\.a//'`
+    local _libraryName=`ls $1*.a|sed -e 's/\.dll\.a//' -e 's/\.a//'|uniq|sort|head -1`
     
     echo "Parsed library name: $_libraryName"    
     
@@ -1526,7 +1532,7 @@ ad_setDefaultEnv() {
     #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
     export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "LDFLAGS=-L/mingw/lib"
-    export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO" 
+    export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "CRYPTO=POLARSSL"
 }
 
@@ -1795,6 +1801,7 @@ MINGLE_SUITE_DEBUG=false
 MINGLE_SUITE_BOOST=false
 MINGLE_SUITE_IMAGE_TOOLS=false
 MINGLE_SUITE_MATH=false
+MINGLE_SUITE_SCM=false
 MINGLE_SUITE_GRAPHICS=false
 MINGLE_SUITE_GEO_SPATIAL=false
 MINGLE_MAPNIK=false
@@ -1812,6 +1819,10 @@ suiteBase() {
     mingleDownloadPackages
 
     updateFindCommand
+    
+    #experimental
+    #updateTarCommand
+
     install7Zip
     buildInstallPThreads
     buildInstallAutoconf
@@ -1829,6 +1840,11 @@ suiteBase() {
     buildInstallTCL
     buildInstallTk
     buildInstallSigc
+
+    #Keep the msys M4 for now due to build issues it causes with autoconf
+    #buildInstallM4
+    #Not ready for mingw64
+    #buildInstallGLibC
 }
 
 suiteXML() {
@@ -1921,6 +1937,30 @@ suitePython() {
     buildInstallWerkzeug
 }
 
+suitePerl() {
+    suiteBase
+    suiteXML
+    suiteFonts
+    suiteEncryption
+    suiteNetworking
+    suiteDatabase
+
+    #buildInstallPerl
+}
+
+suiteSwig() {
+    suiteBase
+    suiteXML
+    suiteFonts
+    suiteEncryption
+    suiteNetworking
+    suiteDatabase
+    suitePython
+    suitePerl 
+
+    #buildInstallSwig
+}
+
 suiteDebug() {
     if $MINGLE_SUITE_DEBUG ; then
         return;
@@ -1957,6 +1997,27 @@ suiteBoost() {
 
     buildInstallBoostJam
     buildInstallBoost
+}
+
+suiteSCMTools() {
+    if $MINGLE_SUITE_SCM ; then
+        return;
+    else
+        MINGLE_SUITE_SCM=true
+    fi
+
+    suiteBase
+    suiteXML
+    suiteFonts
+    suiteEncryption
+    suiteNetworking
+    suiteDatabase
+    suitePython
+    suiteDebug
+    suiteBoost
+
+    #buildInstallSVN
+    #buildInstallGit
 }
 
 suiteImageTools() {
@@ -2105,21 +2166,11 @@ suiteMapnikTools() {
 
     buildInstallMapnikStylesheets
     buildInstallTileLite
-}
 
-# Experimentation
-#Keep the msys M4 for now due to build issues it causes with autoconf
-#buildInstallM4
-#Not ready for mingw64
-#buildInstallGLibC
-#buildInstallNode
-#buildInstallNodeMapnik
-#move swig before gdal
-#buildInstallPerl
-#buildInstallSwig
-#buildInstallAPR
-#buildInstallSVN
-#buildInstallGit
+    #buildInstallNode
+    #buildInstallNodeMapnik
+    #buildInstallAPR
+}
 
 mingleError() {
     local _errorNum=$1
@@ -2328,7 +2379,7 @@ minglePrintSelections() {
 }
 
 mingleGetSelections() {
-    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "Database Tools" "Python Tools" "Debugger" "Boost Libraries" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Manpik Tools" "All" "Quit")
+    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "Database Tools" "Python Tools" "Debugger" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Manpik Tools" "All" "Quit")
 }
 
 mingleProcessSelectionNum() {
@@ -2353,11 +2404,13 @@ mingleProcessSelectionNum() {
 mingleProcessSelection() {
     local _suite="$1"
 
-    mingleInitialize
+    if [ "$_suite" != "Quit" ]; then
+        mingleInitialize
 
-    echo
-    echo "Preparing suite $_suite..."
-    echo
+        echo
+        echo "Preparing suite $_suite..."
+        echo
+    fi
 
     case "$_suite" in
     "Quit")
@@ -2389,6 +2442,9 @@ mingleProcessSelection() {
         ;;
     "Boost Libraries")
         suiteBoost
+        ;;
+    "SCM Tools")
+        suiteSCMTools
         ;;
     "Image Libraries")
         suiteImageTools
