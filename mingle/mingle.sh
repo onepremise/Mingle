@@ -1821,11 +1821,11 @@ suiteBase() {
         SUITE_BASE=true
     fi
 
-    updateGCC
+    updateFindCommand
 
     mingleDownloadPackages
 
-    updateFindCommand
+    updateGCC
     
     #experimental
     #updateTarCommand
