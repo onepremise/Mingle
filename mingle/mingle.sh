@@ -1099,7 +1099,7 @@ buildInstallPython() {
         export "CFLAGS=$CFLAGS -IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
         export "LDFLAGS=$LDFLAGS -Ldependencies/lib"
                
-        ad_configure "$_project" "--with-libs='-lmingle' --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
+        ad_configure "$_project" "--with-libs=-lmingle --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
         ad_make $_project
         
