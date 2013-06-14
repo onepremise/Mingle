@@ -51697,7 +51697,7 @@ diff -ruN Python-2.7.3//PC/msvcrtmodule.c _Python-2.7.3/PC/msvcrtmodule.c
      Py_INCREF(Py_None);
 diff -ruN Python-2.7.3/PC/pyconfig.h _Python-2.7.3/PC/pyconfig.h
 --- Python-2.7.3/PC/pyconfig.h	2012-04-09 19:07:36 -0400
-+++ _Python-2.7.3/PC/pyconfig.h	2013-02-05 13:46:27 -0500
++++ Python-2.7.3/PC/pyconfigb.h	2013-06-13 13:12:37 -0400
 @@ -275,6 +275,21 @@
  #define PY_LLONG_MIN LLONG_MIN
  #define PY_LLONG_MAX LLONG_MAX
@@ -51759,6 +51759,24 @@ diff -ruN Python-2.7.3/PC/pyconfig.h _Python-2.7.3/PC/pyconfig.h
  /* Fairly standard from here! */
  
  /* Define to 1 if you have the `copysign' function. */
+@@ -633,7 +680,7 @@
+ /* #undef HAVE_TIMES */
+ 
+ /* Define if you have uname.  */
+-/* #undef HAVE_UNAME */
++#define HAVE_UNAME
+ 
+ /* Define if you have waitpid.  */
+ /* #undef HAVE_WAITPID */
+@@ -707,7 +754,7 @@
+ /* #define HAVE_SYS_UTIME_H 1 */
+ 
+ /* Define if you have the <sys/utsname.h> header file.  */
+-/* #define HAVE_SYS_UTSNAME_H 1 */
++#define HAVE_SYS_UTSNAME_H 1
+ 
+ /* Define if you have the <thread.h> header file.  */
+ /* #undef HAVE_THREAD_H */
 diff -ruN Python-2.7.3//Python/dynload_win.c _Python-2.7.3/Python/dynload_win.c
 --- Python-2.7.3//Python/dynload_win.c	2012-04-09 19:07:36 -0400
 +++ _Python-2.7.3/Python/dynload_win.c	2013-01-15 13:57:28 -0500

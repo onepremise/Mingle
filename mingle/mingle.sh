@@ -169,6 +169,13 @@ updateGCC() {
 
     sed 's/\(template<class Q>\)/\/\/\1/g' /mingw/x86_64-w64-mingw32/include/unknwn.h > unknwn.h
     mv unknwn.h /mingw/x86_64-w64-mingw32/include/unknwn.h || mingleError $? "Failed to update GCC, aborting!"
+
+    cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
+    if [ ! -e "/mingw/x86_64-w64-mingw32/lib/libmingle.a" ]; then
+        echo "Supplementing GCC with libmingle..."
+        cp -rf $MINGLE_BASE/mingle/libmingle .
+        buildInstallGeneric "libmingle" false "" "xxx" "" ""
+    fi
 }
 
 updateFindCommand() {
@@ -1092,7 +1099,7 @@ buildInstallPython() {
         export "CFLAGS=$CFLAGS -IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
         export "LDFLAGS=$LDFLAGS -Ldependencies/lib"
                
-        ad_configure "$_project" "--with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
+        ad_configure "$_project" "--with-libs='-lmingle' --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
         ad_make $_project
         
@@ -2225,7 +2232,7 @@ mingleInitialize() {
             fi
         done <"$config"
 
-        MINGLE_CACHE=`echo "$MINGLE_CACHE" | sed -e 's/[a-xA-X]:\\\/\/c\//' -e 's/\\\/\//'`
+        MINGLE_CACHE=`echo "$MINGLE_CACHE" | sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g'`
 
         echo MINGLE_CACHE=$MINGLE_CACHE
 

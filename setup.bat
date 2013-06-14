@@ -177,6 +177,13 @@ IF NOT EXIST "msys/etc/fstab" (
     )
 )
 
+ECHO "Make Sure Previous PYTHONPATH is cleared..."
+ECHO.
+
+COPY mingle\profile msys\etc 
+
+msys\bin\bash -l -c "echo \"export MINGLE_BASE=%CD%\"|sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g'>>/etc/profile"
+
 REM ===========================================================================
 REM GET BUILD SCRIPTS IN ORDER
 REM ===========================================================================
@@ -270,11 +277,6 @@ REM ===========================================================================
 REM CONTINUE
 REM ===========================================================================
 :Continue
-
-ECHO "Make Sure Previous PYTHONPATH is cleared..."
-ECHO.
-
-COPY mingle\profile msys\etc 
 
 ECHO "Checking for Visual Studio 2012 Express for Windows Desktop..."
 ECHO.
