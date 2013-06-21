@@ -82,10 +82,24 @@ Type "help", "copyright", "credits" or "license" for more information.
 <sqlite3.Cursor object at 0x0000000002A35EA0>
 ```
 
+Download
+============
+
+Download is available directly from GitHub:
+
+https://github.com/onepremise/Mingle/archive/master.zip
+
+You can also download mingle from our build machine:
+
+https://vanguard.houghtonassociates.com/browse/MINGLE-MINGLE64/latest/artifact/JOB1/64-bit-Mingle-SDK
+
+mingle-light.zip: Without binaries.
+mingle.zip: With binaries.
+
 Setup
 ============
 
-Download this source as an archive. Extract the contents to disk. Run the setup.bat script in a command prompt with administrative priveleges. Click on the msys shortcut to open a terminal.
+Extract the contents to disk. Run the setup.bat script in a command prompt with administrative priveleges. Click on the msys shortcut to open a terminal.
 
 Installing Packages
 ============
@@ -113,3 +127,9 @@ Please Choose from the following:
 9) Boost Libraries            18) Quit
 #?
 ```
+
+Consulting
+============
+
+https://www.houghtonassociates.com
+(email) opensource@houghtonassociates.com

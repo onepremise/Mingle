@@ -161,7 +161,7 @@ mingleDownloadPackages () {
     #mingleDownload "https://github.com/mapnik/node-mapnik/archive/master.zip" "node-mapnik.zip"
     #mingleDownload "http://nodejs.org/dist/v0.10.0/node-v0.10.0.tar.gz"
     #mingleDownload "https://github.com/mitsuhiko/werkzeug/archive/master.zip" "werkzeug.zip"
-    mingleDownload "https://bitbucket.org/springmeyer/tilelite/get/7edec82b0e1f.zip" "tilelite.zip"
+    mingleDownload "https://bitbucket.org/springmeyer/tilelite/get/c1f84defd807.zip" "tilelite.zip"
 }
 
 updateGCC() {
@@ -972,6 +972,10 @@ buildInstallProjDatumgrid() {
         mingleDecompress "proj-datumgrid*"
 
         cp -f * /mingw/share/proj
+     
+        export PROJ_LIB=/mingw/share/proj
+
+        echo "export PROJ_LIB=/mingw/share/proj">>/etc/profile
 
         cd ..
     else
@@ -1193,6 +1197,12 @@ buildInstallTileLite() {
     local _project="tilelite*"
 
     mingleDecompress "$_project"
+
+    local _changenameof=`find . -maxdepth 1 -name "*tilelite*" -type d`
+
+    if [ -n "$_changenameof" ] && [ ! -e "tilelite" ]; then
+        mv $_changenameof tilelite || mingleError $? "mv failed, aborting!"
+    fi
 
     local _projectDir=$(ad_getDirFromWC "$_project")
 
@@ -2333,7 +2343,7 @@ mingleDecompress() {
         elif [ ${_decompFile: -3} == ".7z" ]; then
             7za x "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -4} == ".zip" ]; then
-            unzip "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
+            unzip -q -n "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -5} == ".lzma" ]; then
             lzma -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         fi
@@ -2386,7 +2396,7 @@ minglePrintSelections() {
 }
 
 mingleGetSelections() {
-    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "Database Tools" "Python Tools" "Debugger" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Manpik Tools" "All" "Quit")
+    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "Database Tools" "Python Tools" "Debugger" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "All" "Quit")
 }
 
 mingleProcessSelectionNum() {
