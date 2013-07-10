@@ -285,6 +285,9 @@ buildInstallGLibC() {
     buildInstallGeneric "glibc-*" true "" "xxx" "" ""
 }
 
+# Things to watch:
+# http://sourceware.org/bugzilla/show_bug.cgi?id=12127
+# http://forums.codeblocks.org/index.php/topic,11301.0.html
 buildInstallGDB() {
     local _project="gdb-*"
 
@@ -300,10 +303,12 @@ buildInstallGDB() {
             ad_patch "gdb-mingw.patch"
         fi
 
-        if [ ! -e gdb-python.patch ]; then
-            cp /home/developer/patches/gdb/$AD_GDB_VERSION/gdb-python.patch .
-            ad_patch "gdb-python.patch"
-        fi
+# This patch seems to regress all the py-gdb functionality.
+# Really wierd solution to getting python to work when it already does in mingw. Disabling.
+#        if [ ! -e gdb-python.patch ]; then
+#            cp /home/developer/patches/gdb/$AD_GDB_VERSION/gdb-python.patch .
+#            ad_patch "gdb-python.patch"
+#        fi
 
         echo
         echo "Remove any old config.cache files..."
@@ -312,19 +317,19 @@ buildInstallGDB() {
         
         cd ..
 
-        export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64"
+        export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__MINGW__"
         export "LDFLAGS=-L/mingw/lib"
-        export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64"
+        export "CPPFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__MINGW__"
 
         buildInstallGeneric "$_project" false "--with-gmp --with-mpfr --with-mpc --with-python --enable-shared" "x" "" "gdb --version"
 
         cd $_projectDir/gdb
 
         # Need to fix this in Makefile
-        x86_64-w64-mingw32-gcc.exe -o _gdb.pyd -s -shared -Wl,--out-implib=libgdb.dll.a  -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive *.o -Wl,--no-whole-archive -L../bfd -lbfd -L../liberty -liberty -L/mingw/lib -L../readline -lreadline -lhistory -L../libdecnumber -ldecnumber -L../opcodes -lopcodes -lz -lws2_32 -lpython2.7 -lexpat -L../intl -lintl -liconv
+        #x86_64-w64-mingw32-gcc.exe -o _gdb.pyd -s -shared -Wl,--out-implib=libgdb.dll.a  -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive *.o -Wl,--no-whole-archive -L../bfd -lbfd -L../liberty -liberty -L/mingw/lib -L../readline -lreadline -lhistory -L../libdecnumber -ldecnumber -L../opcodes -lopcodes -lz -lws2_32 -lpython2.7 -lexpat -L../intl -lintl -liconv
 
-        cp -f _gdb.pyd /mingw/share/gdb/python/gdb
-        cp -rf /mingw/share/gdb/python/gdb /mingw/lib/python2.7/site-packages/gdb
+        #cp -f _gdb.pyd /mingw/share/gdb/python/gdb
+        #cp -rf /mingw/share/gdb/python/gdb /mingw/lib/python2.7/site-packages/gdb
 
         cd ../..
     else
