@@ -51292,7 +51292,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  static char *module_search_path = NULL;
  
  
-@@ -200,6 +203,76 @@
+@@ -200,6 +203,75 @@
      return 0;
  }
  
@@ -51323,12 +51323,11 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 +        size_t resize=MIN(length+n+1,MAXPATHLEN);
 +
 +        if (result==NULL) {
-+            newalloc=(char*)malloc(resize);
-+            memset(newalloc, '\0', resize);
++            newalloc=(char*)calloc(resize, sizeof(char*));
 +        } else {
 +            resize+=strlen(result);
 +            newalloc=(char*)realloc(result,resize);
-+            memset(newalloc+length, '\0', (resize-length));
++            //memset(newalloc+length, '\0', (resize-length));
 +        }
 +
 +        if (newalloc) {
@@ -51369,7 +51368,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  #ifdef MS_WINDOWS
  #ifdef Py_ENABLE_SHARED
  
-@@ -237,6 +310,8 @@
+@@ -237,6 +309,8 @@
      TCHAR *keyBufPtr;
      TCHAR **ppPaths = NULL;
  
@@ -51378,7 +51377,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
      /* Tried to use sysget("winver") but here is too early :-( */
      versionLen = _tcslen(PyWin_DLLVersionString);
      /* Space for all the chars, plus one \0 */
-@@ -459,6 +534,118 @@
+@@ -459,6 +533,118 @@
          progpath[0] = '\0';
  }
  
@@ -51497,7 +51496,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  static void
  calculate_path(void)
  {
-@@ -467,6 +654,7 @@
+@@ -467,6 +653,7 @@
      size_t bufsz;
      char *pythonhome = Py_GetPythonHome();
      char *envpath = Py_GETENV("PYTHONPATH");
@@ -51505,7 +51504,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  
  #ifdef MS_WINDOWS
      int skiphome, skipdefault;
-@@ -480,8 +668,11 @@
+@@ -480,8 +667,11 @@
      /* progpath guaranteed \0 terminated in MAXPATH+1 bytes. */
      strcpy(argv0_path, progpath);
      reduce(argv0_path);
@@ -51518,7 +51517,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
              pythonhome = prefix;
          else
              pythonhome = NULL;
-@@ -511,6 +702,20 @@
+@@ -511,6 +701,20 @@
      }
  
      skiphome = pythonhome==NULL ? 0 : 1;
@@ -51539,7 +51538,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  #ifdef Py_ENABLE_SHARED
      machinepath = getpythonregpath(HKEY_LOCAL_MACHINE, skiphome);
      userpath = getpythonregpath(HKEY_CURRENT_USER, skiphome);
-@@ -518,7 +723,8 @@
+@@ -518,7 +722,8 @@
      /* We only use the default relative PYTHONPATH if we havent
         anything better to use! */
      skipdefault = envpath!=NULL || pythonhome!=NULL || \
@@ -51549,7 +51548,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  #endif
  
      /* We need to construct a path from the following parts.
-@@ -555,9 +761,21 @@
+@@ -555,9 +760,21 @@
          bufsz += strlen(machinepath) + 1;
      bufsz += strlen(zip_path) + 1;
  #endif
@@ -51571,7 +51570,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
      module_search_path = buf = malloc(bufsz);
      if (buf == NULL) {
          /* We can't exit, so print a warning and limp along */
-@@ -608,6 +826,35 @@
+@@ -608,6 +825,35 @@
              buf = strchr(buf, '\0');
          }
      }
@@ -51607,7 +51606,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
  #else
      if (pythonhome == NULL) {
          strcpy(buf, PYTHONPATH);
-@@ -615,27 +862,15 @@
+@@ -615,27 +861,15 @@
      }
  #endif /* MS_WINDOWS */
      else {
@@ -51643,7 +51642,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
          }
      }
      if (argv0_path) {
-@@ -702,6 +937,8 @@
+@@ -702,6 +936,8 @@
  char *
  Py_GetExecPrefix(void)
  {
@@ -51651,7 +51650,7 @@ diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
 +        return mingw_dynload_path;
      return Py_GetPrefix();
  }
-
+ 
 diff -ruN Python-2.7.3//PC/msvcrtmodule.c _Python-2.7.3/PC/msvcrtmodule.c
 --- Python-2.7.3//PC/msvcrtmodule.c	2012-04-09 19:07:36 -0400
 +++ _Python-2.7.3/PC/msvcrtmodule.c	2013-01-15 13:57:28 -0500

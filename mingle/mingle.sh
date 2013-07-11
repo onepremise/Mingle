@@ -1044,7 +1044,7 @@ buildInstallPython() {
     echo "Building $_project..."
     echo
     
-    $ad_setDefaultEnv
+    ad_setDefaultEnv
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$ _binCheck" ] );then
@@ -1103,8 +1103,8 @@ buildInstallPython() {
         echo "_socket socketmodule.c">>Modules/Setup.local
         echo "_ssl _ssl.c -DUSE_SSL -lssl -lcrypto -lws2_32">>Modules/Setup.local
 
-        cd ..          
-        
+        cd ..
+  
         export "CFLAGS=$CFLAGS -IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
         export "LDFLAGS=$LDFLAGS -Ldependencies/lib"
                
@@ -1828,6 +1828,7 @@ MINGLE_SUITE_GRAPHICS=false
 MINGLE_SUITE_GEO_SPATIAL=false
 MINGLE_MAPNIK=false
 MINGLE_MAPNIK_TOOLS=false
+MINGLE_EXCLUDE_DEP=false
 
 suiteBase() {
     if [ $SUITE_BASE ]; then
@@ -1876,7 +1877,9 @@ suiteXML() {
         MINGLE_SUITE_XML=true
     fi
 
-    suiteBase
+    if ! $MINGLE_EXCLUDE_DEP; then
+      suiteBase
+    fi
 
     buildInstallExpat
     buildInstallICU
@@ -1890,7 +1893,9 @@ suiteFonts() {
         MINGLE_SUITE_FONTS=true
     fi
 
-    suiteXML
+    if ! $MINGLE_EXCLUDE_DEP; then
+      suiteXML
+    fi
 
     buildInstallFreeType
     buildInstallFontConfig
@@ -1903,7 +1908,9 @@ suiteEncryption() {
         MINGLE_SUITE_ENCYPT=true
     fi
 
-    suiteBase
+    if ! $MINGLE_EXCLUDE_DEP; then
+      suiteBase
+    fi
 
     buildInstallPolarSSL
     buildInstallLOpenSSL
@@ -1916,7 +1923,9 @@ suiteNetworking() {
         MINGLE_SUITE_NETWORK=true
     fi
 
-    suiteEncryption
+    if ! $MINGLE_EXCLUDE_DEP; then
+      suiteEncryption
+    fi
 
     buildInstallCurl
 }
@@ -1928,11 +1937,13 @@ suiteDatabase() {
         MINGLE_SUITE_DB=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+    fi
 
     buildInstallSQLite
     buildInstallPostgres
@@ -1945,12 +1956,14 @@ suitePython() {
         MINGLE_SUITE_PYTHON=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+    fi
 
     buildInstallPython
     buildInstallSetupTools
@@ -1960,25 +1973,29 @@ suitePython() {
 }
 
 suitePerl() {
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+    fi
 
     #buildInstallPerl
 }
 
 suiteSwig() {
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
-    suitePerl 
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suitePerl
+    fi
 
     #buildInstallSwig
 }
@@ -1990,13 +2007,15 @@ suiteDebug() {
         MINGLE_SUITE_DEBUG=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+    fi
 
     buildInstallGDB
 }
@@ -2008,14 +2027,16 @@ suiteBoost() {
         MINGLE_SUITE_BOOST=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
-    suiteDebug
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suiteDebug
+    fi
 
     buildInstallBoostJam
     buildInstallBoost
@@ -2028,15 +2049,17 @@ suiteSCMTools() {
         MINGLE_SUITE_SCM=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
-    suiteDebug
-    suiteBoost
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suiteDebug
+        suiteBoost
+    fi
 
     #buildInstallSVN
     #buildInstallGit
@@ -2049,15 +2072,17 @@ suiteImageTools() {
         MINGLE_SUITE_IMAGE_TOOLS=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
-    suiteDebug
-    suiteBoost
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suiteDebug
+        suiteBoost
+    fi
 
     installLibJPEG
     installLibPNG
@@ -2071,15 +2096,17 @@ suiteMathLibraries() {
         MINGLE_SUITE_MATH=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
-    suiteDebug
-    suiteBoost
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suiteDebug
+        suiteBoost
+    fi
 }
 
 suiteGrpahicLibraries() {
@@ -2089,17 +2116,19 @@ suiteGrpahicLibraries() {
         MINGLE_SUITE_GRAPHICS=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
-    suiteDebug
-    suiteBoost
-    suiteImageTools
-    suiteMathLibraries
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suiteDebug
+        suiteBoost
+        suiteImageTools
+        suiteMathLibraries
+    fi
 
     buildInstallLibproj
     buildInstallProjDatumgrid
@@ -2117,18 +2146,20 @@ suiteGeoSpatialLibraries() {
         MINGLE_SUITE_GEO_SPATIAL=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
-    suiteDebug
-    suiteBoost
-    suiteImageTools
-    suiteMathLibraries
-    suiteGrpahicLibraries
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suiteDebug
+        suiteBoost
+        suiteImageTools
+        suiteMathLibraries
+        suiteGrpahicLibraries
+    fi
 
     buildInstallLibgeos
     buildInstallGDAL
@@ -2143,19 +2174,21 @@ suiteMapnik() {
         MINGLE_MAPNIK=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
-    suiteDebug
-    suiteBoost
-    suiteImageTools
-    suiteMathLibraries
-    suiteGrpahicLibraries
-    suiteGeoSpatialLibraries
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suiteDebug
+        suiteBoost
+        suiteImageTools
+        suiteMathLibraries
+        suiteGrpahicLibraries
+        suiteGeoSpatialLibraries
+    fi
 
     if $_useDev; then
         buildInstallMapnikDev
@@ -2171,20 +2204,22 @@ suiteMapnikTools() {
         MINGLE_MAPNIK_TOOLS=true
     fi
 
-    suiteBase
-    suiteXML
-    suiteFonts
-    suiteEncryption
-    suiteNetworking
-    suiteDatabase
-    suitePython
-    suiteDebug
-    suiteBoost
-    suiteImageTools
-    suiteMathLibraries
-    suiteGrpahicLibraries
-    suiteGeoSpatialLibraries
-    suiteMapnik
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suiteDebug
+        suiteBoost
+        suiteImageTools
+        suiteMathLibraries
+        suiteGrpahicLibraries
+        suiteGeoSpatialLibraries
+        suiteMapnik
+    fi
 
     buildInstallMapnikStylesheets
     buildInstallTileLite
@@ -2556,6 +2591,10 @@ do
     -i | --initialize)
         mingleInitialize
         exit 0
+        ;;
+    -e)
+        MINGLE_EXCLUDE_DEP=true
+        shift 1
         ;;
     -s | --suite=*)
         suite=${1#*=}
