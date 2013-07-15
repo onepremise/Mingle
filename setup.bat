@@ -1,5 +1,6 @@
 @ECHO off
-@setlocal enableextensions
+
+@setlocal enableextensions enabledelayedexpansion
 @cd /d "%~dp0"
 
 REM http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
@@ -209,15 +210,26 @@ XCOPY /S /Y /Q /D patches msys\home\developer\patches
 REM ===========================================================================
 REM PROCESS ARGUMENTS
 REM ===========================================================================
-set MINGLE_SUITE=0
+SET "MINGLE_SUITE=0"
+
 :Loop
-IF "%1"=="" GOTO Continue
-IF "%1"=="-s" GOTO SUITE
-IF "%1"=="--suite" GOTO SUITE
-IF "%1"=="/?" (
-  GOTO HELP
+
+IF "%1"=="" (
+  GOTO Continue
+)
+
+IF "%1"=="-p" (
+  SET "MINGLE_ALT_PATH=%2"
+  ECHO.
+  ECHO MINGLE_ALT_PATH=!MINGLE_ALT_PATH! 
+  SHIFT
 ) ELSE (
-  GOTO INVALID
+  IF "%1"=="-s" GOTO SUITE
+  IF "%1"=="/?" (
+    GOTO HELP
+  ) ELSE (
+    GOTO INVALID
+  )
 )
 
 SHIFT
@@ -232,9 +244,10 @@ ECHO.
 ECHO This is the Windoes command shell wrapper which deploys the MinGW 64bit 
 ECHO development environment. Please select from one of the following options:
 ECHO.
-ECHO Usage: setup.bat [--suite=#selection]
+ECHO Usage: setup.bat [-s NUM]
 ECHO.
-ECHO   -s, --suite Specify a reference number from one of the suites listed below.
+ECHO   -p PATH Use alternate path for build.
+ECHO   -s NUM Specify a reference number from one of the suites listed below.
 ECHO.
 
 msys\bin\bash -l -c "/mingw/bin/mingle -l"
@@ -244,7 +257,7 @@ GOTO EXIT
 :INVALID
 
 ECHO.
-ECHO Invalid Option
+ECHO Invalid Option: %1
 ECHO.
 
 GOTO HELP
@@ -391,11 +404,17 @@ ECHO.
 
 SET ERRL=0
 SET ERROR_CHECK=0
+SET "MINGLE_PATH_OPTION="
+
+IF DEFINED MINGLE_ALT_PATH (
+    set "MINGLE_PATH_OPTION=--path=%MINGLE_ALT_PATH:\=/%"
+    ECHO MINGLE_PATH_OPTION=!MINGLE_PATH_OPTION!
+)
 
 IF %MINGLE_SUITE% EQU 0 (
-    msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle | tee /home/developer/build.log"
+    msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% | tee /home/developer/build.log"
 ) ELSE (
-    msys\bin\bash -l -c "/mingw/bin/mingle --suite=%MINGLE_SUITE% 2>&1 | tee /home/developer/build.log"
+    msys\bin\bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% --suite=%MINGLE_SUITE% 2>&1 | tee /home/developer/build.log"
 )
 
 set ERRL=%ERRORLEVEL%
@@ -425,3 +444,4 @@ ECHO "Setup Complete."
 ECHO.
 
 :EXIT
+@endlocal

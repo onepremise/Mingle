@@ -91,7 +91,9 @@ https://github.com/onepremise/Mingle/archive/master.zip
 
 You can also download mingle from our build machine:
 
-https://vanguard.houghtonassociates.com/browse/MINGLE-MINGLE64/latest/artifact/JOB1/64-bit-Mingle-SDK
+https://vanguard.houghtonassociates.com/browse/MINGLE-MINGLE64/latest
+
+Click the "64 bit Mingle SDK" link under "Artifacts". You should see two packages:
 
 mingle-light.zip: Without binaries.
 mingle.zip: With binaries.

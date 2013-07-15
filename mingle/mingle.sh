@@ -398,7 +398,7 @@ buildInstallTCL() {
 buildInstallTk() {
     local _project="tk$AD_TCL_VERSION_MAJOR*"
     local _cleanEnv=true
-    local _configureFlags="--enable-64bit --enable-shared=no" "libtk86.a"
+    local _configureFlags="--enable-64bit --enable-shared=no"
     local _binCheck="libtk86.a"
     local _postBuildCommand=""
     local _exeToTest=""
@@ -504,6 +504,11 @@ buildInstallLibiconv() {
     echo
     echo "Building libiconv..."
     echo
+
+    if [ -e /mingw/lib/libiconv.dll.a ] && [ -e /mingw/lib/libiconv.a ]; then
+        echo "Already Installed." 
+        return
+    fi
     
     mingleDecompress "$_project"
 
@@ -2284,6 +2289,11 @@ mingleInitialize() {
 
         MINGLE_CACHE=`echo "$MINGLE_CACHE" | sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g'`
 
+        if [ -n "$altPath" ]; then
+            export "MINGLE_BUILD_DIR=$altPath"
+        fi
+
+        echo MINGLE_BUILD_DIR=$MINGLE_BUILD_DIR
         echo MINGLE_CACHE=$MINGLE_CACHE
 
         if [ ! -e "$MINGLE_CACHE" ]; then
@@ -2397,7 +2407,7 @@ mingleDecompress() {
 }
 
 mingleCleanup() {
-    cd $STOREPATH
+    cd "$STOREPATH"
 
     echo
     echo "Finished Building Modules."
@@ -2548,12 +2558,14 @@ mingle_show_help() {
     echo "Deployment script for setting up the development environment in 64 bit MinGW."
     echo
     echo "Arguments:"
-    echo "  -h, --help     Show this menu."
-    echo "  -s, --suite    Deploy the suite specified by the selected suite below:"
-    echo "  -l, --list     List suites of software to choose from."
-    echo "  -d, --download Download software only."
-    echo "  -k, --lookup   Lookup suite name from numerical value."
-    echo "  -m             Get max suite count."
+    echo "  -h, --help      Show this menu."
+    echo "  -s, --suite=NUM Deploy the suite specified by the selected suite below:"
+    echo "  -l, --list      List suites of software to choose from."
+    echo "  -d, --download  Download software only."
+    echo "  -k, --lookup    Lookup suite name from numerical value."
+    echo "  -e, --exclude   Exclude dependency checks during build."
+    echo "  -p, --path=PATH Use alternate path for build."
+    echo "  -m              Get max suite count."
 
     minglePrintSelections
 }
@@ -2579,6 +2591,7 @@ mingleMenu() {
 # Initialize our own variables:
 verbose=0
 suite=""
+altPath=""
 
 # http://mywiki.wooledge.org/BashFAQ/035#Manual_loop
 while :
@@ -2592,7 +2605,7 @@ do
         mingleInitialize
         exit 0
         ;;
-    -e)
+    -e | --exclude)
         MINGLE_EXCLUDE_DEP=true
         shift 1
         ;;
@@ -2616,6 +2629,10 @@ do
     -m)
         mingleGetMaxSetting
         exit $?
+        ;;
+    -p | --path=*)
+        altPath=${1#*=}
+        shift 1
         ;;
     -v)
         verbose=1
