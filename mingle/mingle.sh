@@ -939,6 +939,11 @@ buildInstallICU() {
 buildInstallPostgres() {
     local _project="postgresql-*"
 
+    if [ -e /mingw/lib/libpq.dll ] && [ -e /mingw/bin/postgres.exe ]; then
+        echo "Already Installed."
+        return;
+    fi
+
     mingleDecompress "$_project"
 
     local _projectDir=$(ad_getDirFromWC "$_project")
@@ -1014,13 +1019,11 @@ buildInstallGDAL() {
     echo
     echo "Building $_project..."
     echo
-
-    cd $MINGLE_BUILD_DIR
-    
-    ad_setDefaultEnv
     
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        ad_setDefaultEnv
+
         mingleDecompress "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
@@ -1049,10 +1052,10 @@ buildInstallPython() {
     echo "Building $_project..."
     echo
     
-    ad_setDefaultEnv
-    
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$ _binCheck" ] );then
+        ad_setDefaultEnv
+
         mingleDecompress $_project
 
         local _projectDir=$(ad_getDirFromWC "$_project")
@@ -1132,14 +1135,15 @@ buildInstallSetupTools() {
 
     local _savedir=`pwd`
     local _project="setuptools-*"
-
-    mingleDecompress "$_project"
-
-    local _projectDir=$(ad_getDirFromWC "$_project")
-
-    cd $_project || mingleError $? "cd failed, aborting!"
-        
+    
+    echo "Checking for binary easy_install.exe..."
     if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/easy_install.exe ]; then
+        mingleDecompress "$_project"
+
+        local _projectDir=$(ad_getDirFromWC "$_project")
+
+        cd $_project || mingleError $? "cd failed, aborting!"
+
         setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
 
         cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
@@ -1206,20 +1210,21 @@ buildInstallTileLite() {
     local _savedir=`pwd`
     local _project="tilelite*"
 
-    mingleDecompress "$_project"
-
-    local _changenameof=`find . -maxdepth 1 -name "*tilelite*" -type d`
-
-    if [ -n "$_changenameof" ] && [ ! -e "tilelite" ]; then
-        mv $_changenameof tilelite || mingleError $? "mv failed, aborting!"
-    fi
-
-    local _projectDir=$(ad_getDirFromWC "$_project")
-
-    cd $_project || mingleError $? "cd failed, aborting!"
-
+    echo "Checking for binary liteserv.py..."
     if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/liteserv.py ]; then
-         python setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
+        mingleDecompress "$_project"
+
+        local _changenameof=`find . -maxdepth 1 -name "*tilelite*" -type d`
+
+        if [ -n "$_changenameof" ] && [ ! -e "tilelite" ]; then
+            mv $_changenameof tilelite || mingleError $? "mv failed, aborting!"
+        fi
+
+        local _projectDir=$(ad_getDirFromWC "$_project")
+
+        cd $_project || mingleError $? "cd failed, aborting!"
+
+        python setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
     else
         echo "Already Installed."
     fi
@@ -1239,26 +1244,30 @@ buildInstallWAF() {
 
     local _project="waf-*"
 
-    mingleDecompress "$_project"
+    if [ ! -e /mingw/bin/waf ]; then
+        mingleDecompress "$_project"
 
-    local _projectdir=$(ad_getDirFromWC "$_project")
+        local _projectdir=$(ad_getDirFromWC "$_project")
 
-    cd "$_projectdir" || mingleError $? "cd failed, aborting!"
-        
-    if [ ! -e waf-mingw.patch ]; then
-         cp /home/developer/patches/waf/$AD_WAF_VERSION/waf-mingw.patch .
-         ad_patch "waf-mingw.patch"
+        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+
+        if [ ! -e waf-mingw.patch ]; then
+             cp /home/developer/patches/waf/$AD_WAF_VERSION/waf-mingw.patch .
+             ad_patch "waf-mingw.patch"
+        fi
+
+        cd ..
+
+        buildInstallGeneric "waf-*" true "" "waf" "" ""
+
+        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+
+        cp waf /mingw/bin || mingleError $? "failed to install waf, aborting!"
+
+        cd ..
+    else
+        echo "Already Installed."
     fi
-
-    cd ..
-
-    buildInstallGeneric "waf-*" true "" "waf" "" ""
-
-    cd "$_projectdir" || mingleError $? "cd failed, aborting!"
-
-    cp waf /mingw/bin || mingleError $? "failed to install waf, aborting!"
-
-    cd ..
 }
 
 buildInstallBoostJam() {
@@ -1267,26 +1276,32 @@ buildInstallBoostJam() {
 
 buildInstallBoost() {
     local _project="boost_*"
+    local _binCheck="boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll"
 
-    mingleDecompress "$_project"
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
 
-    local _projectDir=$(ad_getDirFromWC "$_project")
+        mingleDecompress "$_project"
 
-    cd $_project || mingleError $? "cd failed, aborting!"
-        
-    if [ ! -e boost-mingw.patch ]; then
-        # Apply patch for https://svn.boost.org/trac/boost/ticket/5023
-        cp /home/developer/patches/boost/$AD_BOOST_PATH_VERSION/boost-mingw.patch .
-        ad_patch "boost-mingw.patch"
+        local _projectDir=$(ad_getDirFromWC "$_project")
+
+        cd $_project || mingleError $? "cd failed, aborting!"
+
+        if [ ! -e boost-mingw.patch ]; then
+            # Apply patch for https://svn.boost.org/trac/boost/ticket/5023
+            cp /home/developer/patches/boost/$AD_BOOST_PATH_VERSION/boost-mingw.patch .
+            ad_patch "boost-mingw.patch"
+        fi
+
+        cd ..
+
+        export CPLUS_INCLUDE_PATH=/mingw/include/python2.7
+        buildInstallGeneric "boost_*" true "" "boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll" "" ""
+        export CPLUS_INCLUDE_PATH=
+
+        ad_relocate_bin_dlls "boost_"
+    else
+        echo "Already Installed."
     fi
-
-    cd ..
-
-    export CPLUS_INCLUDE_PATH=/mingw/include/python2.7
-    buildInstallGeneric "boost_*" true "" "boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll" "" ""
-    export CPLUS_INCLUDE_PATH=
-
-    ad_relocate_bin_dlls "boost_"
 }
 
 buildInstallPyCairo() {
@@ -1299,14 +1314,14 @@ buildInstallPyCairo() {
     echo "Building $_project..."
     echo
     
-    ad_setDefaultEnv
-
-    export "PYTHON_CONFIG=/mingw/bin/python2.7-config"
-    export "CFLAGS=$CFLAGS -I/mingw/include/Python2.7"
-    export "LDFLAGS=$LDFLAGS -lpixman-1"
-    
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        ad_setDefaultEnv
+
+        export "PYTHON_CONFIG=/mingw/bin/python2.7-config"
+        export "CFLAGS=$CFLAGS -I/mingw/include/Python2.7"
+        export "LDFLAGS=$LDFLAGS -lpixman-1"
+
         mingleDecompress "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
@@ -1357,6 +1372,11 @@ buildInstallPyCairo() {
 buildInstallMapnik() {
     local _project="mapnik-v*"
 
+    if [ -e /mingw/lib/mapnik.dll ] && [ -e /mingw/lib/libmapnik.dll.a ]; then
+        echo "Already Installed." 
+        return
+    fi
+
     mingleDecompress "$_project"
 
     local _projectdir=$(ad_getDirFromWC $_project)
@@ -1378,6 +1398,11 @@ buildInstallMapnik() {
 
 buildInstallMapnikDev() {
     local _project="mapnik-latest*"
+
+    if [ -e /mingw/lib/mapnik.dll ] && [ -e /mingw/lib/libmapnik.dll.a ]; then
+        echo "Already Installed." 
+        return
+    fi
 
     mingleDecompress "$_project"
 
