@@ -633,7 +633,7 @@ installLibJPEG () {
             rmdir libjpeg-turbo
         fi
 
-        tar xvf libjpeg-turbo.tarcd
+        tar xvf libjpeg-turbo.tar
         cp -rf libjpeg-turbo/* /mingw
     else
         echo "libjpeg-turbo already installed."
