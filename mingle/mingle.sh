@@ -1226,7 +1226,7 @@ buildInstallTileLite() {
 
         python setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
     else
-        echo "Already Installed."
+        echo "$_project Already Installed."
     fi
 
     cd $_savedir
@@ -1266,7 +1266,7 @@ buildInstallWAF() {
 
         cd ..
     else
-        echo "Already Installed."
+        echo "$_project Already Installed."
     fi
 }
 
@@ -1300,7 +1300,7 @@ buildInstallBoost() {
 
         ad_relocate_bin_dlls "boost_"
     else
-        echo "Already Installed."
+        echo "$_project Already Installed."
     fi
 }
 
@@ -1373,7 +1373,7 @@ buildInstallMapnik() {
     local _project="mapnik-v*"
 
     if [ -e /mingw/lib/mapnik.dll ] && [ -e /mingw/lib/libmapnik.dll.a ]; then
-        echo "Already Installed." 
+        echo "$_project Already Installed." 
         return
     fi
 
@@ -1397,16 +1397,16 @@ buildInstallMapnik() {
 }
 
 buildInstallMapnikDev() {
-    local _project="mapnik-latest*"
+    local _project="mapnik-*"
 
     if [ -e /mingw/lib/mapnik.dll ] && [ -e /mingw/lib/libmapnik.dll.a ]; then
-        echo "Already Installed." 
+        echo "$_project Already Installed." 
         return
     fi
 
     mingleDecompress "$_project"
 
-    buildInstallGeneric "mapnik-*" true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
+    buildInstallGeneric "$_project" true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
 }

@@ -163,21 +163,17 @@ REM ===========================================================================
 REM SETUP FSTAB
 REM ===========================================================================
 IF NOT EXIST "msys/etc/fstab" (
-    ECHO "Setup MSYS..."
-    ECHO.
+    ECHO "Setup MSYS fstab..."
+    
     msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
     if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"  
 ) ELSE (
-    msys\bin\bash -l -c "grep '/mingw' /etc/fstab>/dev/null"
-    IF %ERRORLEVEL% EQU 1 (
-        ECHO "Setup MSYS..."
-        ECHO.
-
-        msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
-        if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"
-    )
+    ECHO "Updating MSYS fstab..."
+    msys\bin\bash -l -c "newpath=%CD:\=/%/mingw64; sed 's|.*\mingw|'$newpath' \/mingw|' /etc/fstab>/etc/fstab2"
+    msys\bin\bash -l -c "mv /etc/fstab2 /etc/fstab"
 )
 
+ECHO.
 ECHO "Make Sure Previous PYTHONPATH is cleared..."
 ECHO.
 
