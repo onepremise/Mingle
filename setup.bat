@@ -192,16 +192,12 @@ IF NOT EXIST "mingw64\etc" (
     mkdir mingw64\etc
 )
 
-XCOPY /Y /Q /D mingle\mingw.jam msys\home\developer\
 XCOPY /Y /Q /D mingle\mingle.sh mingw64\bin
 XCOPY /Y /Q /D mingle\mingle.cfg mingw64\etc
 
 IF EXIST "mingw64\bin\mingle.sh" (
 MOVE /Y mingw64\bin\mingle.sh mingw64\bin\mingle
 )
-
-IF NOT EXIST "msys\home\developer\patches" MKDIR msys\home\developer\patches
-XCOPY /S /Y /Q /D patches msys\home\developer\patches
 
 REM ===========================================================================
 REM PROCESS ARGUMENTS
@@ -408,9 +404,9 @@ IF DEFINED MINGLE_ALT_PATH (
 )
 
 IF %MINGLE_SUITE% EQU 0 (
-    msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% | tee /home/developer/build.log"
+    msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% | tee %MINGLE_BUILD_DIR%/build.log"
 ) ELSE (
-    msys\bin\bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% --suite=%MINGLE_SUITE% 2>&1 | tee /home/developer/build.log"
+    msys\bin\bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% --suite=%MINGLE_SUITE% 2>&1 | tee %MINGLE_BUILD_DIR%/build.log"
 )
 
 set ERRL=%ERRORLEVEL%

@@ -299,14 +299,14 @@ buildInstallGDB() {
         cd $_projectDir || mingleError $? "cd failed, aborting!"
         
         if [ ! -e gdb-mingw.patch ]; then
-            cp /home/developer/patches/gdb/$AD_GDB_VERSION/gdb-mingw.patch .
+            cp $MINGLE_BASE/patches/gdb/$AD_GDB_VERSION/gdb-mingw.patch .
             ad_patch "gdb-mingw.patch"
         fi
 
 # This patch seems to regress all the py-gdb functionality.
 # Really wierd solution to getting python to work when it already does in mingw. Disabling.
 #        if [ ! -e gdb-python.patch ]; then
-#            cp /home/developer/patches/gdb/$AD_GDB_VERSION/gdb-python.patch .
+#            cp $MINGLE_BUILD_DIR/patches/gdb/$AD_GDB_VERSION/gdb-python.patch .
 #            ad_patch "gdb-python.patch"
 #        fi
 
@@ -826,7 +826,7 @@ buildInstallFontConfig() {
         cd $_projectdir
         
         if [ ! -e fontconfig-mingw.patch ]; then
-            cp /home/developer/patches/fontconfig/$AD_FONT_CONFIG/fontconfig-mingw.patch .
+            cp $MINGLE_BASE/patches/fontconfig/$AD_FONT_CONFIG/fontconfig-mingw.patch .
             ad_patch "fontconfig-mingw.patch"
         fi
         
@@ -951,7 +951,7 @@ buildInstallPostgres() {
     cd "$_projectDir" || mingleError $? "cd failed, aborting!"
 
     if [ ! -e postgresql-mingw.patch ]; then
-        cp /home/developer/patches/postgresql/$AD_POSTGRES_VERSION/postgresql-mingw.patch .
+        cp $MINGLE_BASE/patches/postgresql/$AD_POSTGRES_VERSION/postgresql-mingw.patch .
         ad_patch "postgresql-mingw.patch"
     fi
 
@@ -1071,7 +1071,7 @@ buildInstallPython() {
             #http://bugs.python.org/issue4709
             
             #my update
-            cp /home/developer/patches/python/$AD_PYTHON_VERSION/python-mingw.patch .
+            cp $MINGLE_BASE/patches/python/$AD_PYTHON_VERSION/python-mingw.patch .
             ad_patch "python-mingw.patch"
         fi
 
@@ -1252,7 +1252,7 @@ buildInstallWAF() {
         cd "$_projectdir" || mingleError $? "cd failed, aborting!"
 
         if [ ! -e waf-mingw.patch ]; then
-             cp /home/developer/patches/waf/$AD_WAF_VERSION/waf-mingw.patch .
+             cp $MINGLE_BASE/patches/waf/$AD_WAF_VERSION/waf-mingw.patch .
              ad_patch "waf-mingw.patch"
         fi
 
@@ -1288,7 +1288,7 @@ buildInstallBoost() {
 
         if [ ! -e boost-mingw.patch ]; then
             # Apply patch for https://svn.boost.org/trac/boost/ticket/5023
-            cp /home/developer/patches/boost/$AD_BOOST_PATH_VERSION/boost-mingw.patch .
+            cp $MINGLE_BASE/patches/boost/$AD_BOOST_PATH_VERSION/boost-mingw.patch .
             ad_patch "boost-mingw.patch"
         fi
 
@@ -1335,7 +1335,7 @@ buildInstallPyCairo() {
         cd waf-*/waflib
 
         if [ ! -e waf-mingw.patch ]; then
-            cp /home/developer/patches/py2cairo/$AD_PYCAIRO_VERSION/waf-mingw.patch .
+            cp $MINGLE_BASE/patches/py2cairo/$AD_PYCAIRO_VERSION/waf-mingw.patch .
             ad_patch "waf-mingw.patch"
             rm Node.pyc
         fi
@@ -1385,7 +1385,7 @@ buildInstallMapnik() {
         
     if [ ! -e mapnik-mingw.patch ]; then
          #my update
-         cp /home/developer/patches/mapnik/$AD_MAPNIK_VERSION/mapnik-mingw.patch .
+         cp $MINGLE_BASE/patches/mapnik/$AD_MAPNIK_VERSION/mapnik-mingw.patch .
          ad_patch "mapnik-mingw.patch"
     fi
 
@@ -1723,7 +1723,7 @@ ad_boost_jam() {
     cd $_projectDir || mingleError $? "ad_boost_jam cd failed, aborting!"
     
     #this is needed for boost https://svn.boost.org/trac/boost/ticket/6350
-    cp /home/developer/mingw.jam tools/build/v2/tools
+    cp $MINGLE_BASE/mingle/mingw.jam tools/build/v2/tools || mingleError $? "ad_boost_jam mingw.jam copy failed, aborting!"
 
     
    ./bootstrap.sh --with-icu --prefix=/mingw --with-toolset=mingw || mingleError $? "ad_boost_jam boostrap failed, aborting"
