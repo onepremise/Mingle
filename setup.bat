@@ -165,10 +165,11 @@ REM ===========================================================================
 IF NOT EXIST "msys/etc/fstab" (
     ECHO "Setup MSYS fstab..."
     
-    msys\bin\bash -l -c "ECHO '%CD%\mingw64' /mingw>/etc/fstab"
-    if not exist "msys\home\developer" mkdir "%CD%\msys\home\developer"  
+    msys\bin\bash -l -c "ECHO '%CD:\=/%/mingw64' /mingw>/etc/fstab"
+    if not exist "msys%MINGLE_BUILD_DIR%" mkdir "msys%MINGLE_BUILD_DIR%"  
 ) ELSE (
     ECHO "Updating MSYS fstab..."
+
     msys\bin\bash -l -c "newpath=%CD:\=/%/mingw64; sed 's|.*\mingw|'$newpath' \/mingw|' /etc/fstab>/etc/fstab2"
     msys\bin\bash -l -c "mv /etc/fstab2 /etc/fstab"
 )
@@ -413,9 +414,9 @@ set ERRL=%ERRORLEVEL%
 set ERR_MSG="Error: %ERRL%, Failed to execute mingle!"
 
 IF %ERRL% NEQ 0 set ERROR_CHECK=1
-IF EXIST "msys\home\developer\mingle_error.log" (
+IF EXIST "%MINGLE_BUILD_DIR%\mingle_error.log" (
     set ERROR_CHECK=1
-    FOR /F "eol=; tokens=1,2* delims=," %%i in (msys\home\developer\mingle_error.log) do (
+    FOR /F "eol=; tokens=1,2* delims=," %%i in (msys%MINGLE_BUILD_DIR%\mingle_error.log) do (
         set ERRL=%%i
         set ERR_MSG=%%j
     )
@@ -427,8 +428,8 @@ IF %ERROR_CHECK% EQU 1 (
    
 )
 
-IF EXIST msys\home\developer\build.log (
-    COPY /Y msys\home\developer\build.log .
+IF EXIST msys%MINGLE_BUILD_DIR:/=\%\build.log (
+    COPY /Y msys%MINGLE_BUILD_DIR:/=\%\build.log .
 )
 
 ECHO.
