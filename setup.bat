@@ -173,6 +173,17 @@ IF NOT EXIST "msys/etc/fstab" (
     msys\bin\bash -l -c "mv /etc/fstab2 /etc/fstab"
 )
 
+REM ===========================================================================
+REM UPDATE PROFILE
+REM ===========================================================================
+findstr /I "MINGLE_BASE" msys\etc\profile
+if ERRORLEVEL 1 (
+   ECHO.
+   ECHO Removing old profile...
+   ECHO.
+   DEL msys\etc\profile
+)
+
 IF NOT EXIST "msys\etc\profile" (
     ECHO.
     ECHO "Make Sure Previous PYTHONPATH is cleared and profile is updated..."
