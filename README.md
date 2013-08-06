@@ -59,6 +59,9 @@ The following projects are fully building in the environment setup:
 * python3.3 (Very Experimental)
 * GDB w/python debugger
 * waf
+* apr
+* apr-util
+* swig
 * pycairo
 * mapnik
 

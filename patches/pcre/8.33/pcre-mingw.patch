@@ -1,0 +1,12 @@
+$ diff -u pcre-8.33/configure.ac pcre-8.33/configure2.ac
+--- pcre-8.33/configure.ac      2013-05-27 11:54:34 -0400
++++ pcre-8.33/configure2.ac     2013-08-05 11:43:32 -0400
+@@ -681,7 +681,7 @@
+ fi
+
+ if test "$enable_jit" = "yes"; then
+-  AX_PTHREAD([], [AC_MSG_ERROR([JIT support requires pthreads])])
++  #AX_PTHREAD([], [AC_MSG_ERROR([JIT support requires pthreads])])
+   CC="$PTHREAD_CC"
+   CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
+   LIBS="$PTHREAD_LIBS $LIBS"

@@ -19,6 +19,7 @@ export AD_GMP=5.1.2
 export AD_MPFR=3.1.2
 export AD_MPC=1.0.1
 export AD_MINGW64_CRT=2.0.8
+export AD_PEXPORTS=0.46
 export AD_GLIBC=2.16.0
 export AD_ZLIB=1.2.7
 export AD_BZIP=1.0.6
@@ -36,6 +37,7 @@ export AD_OPENSSL_VERSION=1.0.1c
 export AD_LIBXML2_VERSION=2.9.0
 export AD_LIBCURL_VERSION=7.28.1
 
+export AD_CUNIT_VERSION=2.1-2
 export AD_GDB_VERSION=7.5
 
 export AD_TCL_VERSION_MAJOR=8.6
@@ -44,7 +46,8 @@ export AD_TCL_VERSION=$AD_TCL_VERSION_MAJOR$AD_TCL_VERSION_MINOR
 
 export AD_TK_VERSION=8.6.0
 
-export AD_APR_VERSION=1.4.6
+export AD_APR_VERSION=1.4.8
+export AD_APRUTIL_VERSION=1.5.2
 export AD_SVN_VERSION=1.7.9
 export AD_GIT_VERSION=
 
@@ -86,13 +89,16 @@ export AD_SETUPTOOLS_VERSION=0.6c11
 export AD_NOSE_VERSION=1.2.1
 export AD_WAF_VERSION=1.7.11
 
+export AD_BERKELEY_DB=6.0.20
 export AD_POSTGRES_VERSION=9.2.2
+export AD_POSTGIS_VERSION=2.0.3
 
 export AD_MAPNIK_VERSION=2.1.0
 
 export AD_SWIG_VERSION=2.0.9
-export AD_PERL_VERSION=5.16.2
+export AD_PERL_VERSION=5.18.0
 export AD_PERL_SHRT_VERSION=5.0
+export AD_PCRE_VERSION=8.33
 
 mingleDownloadPackages () {
     echo "Checking Downloads..."
@@ -110,9 +116,12 @@ mingleDownloadPackages () {
     mingleDownload "http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-v$AD_MINGW64_CRT.tar.gz"
     mingleDownload "http://ftp.gnu.org/gnu/libc/glibc-$AD_GLIBC.tar.xz"
     mingleDownload "http://ftp.gnu.org/gnu/gdb/gdb-$AD_GDB_VERSION.tar.gz"
+    mingleDownload "http://sourceforge.net/projects/mingw/files/MinGW/Extension/pexports/pexports-$AD_PEXPORTS/pexports-$AD_PEXPORTS-mingw32-src.tar.xz/download"
+    mingleDownload "http://mingw-w64.svn.sourceforge.net/viewvc/mingw-w64/trunk/mingw-w64-tools/gendef/?view=tar" "gendef.tar.gz"
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tcl$AD_TCL_VERSION-src.tar.gz"
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tk$AD_TK_VERSION-src.tar.gz"
     mingleDownload "http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz"
+    mingleDownload "http://sourceforge.net/projects/cunit/files/CUnit/$AD_CUNIT_VERSION/CUnit-$AD_CUNIT_VERSION-src.tar.bz2/download" "cunit-$AD_CUNIT_VERSION-src.tar.bz2"
     mingleDownload "http://sourceforge.net/projects/libpng/files/zlib/$AD_ZLIB/zlib-$AD_ZLIB.tar.gz/download" "zlib-$AD_ZLIB.tar.gz"
     mingleDownload "http://www.bzip.org/$AD_BZIP/bzip2-$AD_BZIP.tar.gz"
     mingleDownload "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$AD_LIBICONV.tar.gz"
@@ -128,7 +137,11 @@ mingleDownloadPackages () {
     mingleDownload "http://www.zlib.net/zlib-$AD_ZLIB_VERSION.tar.gz"
     mingleDownload "ftp://ftp.remotesensing.org/pub/libtiff/tiff-$AD_TIFF_VERSION.tar.gz"
     mingleDownload "http://curl.haxx.se/download/curl-$AD_LIBCURL_VERSION.tar.bz2"
-    mingleDownload "http://mirror.cc.columbia.edu/pub/software/apache/apr/apr-$AD_APR_VERSION.tar.bz2"
+
+    mingleDownload "http://apache.tradebit.com/pub//apr/apr-$AD_APR_VERSION.tar.gz"
+    mingleDownload "http://apache.tradebit.com/pub//apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
+
+    mingleDownload "http://download.oracle.com/berkeley-db/db-$AD_BERKELEY_DB.tar.gz"
     mingleDownload "http://www.apache.org/dist/subversion/subversion-$AD_SVN_VERSION.tar.bz2"
     mingleDownload "https://github.com/git/git/archive/master.zip" "git-master.zip"
     mingleDownload "http://ftp.gnome.org/pub/GNOME/sources/libsigc++/$AD_LIBSIGC_PATH_VERSION/libsigc++-$AD_LIBSIGC_VERSION.tar.xz"
@@ -157,11 +170,14 @@ mingleDownloadPackages () {
     mingleDownload "https://github.com/onepremise/mapnik/archive/master.zip" "mapnik-latest.zip"
     mingleDownload "http://downloads.sourceforge.net/project/swig/swigwin/swigwin-$AD_SWIG_VERSION/swigwin-$AD_SWIG_VERSION.zip"
     mingleDownload "http://www.cpan.org/src/$AD_PERL_SHRT_VERSION/perl-$AD_PERL_VERSION.tar.gz"
+    mingleDownload "http://sourceforge.net/projects/pcre/files/pcre/$AD_PCRE_VERSION/pcre-$AD_PCRE_VERSION.tar.gz/download" "pcre-$AD_PCRE_VERSION.tar.gz"
+    mingleDownload "http://search.cpan.org/CPAN/authors/id/S/SH/SHAY/dmake-4.12-20090907-SHAY.zip"
     mingleDownload "https://github.com/openstreetmap/mapnik-stylesheets/archive/master.zip" "mapnik-stylesheets.zip"
     #mingleDownload "https://github.com/mapnik/node-mapnik/archive/master.zip" "node-mapnik.zip"
     #mingleDownload "http://nodejs.org/dist/v0.10.0/node-v0.10.0.tar.gz"
     #mingleDownload "https://github.com/mitsuhiko/werkzeug/archive/master.zip" "werkzeug.zip"
     mingleDownload "https://bitbucket.org/springmeyer/tilelite/get/c1f84defd807.zip" "tilelite.zip"
+    mingleDownload "http://download.osgeo.org/postgis/source/postgis-$AD_POSTGIS_VERSION.tar.gz"
 }
 
 updateGCC() {
@@ -174,7 +190,7 @@ updateGCC() {
     if [ ! -e "/mingw/x86_64-w64-mingw32/lib/libmingle.a" ]; then
         echo "Supplementing GCC with libmingle..."
         cp -rf $MINGLE_BASE/mingle/libmingle .
-        buildInstallGeneric "libmingle" false "" "xxx" "" ""
+        buildInstallGeneric "libmingle" false false "" "xxx" "" ""
     fi
 }
 
@@ -203,7 +219,7 @@ updateTarCommand() {
         #export "LDFLAGS=-L/mingw/lib"
         #export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64"
 
-        buildInstallGeneric "tar-*" true "" "tarzzz" "" "tar --version"
+        buildInstallGeneric "tar-*" true false "" "tarzzz" "" "tar --version"
     else
         echo "TAR is up to date."
     fi
@@ -239,31 +255,31 @@ updateMake() {
 }
 
 buildInstallM4() {
-    buildInstallGeneric "m4-*" true "" "m4" "" "m4 --version"
+    buildInstallGeneric "m4-*" true false "" "m4" "" "m4 --version"
 }
 
 buildInstallAutoconf() {
     export "M4=/bin/m4"
-    buildInstallGeneric "autoconf-*" true "" "autoconf" "" "autoconf --version"
+    buildInstallGeneric "autoconf-*" true false "" "autoconf" "" "autoconf --version"
 }
 
 buildInstallAutoMake() {
-    buildInstallGeneric "automake-*" true "" "automake" "" "automake --version"
+    buildInstallGeneric "automake-*" true false "" "automake" "" "automake --version"
 }
 
 buildInstallGMP() {
     export "CFLAGS="
     export "LDFLAGS="
     export "CPPFLAGS=" 
-    buildInstallGeneric "gmp-*" false "--enable-cxx " "libgmp.a" "" ""
+    buildInstallGeneric "gmp-*" false false "--enable-cxx " "libgmp.a" "" ""
 }
 
 buildInstallMPFR() {
-    buildInstallGeneric "mpfr-*" true "--with-gmp=/mingw --disable-shared" "libmpfr.a" "" ""
+    buildInstallGeneric "mpfr-*" true false "--with-gmp=/mingw --disable-shared" "libmpfr.a" "" ""
 }
 
 buildInstallMPC() {
-    buildInstallGeneric "mpc-*" true "--with-gmp=/mingw --with-mpfr=/mingw --disable-shared" "libmpc.a" "" ""
+    buildInstallGeneric "mpc-*" true false "--with-gmp=/mingw --with-mpfr=/mingw --disable-shared" "libmpc.a" "" ""
 }
 
 buildInstallMingw64CRT() {
@@ -271,18 +287,26 @@ buildInstallMingw64CRT() {
         export "CFLAGS="
         export "LDFLAGS="
         export "CPPFLAGS=" 
-        buildInstallGeneric "mingw-w64-*" false "--enable-lib64 --with-gmp --with-crt --with-mpfr --with-mpc --disable-multilib --enable-languages=c,c++ --with-pkgversion=\"MinGW64-Windows\"" "x" "" ""
+        buildInstallGeneric "mingw-w64-*" false false "--enable-lib64 --with-gmp --with-crt --with-mpfr --with-mpc --disable-multilib --enable-languages=c,c++ --with-pkgversion=\"MinGW64-Windows\"" "x" "" ""
     else
         echo "Mingw64 CRT is up to date."
     fi
 }
 
 buildInstallLibtool() {
-    buildInstallGeneric "libtool-*" true "" "libtool" "" "libtool --version"
+    buildInstallGeneric "libtool-*" true false "" "libtool" "" "libtool --version"
+}
+
+buildInstallPExports() {
+    buildInstallGeneric "pexports-*" true false "" "pexports"
+}
+
+buildInstallGenDef() {
+    buildInstallGeneric "gendef*" true false "" "gendef"
 }
 
 buildInstallGLibC() {
-    buildInstallGeneric "glibc-*" true "" "xxx" "" ""
+    buildInstallGeneric "glibc-*" true false "" "xxx" "" ""
 }
 
 # Things to watch:
@@ -321,7 +345,7 @@ buildInstallGDB() {
         export "LDFLAGS=-L/mingw/lib"
         export "CPPFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__MINGW__"
 
-        buildInstallGeneric "$_project" false "--with-gmp --with-mpfr --with-mpc --with-python --enable-shared" "x" "" "gdb --version"
+        buildInstallGeneric "$_project" false false "--with-gmp --with-mpfr --with-mpc --with-python --enable-shared" "x" "" "gdb --version"
 
         cd $_projectDir/gdb
 
@@ -335,6 +359,12 @@ buildInstallGDB() {
     else
         echo "GDB is up to date."
     fi
+}
+
+buildInstallCUnit() {
+    local _project="CUnit-*"
+
+    buildInstallGeneric "$_project" true false "" "libcunit.a"
 }
 
 buildInstallTCL() {
@@ -583,11 +613,11 @@ buildInstallPThreads() {
 }
 
 buildInstallBinutils() {
-    buildInstallGeneric "binutils-*" true "" "dllwrap.exe" "" "dllwrap.exe --version"
+    buildInstallGeneric "binutils-*" true false "" "dllwrap.exe" "" "dllwrap.exe --version"
 }
 
 buildInstallPkgconfig() {
-    buildInstallGeneric "pkg-config-*" true "--with-internal-glib" "pkg-config" "" "pkg-config --version"
+    buildInstallGeneric "pkg-config-*" true false "--with-internal-glib" "pkg-config" "" "pkg-config --version"
 }
 
 installLibJPEG () {
@@ -671,21 +701,21 @@ installLibPNG() {
 }
 
 installLibTiff() {
-    buildInstallGeneric "tiff-*" true "" "tiffinfo" "" "tiffinfo"
+    buildInstallGeneric "tiff-*" true false "" "tiffinfo" "" "tiffinfo"
 }
 
 buildInstallSigc() {
-    buildInstallGeneric "libsigc++-*" true "" "libsigc-2.0-0.dll"
+    buildInstallGeneric "libsigc++-*" true false "" "libsigc-2.0-0.dll"
 }
 
 buildInstallPixman() {
-    buildInstallGeneric "pixman-$AD_PIXMAN_VERSION*" true "" "libpixman-1.a"
+    buildInstallGeneric "pixman-$AD_PIXMAN_VERSION*" true false "" "libpixman-1.a"
 }
 
 buildInstallCairo() {
     local _project="cairo-$AD_CAIRO_VERSION*"
 
-    buildInstallGeneric "$_project" true "" "libcairo.a"
+    buildInstallGeneric "$_project" true false "" "libcairo.a"
 
     if ! ( [ -e "/mingw/lib/libcairo.dll" ] && [ -e "/mingw/bin/libcairo.dll" ] );then
         echo "Manually generating libcairo DLL..."
@@ -712,7 +742,7 @@ buildInstallCairo() {
 }
 
 buildInstallCairomm() {
-    buildInstallGeneric "cairomm-*" true "" "libcairomm-1.0.a"
+    buildInstallGeneric "cairomm-*" true false "" "libcairomm-1.0.a"
 }
 
 buildInstallPolarSSL() {
@@ -783,24 +813,105 @@ buildInstallLOpenSSL() {
 }
 
 buildInstallLibXML2() {
-    buildInstallGeneric "libxml2-*" true "--enable-shared --enable-static --with-icu" "xmllint" "" "xmllint --version"
+    buildInstallGeneric "libxml2-*" true false "--enable-shared --enable-static --with-icu" "xmllint" "" "xmllint --version"
 }
 
 buildInstallCurl() {
-    #buildInstallGeneric "curl-*" true "--with-polarssl" "libcurl.a" "" "curl --version"
-    buildInstallGeneric "curl-*" true "" "libcurl.a" "" "curl --version"
+    #buildInstallGeneric "curl-*" true false "--with-polarssl" "libcurl.a" "" "curl --version"
+    buildInstallGeneric "curl-*" true false "" "libcurl.a" "" "curl --version"
 }
 
 buildInstallAPR() {
-    buildInstallGeneric "apr-*" true "" "xxxx" ""
+    local _project="apr-*"
+
+    if [ -e /mingw/lib/libapr-1.a ]; then
+        echo "$_project Already Installed."
+        return;
+    fi
+
+    export "CFLAGS=-I/mingw/include -D__MINGW__ -DAPU_DECLARE_STATIC"
+    export "LDFLAGS=-L/mingw/lib"
+    export "CPPFLAGS=-I/mingw/include -D__MINGW__  -DAPU_DECLARE_STATIC"
+
+    mingleDecompress "$_project"
+
+    local _projectDir=$(ad_getDirFromWC "$_project")
+
+    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+
+    if [ ! -e apr-mingw.patch ]; then
+        cp $MINGLE_BASE/patches/apr/$AD_APR_VERSION/apr-mingw.patch .
+        ad_patch "apr-mingw.patch"
+    fi
+
+    cd ..
+    buildInstallGeneric "apr-*" false false "--enable-shared" "libapr-1.a" "" "apr-1-config --version"
+
+    mkdir -p /mingw/include/apr-1/arch/win32
+    cp -f $_projectDir/include/arch/apr_private_common.h /mingw/include/apr-1/arch
+    cp -rf $_projectDir/include/arch/win32 /mingw/include/apr-1/arch
+}
+
+buildInstallAPRUtil() {
+    export "CFLAGS=-I/mingw/include -D__MINGW__ -DAPU_DECLARE_STATIC"
+    export "LDFLAGS=-L/mingw/lib"
+    export "CPPFLAGS=-I/mingw/include -D__MINGW__  -DAPU_DECLARE_STATIC"
+
+    buildInstallGeneric "apr-util-*" false false "--with-apr=/mingw/bin/apr-1-config --with-expat=/mingw" "libaprutil-1.a" "" "apu-1-config --version"
+}
+
+buildInstallBerkeleyDB() {
+    local _project="db-*"
+
+    buildInstallGeneric "$_project" true false "" "xx" "" "xx --version"
 }
 
 buildInstallSVN() {
-    buildInstallGeneric "subversion-*" true "" "xxxx" ""
+    local _project="subversion-*"
+    local _additionFlags="--prefix=/mingw"
+    local _binCheck="svn.exe"
+    local _exeToTest="svn --version"
+
+    echo
+    echo "Building $_project..."
+    echo
+    
+    ad_setDefaultEnv
+
+    export "CFLAGS=$CFLAGS -DAPU_DECLARE_STATIC"
+    export "LDFLAGS=$LDFLAGS -lole32 -lmlang -luuid"
+    export "CPPFLAGS=$CPPFLAGS -DAPU_DECLARE_STATIC"
+
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        mingleDecompress "$_project"
+
+        local _projectdir=$(ad_getDirFromWC $_project)
+        
+        cd $_projectdir || mingleError $? "cd failed, aborting!"
+
+        if [ ! -e svn-mingw.patch ]; then
+            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/svn-mingw.patch .
+            ad_patch "svn-mingw.patch"
+        fi
+
+        autoconf || mingleError $? "autoconf failed, aborting!"
+        ./configure "$_additionFlags" || mingleError $? "configure failed, aborting!"
+
+        cd ..
+
+        ad_make "$_project"
+    else
+        echo "Already Installed."
+    fi
+
+    ad_run_test "$_exeToTest"
+    
+    echo   
 }
 
 buildInstallGit() {
-    buildInstallGeneric "git-master*" true "" "xxxx" ""
+    buildInstallGeneric "git-master*" true false "" "xxxx" ""
 }
 
 buildInstallFontConfig() {
@@ -823,7 +934,7 @@ buildInstallFontConfig() {
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
-        cd $_projectdir
+        cd $_projectdir || mingleError $? "cd failed, aborting!"
         
         if [ ! -e fontconfig-mingw.patch ]; then
             cp $MINGLE_BASE/patches/fontconfig/$AD_FONT_CONFIG/fontconfig-mingw.patch .
@@ -836,7 +947,7 @@ buildInstallFontConfig() {
         cd ..
         
         #export "CFLAGS=$CFLAGS -DFC_DBG_CONFIG"
-        ad_configure "$_project" "$_additionFlags"
+        ad_configure "$_project" false "$_additionFlags"
         ad_make "$_project"
 
         local _shortProjectName=$(ad_getShortLibName $_project)
@@ -879,7 +990,7 @@ buildInstallFreeType() {
 }
 
 buildInstallSQLite() {
-    buildInstallGeneric "sqlite-*" true "" "libsqlite3.a" "" "sqlite3 --version"
+    buildInstallGeneric "sqlite-*" true false "" "libsqlite3.a" "" "sqlite3 --version"
 }
 
 buildInstallICU() {
@@ -957,7 +1068,7 @@ buildInstallPostgres() {
 
     cd ..
 
-    buildInstallGeneric "$_project" true "" "postgres" "" "postgres --version"
+    buildInstallGeneric "$_project" true false "" "postgres" "" "postgres --version"
     
     if [ -e /mingw/lib/libpq.dll ]; then
         cp -rf /mingw/lib/libpq.dll /mingw/bin
@@ -965,11 +1076,11 @@ buildInstallPostgres() {
 }
 
 buildInstallExpat() {
-    buildInstallGeneric "expat-*" true "" "libexpat.a"
+    buildInstallGeneric "expat-*" true false "" "libexpat.a"
 }
 
 buildInstallLibproj() {
-    buildInstallGeneric "proj-*" true "" "libproj.a"
+    buildInstallGeneric "proj-*" true false "" "libproj.a"
 }
 
 buildInstallProjDatumgrid() {
@@ -1001,13 +1112,13 @@ buildInstallProjDatumgrid() {
 }
 
 buildInstallLibGeotiff() {
-    buildInstallGeneric "libgeotiff-*" true "--enable-shared --enable-incode-epsg" "libgeotiff.dll.a" "" "geotifcp"
+    buildInstallGeneric "libgeotiff-*" true false "--enable-shared --enable-incode-epsg" "libgeotiff.dll.a" "" "geotifcp"
     
-    buildInstallGeneric "libgeotiff-*" true "--enable-static --enable-incode-epsg" "libgeotiff.a" "" "geotifcp"
+    buildInstallGeneric "libgeotiff-*" true false "--enable-static --enable-incode-epsg" "libgeotiff.a" "" "geotifcp"
 }
 
 buildInstallLibgeos() {
-    buildInstallGeneric "geos-*" true "" "libgeos.a" "" ""
+    buildInstallGeneric "geos-*" true false "" "libgeos.a" "" ""
 }
 
 buildInstallGDAL() {
@@ -1028,7 +1139,7 @@ buildInstallGDAL() {
 
         local _projectDir=$(ad_getDirFromWC "$_project")
 
-        ad_configure "$_project" "$_configureFlags"
+        ad_configure "$_project" false "$_configureFlags"
 
         #Not sure why but libtool crashes in bash if you have CPPFLAGS set
         ad_clearEnv
@@ -1116,7 +1227,7 @@ buildInstallPython() {
         export "CFLAGS=$CFLAGS -IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
         export "LDFLAGS=$LDFLAGS -Ldependencies/lib"
                
-        ad_configure "$_project" "--with-libs=-lmingle --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
+        ad_configure "$_project" false "--with-libs=-lmingle --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
         ad_make $_project
         
@@ -1233,11 +1344,11 @@ buildInstallTileLite() {
 }
 
 buildInstallNode() {
-    buildInstallGeneric "node-v*" true "" "xxx"
+    buildInstallGeneric "node-v*" true false "" "xxx"
 }
 
 buildInstallNodeMapnik() {
-    buildInstallGeneric "node-mapnik*" true "" "xxx"
+    buildInstallGeneric "node-mapnik*" true false "" "xxx"
 }
 
 buildInstallWAF() {
@@ -1258,7 +1369,7 @@ buildInstallWAF() {
 
         cd ..
 
-        buildInstallGeneric "waf-*" true "" "waf" "" ""
+        buildInstallGeneric "waf-*" true false "" "waf" "" ""
 
         cd "$_projectdir" || mingleError $? "cd failed, aborting!"
 
@@ -1271,7 +1382,7 @@ buildInstallWAF() {
 }
 
 buildInstallBoostJam() {
-    buildInstallGeneric "boost-jam*" true "" "bjam" "cp bin.ntx86_64/*.exe /mingw/bin" ""
+    buildInstallGeneric "boost-jam*" true false "" "bjam" "cp bin.ntx86_64/*.exe /mingw/bin" ""
 }
 
 buildInstallBoost() {
@@ -1295,7 +1406,7 @@ buildInstallBoost() {
         cd ..
 
         export CPLUS_INCLUDE_PATH=/mingw/include/python2.7
-        buildInstallGeneric "boost_*" true "" "boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll" "" ""
+        buildInstallGeneric "boost_*" true false "" "boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll" "" ""
         export CPLUS_INCLUDE_PATH=
 
         ad_relocate_bin_dlls "boost_"
@@ -1391,7 +1502,7 @@ buildInstallMapnik() {
 
     cd ..
 
-    buildInstallGeneric "mapnik-*" true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
+    buildInstallGeneric "mapnik-*" true false "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
 }
@@ -1406,7 +1517,7 @@ buildInstallMapnikDev() {
 
     mingleDecompress "$_project"
 
-    buildInstallGeneric "$_project" true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
+    buildInstallGeneric "$_project" true false "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
 }
@@ -1454,12 +1565,98 @@ buildInstallMapnikStylesheets() {
     cd ..
 }
 
+buildInstalldMake() {
+    local _project="dmake*"
+
+    if [ -e /usr/local/bin/dmake ]; then
+        echo "$_project Already Installed." 
+        echo
+        return
+    fi
+
+    mingleDecompress "$_project"
+
+    local _projectdir=$(ad_getDirFromWC $_project)
+
+    echo "Installing dmake..."
+    echo
+
+    cp $_projectdir/dmake /usr/local/bin
+    mkdir /usr/local/lib/dmake
+    cp -rf $_projectdir/startup /usr/local/lib/dmake
+    
+    export MAKESTARTUP=/usr/local/lib/dmake/startup/startup.mk
+
+    echo "export MAKESTARTUP=/usr/local/lib/dmake/startup/startup.mk">>/etc/profile
+}
+
 buildInstallPerl() {
-    buildInstallGeneric "perl-*" true "" "xxx" "" ""
+    local _project="perl*"
+
+    if [ -e /mingw/bin/perl5.18.0 ]; then
+        echo "$_project Already Installed." 
+        echo
+        return
+    fi
+
+    mingleDecompress "$_project"
+
+    local _projectdir=$(ad_getDirFromWC $_project)
+
+    cd $_project || mingleError $? "cd failed, aborting!"
+
+    #Notes from http://sourceforge.net/projects/perlmingw/files/Compiler%20for%2064%20bit%20Windows/
+    if [ ! -e perl-mingw.patch ]; then
+         cp $MINGLE_BASE/patches/perl/$AD_PERL_VERSION/perl-mingw.patch .
+         ad_patch "perl-mingw.patch"
+    fi
+
+    # Remove if old default config preexists
+    if [ -e config.sh ]; then
+        rm config.sh
+    fi
+
+    cd win32 || mingleError $? "cd failed, aborting!"
+
+    cmd /c "dmake MINGLE_BASE*=c:\\projects\\tools\\MinGW-AD64S"
+    cmd /c "dmake install MINGLE_BASE*=c:\\projects\\tools\\MinGW-AD64S"
+
+    cd ../..
+}
+
+buildInstallPCRE() {
+    local _project="pcre-*"
+
+    if [ -e /mingw/bin/pcregrep ]; then
+        echo "$_project Already Installed." 
+        echo
+        return
+    fi
+
+    mingleDecompress "$_project"
+
+    local _projectdir=$(ad_getDirFromWC $_project)
+
+    cd $_project || mingleError $? "cd failed, aborting!"
+
+    if [ ! -e pcre-mingw.patch ]; then
+         cp $MINGLE_BASE/patches/pcre/$AD_PCRE_VERSION/pcre-mingw.patch .
+         ad_patch "pcre-mingw.patch"
+    fi
+
+    buildInstallGeneric "$_project" true false "--disable-cpp --disable-shared --enable-newline-is-anycrlf --enable-utf8 --enable-unicode-properties" "xxx" "" ""
 }
 
 buildInstallSwig() {
-    buildInstallGeneric "swigwin-*" true "" "xxx" "" ""
+    local _project="swigwin-*"
+
+    buildInstallGeneric "$_project" true false "" "swig" "" "swig -version"
+}
+
+buildInstallPostGIS () {
+    local _project="postgis-*"
+
+    buildInstallGeneric "$_project" true false "" "xxx" "" "xxx"
 }
 
 ad_isDateNewerThanFileModTime() {
@@ -1605,18 +1802,28 @@ ad_patch() {
 
 ad_configure() {
     local _project=$1
-    local _additionFlags=$2
+    local _runACLocal=$2
+    local _additionFlags=$3
     
     local _projectDir=$(ad_getDirFromWC "$_project")
 
     cd $_projectDir || mingleError $? "ad_configure cd failed, aborting!"
 
-    if [ -e "configure.ac" ] || [ -e "configure.in" ]; then
+    if [ -e "autogen.sh" ]; then
+        ./autogen.sh
+    elif [ -e "configure.ac" ] || [ -e "configure.in" ]; then
         if [ -e "/mingw/bin/autoconf" ];then
             echo
-            echo "Executing autoconf..."
 
+            if $_runACLocal; then
+                echo "Executing aclocal..."
+                aclocal || mingleError $? "ad_configure aclocal failed, aborting!"
+            fi
+
+            echo "Executing autoconf..."
             autoconf || mingleError $? "ad_configure autoconf failed, aborting!"
+
+            echo
         fi
         
         if [ -e "/mingw/bin/autoheader" ];then
@@ -1787,10 +1994,11 @@ ad_getShortLibName() {
 buildInstallGeneric() {
     local _project="$1"
     local _cleanEnv=$2 #true/false
-    local _configureFlags="$3"
-    local _binCheck="$4"
-    local _postBuildCommand="$5"
-    local _exeToTest="$6"
+    local _runACLocal=$3 #true/false
+    local _configureFlags="$4"
+    local _binCheck="$5"
+    local _postBuildCommand="$6"
+    local _exeToTest="$7"
     
     echo
     echo "Building $_project..."
@@ -1808,7 +2016,7 @@ buildInstallGeneric() {
 
         local _projectDir=$(ad_getDirFromWC "$_project")
 
-        ad_configure "$_project" "$_configureFlags"
+        ad_configure "$_project" $_runACLocal "$_configureFlags"
 
         local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"`
 
@@ -1872,6 +2080,9 @@ suiteBase() {
     mingleDownloadPackages
 
     updateGCC
+
+    buildInstallPExports
+    buildInstallGenDef
     
     #experimental
     #updateTarCommand
@@ -1977,6 +2188,7 @@ suiteDatabase() {
 
     buildInstallSQLite
     buildInstallPostgres
+    #buildInstallPostGIS
 }
 
 suitePython() {
@@ -2010,9 +2222,11 @@ suitePerl() {
         suiteEncryption
         suiteNetworking
         suiteDatabase
+        buildInstalldMake
     fi
 
-    #buildInstallPerl
+    buildInstallPerl
+    buildInstallPCRE
 }
 
 suiteSwig() {
@@ -2027,10 +2241,10 @@ suiteSwig() {
         suitePerl
     fi
 
-    #buildInstallSwig
+    buildInstallSwig
 }
 
-suiteDebug() {
+suiteDebugTest() {
     if $MINGLE_SUITE_DEBUG ; then
         return;
     else
@@ -2048,6 +2262,7 @@ suiteDebug() {
     fi
 
     buildInstallGDB
+    buildInstallCUnit
 }
 
 suiteBoost() {
@@ -2089,9 +2304,13 @@ suiteSCMTools() {
         suitePython
         suiteDebug
         suiteBoost
+        buildInstallAPR
+        buildInstallAPRUtil
+        suiteSwig
+        #buildInstallBerkeleyDB
     fi
 
-    #buildInstallSVN
+    buildInstallSVN
     #buildInstallGit
 }
 
@@ -2256,7 +2475,6 @@ suiteMapnikTools() {
 
     #buildInstallNode
     #buildInstallNodeMapnik
-    #buildInstallAPR
 }
 
 mingleError() {
@@ -2404,6 +2622,10 @@ mingleDecompress() {
 
     if [ -z "$_projectDir" ]; then
         local _decompFile=$(ad_getArchiveFromWC "$_project")
+
+        if [ ! -e "$_decompFile" ]; then
+            mingleError $? "Failed to find archive for: $_project, aborting!"
+        fi
             
         echo "Decompressing $_decompFile"...
             
@@ -2471,7 +2693,7 @@ minglePrintSelections() {
 }
 
 mingleGetSelections() {
-    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "Database Tools" "Python Tools" "Debugger" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "All" "Quit")
+    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "Database Tools" "Python Tools" "Debugging and Testing" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "All" "Quit")
 }
 
 mingleProcessSelectionNum() {
@@ -2529,8 +2751,8 @@ mingleProcessSelection() {
     "Python Tools")
         suitePython
         ;;
-    "Debugger")
-        suiteDebug
+    "Debugging and Testing")
+        suiteDebugTest
         ;;
     "Boost Libraries")
         suiteBoost
