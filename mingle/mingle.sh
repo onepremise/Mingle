@@ -142,7 +142,7 @@ mingleDownloadPackages () {
     mingleDownload "http://apache.tradebit.com/pub//apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
 
     mingleDownload "http://download.oracle.com/berkeley-db/db-$AD_BERKELEY_DB.tar.gz"
-    mingleDownload "http://www.apache.org/dist/subversion/subversion-$AD_SVN_VERSION.tar.bz2"
+    mingleDownload "http://archive.apache.org/dist/subversion/subversion-$AD_SVN_VERSION.tar.gz"
     mingleDownload "https://github.com/git/git/archive/master.zip" "git-master.zip"
     mingleDownload "http://ftp.gnome.org/pub/GNOME/sources/libsigc++/$AD_LIBSIGC_PATH_VERSION/libsigc++-$AD_LIBSIGC_VERSION.tar.xz"
     mingleDownload "http://www.cairographics.org/releases/pixman-$AD_PIXMAN_VERSION.tar.gz"
@@ -2493,7 +2493,7 @@ mingleError() {
     echo "Current Project Dir: `pwd`"
     echo
     echo "`date +%m-%d-%y\ %T`, $_errorNum $_errorMsg"
-    echo "`date +%m-%d-%y\ %T`, \"$_errorNum\" \"$_errorMsg\"">$MINGLE_BUILD_DIR/../mingle_error.log
+    echo "`date +%m-%d-%y\ %T`, \"$_errorNum\" \"$_errorMsg\"">$MINGLE_BUILD_DIR/mingle_error.log
     echo
 
     exit $_errorNum
@@ -2568,8 +2568,8 @@ mingleInitialize() {
 
     cd $MINGLE_BUILD_DIR
 
-    if [ -e "../mingle_error.log" ]; then
-        rm ../mingle_error.log
+    if [ -e "mingle_error.log" ]; then
+        rm mingle_error.log
     fi
 }
 

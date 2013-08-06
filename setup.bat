@@ -425,7 +425,7 @@ set ERRL=%ERRORLEVEL%
 set ERR_MSG="Error: %ERRL%, Failed to execute mingle!"
 
 IF %ERRL% NEQ 0 set ERROR_CHECK=1
-IF EXIST "%MINGLE_BUILD_DIR%\mingle_error.log" (
+IF EXIST "msys%MINGLE_BUILD_DIR%\mingle_error.log" (
     set ERROR_CHECK=1
     FOR /F "eol=; tokens=1,2* delims=," %%i in (msys%MINGLE_BUILD_DIR%\mingle_error.log) do (
         set ERRL=%%i
