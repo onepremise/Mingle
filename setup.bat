@@ -427,9 +427,9 @@ if not exist "msys%MINGLE_BUILD_DIR%" (
 )
 
 IF %MINGLE_SUITE% EQU 0 (
-    msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% 2>&1 | tee %MINGLE_BUILD_DIR%/build.log"
+    msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% | tee %MINGLE_BUILD_DIR%/build.log"
 ) ELSE (
-    msys\bin\bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% --suite=%MINGLE_SUITE% 2>&1 | tee %MINGLE_BUILD_DIR%/build.log"
+    msys\bin\bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% --suite=%MINGLE_SUITE% | tee %MINGLE_BUILD_DIR%/build.log"
 )
 
 set ERRL=%ERRORLEVEL%

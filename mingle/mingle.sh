@@ -89,6 +89,8 @@ export AD_SETUPTOOLS_VERSION=0.6c11
 export AD_NOSE_VERSION=1.2.1
 export AD_WAF_VERSION=1.7.11
 
+export AD_JSONC_VERSION=master
+
 export AD_BERKELEY_DB=6.0.20
 export AD_POSTGRES_VERSION=9.2.2
 export AD_POSTGIS_VERSION=2.0.3
@@ -116,7 +118,7 @@ mingleDownloadPackages () {
     mingleDownload "http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-v$AD_MINGW64_CRT.tar.gz"
     mingleDownload "http://ftp.gnu.org/gnu/libc/glibc-$AD_GLIBC.tar.xz"
     mingleDownload "http://ftp.gnu.org/gnu/gdb/gdb-$AD_GDB_VERSION.tar.gz"
-    mingleDownload "http://sourceforge.net/projects/mingw/files/MinGW/Extension/pexports/pexports-$AD_PEXPORTS/pexports-$AD_PEXPORTS-mingw32-src.tar.xz/download"
+    mingleDownload "http://downloads.sourceforge.net/project/mingw/MinGW/Extension/pexports/pexports-$AD_PEXPORTS/pexports-$AD_PEXPORTS-mingw32-src.tar.xz"
     mingleDownload "http://mingw-w64.svn.sourceforge.net/viewvc/mingw-w64/trunk/mingw-w64-tools/gendef/?view=tar" "gendef.tar.gz"
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tcl$AD_TCL_VERSION-src.tar.gz"
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tk$AD_TK_VERSION-src.tar.gz"
@@ -177,6 +179,7 @@ mingleDownloadPackages () {
     #mingleDownload "http://nodejs.org/dist/v0.10.0/node-v0.10.0.tar.gz"
     #mingleDownload "https://github.com/mitsuhiko/werkzeug/archive/master.zip" "werkzeug.zip"
     mingleDownload "https://bitbucket.org/springmeyer/tilelite/get/c1f84defd807.zip" "tilelite.zip"
+    mingleDownload "https://github.com/json-c/json-c/archive/be002fbb96c484f89aee2c843b89bdd00b0a5e46.zip" "json-c-$AD_JSONC_VERSION.zip"
     mingleDownload "http://download.osgeo.org/postgis/source/postgis-$AD_POSTGIS_VERSION.tar.gz"
 }
 
@@ -862,8 +865,40 @@ buildInstallAPRUtil() {
 
 buildInstallBerkeleyDB() {
     local _project="db-*"
+    local _additionFlags="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --enable-mingw --enable-cxx --disable-replication"
+    local _binCheck="xxx"
 
-    buildInstallGeneric "$_project" true false "" "xx" "" "xx --version"
+    echo
+    echo "Building $_project..."
+    echo
+    
+    ad_setDefaultEnv
+
+    export "CFLAGS=$CFLAGS -D__MINGW__"
+    export "CPPFLAGS=$CPPFLAGS -D__MINGW__"
+
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        mingleDecompress "$_project"
+
+        local _projectdir=$(ad_getDirFromWC $_project)
+        
+        cd $_projectdir || mingleError $? "cd failed, aborting!"
+
+        cd dist
+
+        aclocal -I aclocal -I aclocal_java
+        autoconf
+        autoheader
+
+        cd ../build_unix
+        
+        ../dist/configure "$_additionFlags" || mingleError $? "configure failed, aborting!"
+ 
+        make || mingleError $? "make failed, aborting!"
+
+        make install || mingleError $? "make failed, aborting!"
+    fi
 }
 
 buildInstallSVN() {
@@ -1653,10 +1688,39 @@ buildInstallSwig() {
     buildInstallGeneric "$_project" true false "" "swig" "" "swig -version"
 }
 
+buildInstallJSONC() {
+    local _project="json-c-*"
+
+    buildInstallGeneric "$_project" true false "--disable-oldname-compat" "libjson-c-2.dll"
+
+    if [ ! -e /mingw/include/json ]; then
+        ln -s /mingw/include/json-c/ /mingw/include/json || mingleError $? "json-c: ln failed, aborting!"
+    fi
+}
+
 buildInstallPostGIS () {
     local _project="postgis-*"
 
-    buildInstallGeneric "$_project" true false "" "xxx" "" "xxx"
+    if [ -e /mingw/lib/postgresql/postgis-2.0.dll ]; then
+        echo "$_project Already Installed." 
+        echo
+        return
+    fi
+
+    mingleDecompress "$_project"
+
+    local _projectdir=$(ad_getDirFromWC $_project)
+
+    cd $_project || mingleError $? "cd failed, aborting!"
+
+    if [ ! -e postgis-mingw.patch ]; then
+         cp $MINGLE_BASE/patches/postgis/$AD_POSTGIS_VERSION/postgis-mingw.patch .
+         ad_patch "postgis-mingw.patch"
+    fi
+        
+    export "PG_CPPFLAGS=-D__ERRCODE_DEFINED_MS"
+
+    buildInstallGeneric "$_project" true false "--with-jsondir=/mingw" "/mingw/lib/postgresql/postgis-2.0.dll"
 }
 
 ad_isDateNewerThanFileModTime() {
@@ -2104,6 +2168,7 @@ suiteBase() {
     buildInstallTCL
     buildInstallTk
     buildInstallSigc
+    buildInstallJSONC
 
     #Keep the msys M4 for now due to build issues it causes with autoconf
     #buildInstallM4
@@ -2188,7 +2253,8 @@ suiteDatabase() {
 
     buildInstallSQLite
     buildInstallPostgres
-    #buildInstallPostGIS
+    buildInstallPostGIS
+    #buildInstallBerkeleyDB
 }
 
 suitePython() {
@@ -2307,7 +2373,6 @@ suiteSCMTools() {
         buildInstallAPR
         buildInstallAPRUtil
         suiteSwig
-        #buildInstallBerkeleyDB
     fi
 
     buildInstallSVN
@@ -2536,6 +2601,7 @@ mingleInitialize() {
             export "MINGLE_BUILD_DIR=$altPath"
         fi
 
+        echo MINGLE_BASE=$MINGLE_BASE
         echo MINGLE_BUILD_DIR=$MINGLE_BUILD_DIR
         echo MINGLE_CACHE=$MINGLE_CACHE
 
