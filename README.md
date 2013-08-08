@@ -34,16 +34,17 @@ The following projects are fully building in the environment setup:
 * libpng
 * libtiff
 * expat
-* TCL
+* Tcl
 * ICU
-* SQLite
 * freetype
 * polarssl
 * openssl
 * libxml2
 * fontconfig
 * curl
-* postgres
+* SQLite
+* Postgres
+* Berkeley DB
 * libproj
 * projdatumgrid
 * libgeotiff

@@ -866,19 +866,18 @@ buildInstallAPRUtil() {
 buildInstallBerkeleyDB() {
     local _project="db-*"
     local _additionFlags="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --enable-mingw --enable-cxx --disable-replication"
-    local _binCheck="xxx"
-
-    echo
-    echo "Building $_project..."
-    echo
-    
-    ad_setDefaultEnv
-
-    export "CFLAGS=$CFLAGS -D__MINGW__"
-    export "CPPFLAGS=$CPPFLAGS -D__MINGW__"
+    local _binCheck="db_verify.exe"
+    local _exeToTest="db_verify -V"
 
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        echo
+        echo "Building $_project..."
+        echo
+
+        ad_setDefaultEnv
+        #ad_clearEnv
+
         mingleDecompress "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
@@ -887,18 +886,21 @@ buildInstallBerkeleyDB() {
 
         cd dist
 
-        aclocal -I aclocal -I aclocal_java
-        autoconf
-        autoheader
+        ./s_config
+        #aclocal -I aclocal -I aclocal_java
+        #autoconf
+        #autoheader
 
         cd ../build_unix
         
-        ../dist/configure "$_additionFlags" || mingleError $? "configure failed, aborting!"
- 
+        ../dist/configure $_additionFlags || mingleError $? "configure failed, aborting!"
+
         make || mingleError $? "make failed, aborting!"
 
         make install || mingleError $? "make failed, aborting!"
     fi
+
+    ad_run_test "$_exeToTest"
 }
 
 buildInstallSVN() {
@@ -1834,6 +1836,7 @@ ad_clearEnv() {
     unset LDFLAGS
     unset CPPFLAGS
     unset CRYPTO
+    unset CC
 }
 
 ad_setDefaultEnv() {
@@ -1847,6 +1850,7 @@ ad_setDefaultEnv() {
     export "LDFLAGS=-L/mingw/lib"
     export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "CRYPTO=POLARSSL"
+    export "CC=x86_64-w64-mingw32-gcc"
 }
 
 ad_patch() {
@@ -1918,8 +1922,7 @@ ad_configure() {
         while [ $? -ge 1 ]
         do
             if [ $_counter -gt $_retries ]; then
-                echo "Max configure retries reached. Build Failed!"
-                exit 1
+                mingleError 9999 "Max configure retries reached. Build Failed!"
             fi
 
             local _test=`cat out.txt|grep "unrecognized option"|sed -e "s/^.*\(--.*\)'/\1/"`
@@ -1927,7 +1930,8 @@ ad_configure() {
             if [ -z "$_test" ]; then
                 _test=`cat out.txt|grep "error: no such option:"|sed -e "s/^.*\(--.*\)/\1/"`
                 if [ -z "$_test" ]; then
-                    exit 1
+                    cat out.txt
+                    mingleError 9999 "Configuration Failed for $_project!"
                 fi
             fi
 
@@ -2253,8 +2257,7 @@ suiteDatabase() {
 
     buildInstallSQLite
     buildInstallPostgres
-    buildInstallPostGIS
-    #buildInstallBerkeleyDB
+    buildInstallBerkeleyDB
 }
 
 suitePython() {
@@ -2372,6 +2375,7 @@ suiteSCMTools() {
         suiteBoost
         buildInstallAPR
         buildInstallAPRUtil
+        suitePerl
         suiteSwig
     fi
 
@@ -2477,6 +2481,7 @@ suiteGeoSpatialLibraries() {
 
     buildInstallLibgeos
     buildInstallGDAL
+    buildInstallPostGIS
 }
 
 suiteMapnik() {
@@ -2540,6 +2545,31 @@ suiteMapnikTools() {
 
     #buildInstallNode
     #buildInstallNodeMapnik
+}
+
+suiteAllExceptMapnik() {
+    suiteBase
+    suiteXML
+    suiteFonts
+    suiteEncryption
+    suiteNetworking
+    suiteDatabase
+    suitePython
+    suiteDebug
+    suiteBoost
+    buildInstallAPR
+    buildInstallAPRUtil
+    suitePerl
+    suiteSwig
+    suiteSCMTools
+    suiteImageTools
+    suiteMathLibraries
+    suiteGrpahicLibraries
+    suiteGeoSpatialLibraries
+}
+
+suiteAll() {
+    suiteAllExceptMapnik
 }
 
 mingleError() {
@@ -2848,7 +2878,7 @@ mingleProcessSelection() {
         suiteMapnikTools
         ;;
     "All")
-        suiteMapnikTools
+        suiteAll
         break
         ;;
     *)
