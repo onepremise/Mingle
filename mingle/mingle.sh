@@ -948,6 +948,8 @@ buildInstallSVN() {
 }
 
 buildInstallGit() {
+    # make NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw TCLTK_PATH=/mingw DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1
+
     buildInstallGeneric "git-master*" true false "" "xxxx" ""
 }
 
@@ -1105,7 +1107,11 @@ buildInstallPostgres() {
 
     cd ..
 
-    buildInstallGeneric "$_project" true false "" "postgres" "" "postgres --version"
+    export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64"
+    export "LDFLAGS=-L/mingw/lib"
+    export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64"
+
+    buildInstallGeneric "$_project" false false "" "postgres" "" "postgres --version"
     
     if [ -e /mingw/lib/libpq.dll ]; then
         cp -rf /mingw/lib/libpq.dll /mingw/bin
