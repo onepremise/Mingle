@@ -958,17 +958,19 @@ buildInstallFontConfig() {
     local _additionFlags="--enable-libxml2 --disable-docs"
     local _binCheck="fc-list"
     local _exeToTest="fc-list"
-    
-    echo
-    echo "Building $_project..."
-    echo
-    
-    ad_setDefaultEnv
- 
+
     export "FREETYPE_LIBS=`freetype-config --libs`"
-    
+
+    echo
     echo "Checking for binary $_binCheck..."
+    echo
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        echo
+        echo "Building $_project..."
+        echo
+    
+        ad_setDefaultEnv
+
         mingleDecompress "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
@@ -1406,7 +1408,7 @@ buildInstallWAF() {
         cd "$_projectdir" || mingleError $? "cd failed, aborting!"
 
         if [ ! -e waf-mingw.patch ]; then
-             cp $MINGLE_BASE/patches/waf/$AD_WAF_VERSION/waf-mingw.patch .
+             cp $MINGLE_BASE/patches/waf/$AD_WAF_VERSION/waf-mingw.patch . || mingleError $? "patch failed, aborting!"
              ad_patch "waf-mingw.patch"
         fi
 
@@ -1767,7 +1769,7 @@ ad_isDateNewerThanFileModTime() {
 
 ad_getDirFromWC() {
     local _project="$1"
-    local _result=`find . -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
+    local _result=`find $MINGLE_BUILD_DIR -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
 
     echo "$_result"
 }
@@ -2085,19 +2087,21 @@ buildInstallGeneric() {
     local _binCheck="$5"
     local _postBuildCommand="$6"
     local _exeToTest="$7"
-    
-    echo
-    echo "Building $_project..."
-    echo
 
     cd $MINGLE_BUILD_DIR
-    
-    if $_cleanEnv; then
-        ad_setDefaultEnv
-    fi
-    
+
+    echo
     echo "Checking for binary $_binCheck..."
+    echo
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        echo
+        echo "Building $_project..."
+        echo
+
+        if $_cleanEnv; then
+            ad_setDefaultEnv
+        fi
+
         mingleDecompress "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
