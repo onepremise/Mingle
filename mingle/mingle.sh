@@ -948,7 +948,7 @@ buildInstallSVN() {
 }
 
 buildInstallGit() {
-    # make NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw TCLTK_PATH=/mingw DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1
+    # make NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1
 
     buildInstallGeneric "git-master*" true false "" "xxxx" ""
 }
@@ -1464,12 +1464,12 @@ buildInstallPyCairo() {
     local _binCheck="/pkgconfig/pycairo.pc"
     local _exeToTest=""
     
-    echo
-    echo "Building $_project..."
-    echo
-    
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        echo
+        echo "Building $_project..."
+        echo
+
         ad_setDefaultEnv
 
         export "PYTHON_CONFIG=/mingw/bin/python2.7-config"
@@ -1611,6 +1611,14 @@ buildInstallMapnikStylesheets() {
 buildInstalldMake() {
     local _project="dmake*"
 
+    if ! grep MAKESTARTUP /etc/profile; then
+        echo
+        echo "Adding MAKESTARTUP to profile..."
+        echo
+        export MAKESTARTUP=/usr/local/lib/dmake/startup/startup.mk
+        echo "export MAKESTARTUP=/usr/local/lib/dmake/startup/startup.mk">>/etc/profile
+    fi
+
     if [ -e /usr/local/bin/dmake ]; then
         echo "$_project Already Installed." 
         echo
@@ -1641,6 +1649,10 @@ buildInstallPerl() {
         echo
         return
     fi
+
+    echo
+    echo "Building $_project..."
+    echo
 
     mingleDecompress "$_project"
 
