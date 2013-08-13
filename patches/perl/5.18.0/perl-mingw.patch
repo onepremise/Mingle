@@ -307,3 +307,14 @@ $ diff -u perl-5.18.0/win32/makefile.mk perl-5.18.0/win32/makefile3.mk
  INST_COREDIR   = $(INST_ARCHLIB)\CORE
  INST_HTML      = $(INST_TOP)$(INST_VER)\html
 
+--- perl-5.18.0/cpan/ExtUtils-MakeMaker/lib/ExtUtils/MM_Win32.pm	2013-04-30 22:52:56 -0400
++++ perl-5.18.0/cpan/ExtUtils-MakeMaker/lib/ExtUtils/MM_Win32.2.pm	2013-08-12 16:48:01 -0400
+@@ -150,7 +150,7 @@
+ sub init_tools {
+     my ($self) = @_;
+ 
+-    $self->{NOOP}     ||= 'rem';
++    $self->{NOOP}     ||= '@echo';
+     $self->{DEV_NULL} ||= '> NUL';
+ 
+     $self->{FIXIN}    ||= $self->{PERL_CORE} ? 
