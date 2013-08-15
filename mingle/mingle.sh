@@ -1201,7 +1201,7 @@ buildInstallGDAL() {
 
 buildInstallPython() {
     local _project="Python-*"
-    local _binCheck="python$AD_PYTHON_MAJORxxx"
+    local _binCheck="python$AD_PYTHON_MAJOR"
     local _exeToTest="python --version"
     
     echo
