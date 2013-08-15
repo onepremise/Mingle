@@ -1138,7 +1138,7 @@ buildInstallProjDatumgrid() {
             mkdir proj-datumgrid
         fi
 
-        cd proj-datumgrid
+        cd proj-datumgrid || mingleError $? "cd failed, aborting!"
 
         mingleDecompress "proj-datumgrid*"
 
@@ -1221,7 +1221,7 @@ buildInstallPython() {
             mv cpython* python-latest
         fi
         
-        cd $_projectDir
+        cd $_projectDir || mingleError $? "cd failed, aborting!"
         
         if [ ! -e python-mingw.patch ]; then
             #http://bugs.python.org/issue3754
@@ -2755,6 +2755,8 @@ mingleDecompress() {
         if [ ! -e "$_decompFile" ]; then
             mingleError $? "Failed to find archive for: $_project, aborting!"
         fi
+
+        cd $MINGLE_BUILD_DIR
             
         echo "Decompressing $_decompFile"...
             
