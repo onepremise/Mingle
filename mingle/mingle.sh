@@ -2013,17 +2013,27 @@ ad_make() {
     
     local _projectDir=$(ad_getDirFromWC "$_project")
     cd $_projectDir || mingleError $? "cd failed, aborting"
-    
+
     echo
     echo "Executing make $_makeParameters..."
     echo
-    make "$_makeParameters" || mingleError $? "make failed, aborting!"
 
-    echo
-    echo "Executing make install $_makeParameters..."
-    echo
-    make install "$_makeParameters" || mingleError $? "make install failed, aborting"
-    
+    if [ -n "$_makeParameters" ]; then    
+        make "$_makeParameters" || mingleError $? "make failed, aborting!"
+
+        echo
+        echo "Executing make install $_makeParameters..."
+        echo
+        make install "$_makeParameters" || mingleError $? "make install failed, aborting"
+    else
+        make || mingleError $? "make failed, aborting!"
+
+        echo
+        echo "Executing make install $_makeParameters..."
+        echo
+        make install || mingleError $? "make install failed, aborting"
+    fi
+
     cd ..
 }
 
@@ -2125,7 +2135,7 @@ buildInstallGeneric() {
 
         ad_configure "$_project" $_runACLocal "$_configureFlags"
 
-        local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"`
+        local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"&>/dev/null`
 
         if [ -e "$_projectDir/bootstrap.sh" ] && [ ! -z "$_jamCheck" ]; then
             ad_boost_jam "$_project"
