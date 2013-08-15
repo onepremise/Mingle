@@ -1201,15 +1201,16 @@ buildInstallGDAL() {
 
 buildInstallPython() {
     local _project="Python-*"
-    local _binCheck="python$AD_PYTHON_MAJOR"
+    local _binCheck="python$AD_PYTHON_MAJORxxx"
     local _exeToTest="python --version"
-
-    echo
-    echo "Building $_project..."
-    echo
     
+    echo
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$ _binCheck" ] );then
+        echo
+        echo "Building $_project..."
+        echo
+
         ad_setDefaultEnv
 
         mingleDecompress $_project
@@ -1675,7 +1676,13 @@ buildInstallPerl() {
 
     cd win32 || mingleError $? "cd failed, aborting!"
 
+    echo "Executing make..."
+    echo
+
     cmd /c "dmake MINGLE_BASE*=c:\\projects\\tools\\MinGW-AD64S"
+
+    echo "Executing make install..."
+    echo
     cmd /c "dmake install MINGLE_BASE*=c:\\projects\\tools\\MinGW-AD64S"
 
     cd ../..
@@ -1857,6 +1864,8 @@ ad_clearEnv() {
     unset CPPFLAGS
     unset CRYPTO
     unset CC
+
+    cd $MINGLE_BUILD_DIR
 }
 
 ad_setDefaultEnv() {
@@ -1871,6 +1880,8 @@ ad_setDefaultEnv() {
     export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "CRYPTO=POLARSSL"
     export "CC=x86_64-w64-mingw32-gcc"
+
+    cd $MINGLE_BUILD_DIR
 }
 
 ad_patch() {
