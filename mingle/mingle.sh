@@ -816,7 +816,7 @@ buildInstallLOpenSSL() {
 }
 
 buildInstallLibXML2() {
-    buildInstallGeneric "libxml2-*" true false "--enable-shared --enable-static --with-icu" "xmllint" "" "" "xmllint --version"
+    buildInstallGeneric "libxml2-*" true false "--enable-shared --enable-static --with-icu" "" "xmllint" "" "xmllint --version"
 }
 
 buildInstallCurl() {
