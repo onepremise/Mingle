@@ -2164,7 +2164,7 @@ buildInstallGeneric() {
 
         ad_configure "$_project" $_runACLocal "$_configureFlags"
 
-        local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"&>/dev/null`
+        local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"`
 
         if [ -e "$_projectDir/bootstrap.sh" ] && [ ! -z "$_jamCheck" ]; then
             ad_boost_jam "$_project"
