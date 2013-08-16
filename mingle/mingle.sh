@@ -123,7 +123,8 @@ mingleDownloadPackages () {
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tcl$AD_TCL_VERSION-src.tar.gz"
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tk$AD_TK_VERSION-src.tar.gz"
     mingleDownload "http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz"
-    mingleDownload "http://sourceforge.net/projects/cunit/files/CUnit/$AD_CUNIT_VERSION/CUnit-$AD_CUNIT_VERSION-src.tar.bz2/download" "cunit-$AD_CUNIT_VERSION-src.tar.bz2"
+    mingleDownload "http://sourceforge.net/projects/cunit/files/CUnit/$AD_CUNIT_VERSION/CUnit-$AD_CUNIT_VERSION-src.tar.bz2/download"
+    mingleDownload "http://downloads.sourceforge.net/project/cunit/CUnit/$AD_CUNIT_VERSION/CUnit-$AD_CUNIT_VERSION-src.tar.bz2"
     mingleDownload "http://sourceforge.net/projects/libpng/files/zlib/$AD_ZLIB/zlib-$AD_ZLIB.tar.gz/download" "zlib-$AD_ZLIB.tar.gz"
     mingleDownload "http://www.bzip.org/$AD_BZIP/bzip2-$AD_BZIP.tar.gz"
     mingleDownload "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$AD_LIBICONV.tar.gz"
@@ -145,7 +146,7 @@ mingleDownloadPackages () {
 
     mingleDownload "http://download.oracle.com/berkeley-db/db-$AD_BERKELEY_DB.tar.gz"
     mingleDownload "http://archive.apache.org/dist/subversion/subversion-$AD_SVN_VERSION.tar.gz"
-    mingleDownload "https://github.com/git/git/archive/master.zip" "git-master.zip"
+    mingleDownload "https://github.com/onepremise/git/archive/master.zip" "git-master.zip"
     mingleDownload "http://ftp.gnome.org/pub/GNOME/sources/libsigc++/$AD_LIBSIGC_PATH_VERSION/libsigc++-$AD_LIBSIGC_VERSION.tar.xz"
     mingleDownload "http://www.cairographics.org/releases/pixman-$AD_PIXMAN_VERSION.tar.gz"
     mingleDownload "http://www.cairographics.org/releases/cairo-$AD_CAIRO_VERSION.tar.xz"
@@ -948,9 +949,33 @@ buildInstallSVN() {
 }
 
 buildInstallGit() {
-    # make NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1
+    local _project="git-*"
+    local _binCheck="xxgit.exe"
+    local _exeToTest="git.exe --version"
 
-    buildInstallGeneric "git-master*" true false "" "" "xxxx" ""
+    echo
+    echo "Checking $_project..."
+    echo
+    
+    if [ ! -e /mingw/bin/$_binCheck ]; then
+        echo
+        echo "Building $_project..."
+        echo
+
+        mingleDecompress "$_project"
+
+        cd $_project
+
+        make LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 CFLAGS='-g -O2 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' prefix=/mingw CC=gcc INSTALL=/bin/install|| mingleError $? "make failed, aborting!"
+
+        make install LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 CFLAGS='-g -O2 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' prefix=/mingw CC=gcc INSTALL=/bin/install|| mingleError $? "make install failed, aborting!"
+
+        cd ..
+    else
+        echo "Already Installed."          
+    fi
+    
+    echo
 }
 
 buildInstallFontConfig() {
@@ -1007,10 +1032,14 @@ buildInstallFontConfig() {
 
 buildInstallFreeType() {
     echo
-    echo "Installing freetype..."
+    echo "Checking freetype..."
     echo
     
     if [ ! -e /mingw/lib/libfreetype.a ]; then
+        echo
+        echo "Building freetype..."
+        echo
+
         mingleDecompress "freetype-*"
 
         cd freetype-*
@@ -1428,7 +1457,7 @@ buildInstallWAF() {
 }
 
 buildInstallBoostJam() {
-    buildInstallGeneric "boost-jam*" true false "" "bjam" "cp bin.ntx86_64/*.exe /mingw/bin" ""
+    buildInstallGeneric "boost-jam*" true false "" "" "bjam" "cp bin.ntx86_64/*.exe /mingw/bin" ""
 }
 
 buildInstallBoost() {
@@ -2398,7 +2427,7 @@ suiteBoost() {
         suiteNetworking
         suiteDatabase
         suitePython
-        suiteDebug
+        suiteDebugTest
     fi
 
     buildInstallBoostJam
@@ -2420,7 +2449,7 @@ suiteSCMTools() {
         suiteNetworking
         suiteDatabase
         suitePython
-        suiteDebug
+        suiteDebugTest
         suiteBoost
         buildInstallAPR
         buildInstallAPRUtil
@@ -2429,7 +2458,7 @@ suiteSCMTools() {
     fi
 
     buildInstallSVN
-    #buildInstallGit
+    buildInstallGit
 }
 
 suiteImageTools() {
@@ -2447,7 +2476,7 @@ suiteImageTools() {
         suiteNetworking
         suiteDatabase
         suitePython
-        suiteDebug
+        suiteDebugTest
         suiteBoost
     fi
 
@@ -2471,7 +2500,7 @@ suiteMathLibraries() {
         suiteNetworking
         suiteDatabase
         suitePython
-        suiteDebug
+        suiteDebugTest
         suiteBoost
     fi
 }
@@ -2491,7 +2520,7 @@ suiteGrpahicLibraries() {
         suiteNetworking
         suiteDatabase
         suitePython
-        suiteDebug
+        suiteDebugTest
         suiteBoost
         suiteImageTools
         suiteMathLibraries
@@ -2521,7 +2550,7 @@ suiteGeoSpatialLibraries() {
         suiteNetworking
         suiteDatabase
         suitePython
-        suiteDebug
+        suiteDebugTest
         suiteBoost
         suiteImageTools
         suiteMathLibraries
@@ -2550,7 +2579,7 @@ suiteMapnik() {
         suiteNetworking
         suiteDatabase
         suitePython
-        suiteDebug
+        suiteDebugTestTest
         suiteBoost
         suiteImageTools
         suiteMathLibraries
@@ -2580,7 +2609,7 @@ suiteMapnikTools() {
         suiteNetworking
         suiteDatabase
         suitePython
-        suiteDebug
+        suiteDebugTest
         suiteBoost
         suiteImageTools
         suiteMathLibraries
@@ -2604,7 +2633,7 @@ suiteAllExceptMapnik() {
     suiteNetworking
     suiteDatabase
     suitePython
-    suiteDebug
+    suiteDebugTest
     suiteBoost
     buildInstallAPR
     buildInstallAPRUtil
