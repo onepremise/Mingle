@@ -1961,12 +1961,17 @@ ad_configure() {
 
             if $_runACLocal; then
                 echo "Executing aclocal..."
-                aclocal || mingleError $? "ad_configure aclocal failed, aborting!"
+                
+                if [ -n "$_aclocalFlags" ]; then
+                    aclocal "$_aclocalFlags" || mingleError $? "ad_configure aclocal failed, aborting!"
+                else
+                    aclocal || mingleError $? "ad_configure aclocal failed, aborting!"
+                fi
             fi
 
             if $_runAutoconf; then
                 echo "Executing autoconf..."
-                autoconf "$_aclocalFlags" || mingleError $? "ad_configure autoconf failed, aborting!"
+                autoconf || mingleError $? "ad_configure autoconf failed, aborting!"
             fi
 
             echo
