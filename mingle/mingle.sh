@@ -97,7 +97,7 @@ export AD_POSTGIS_VERSION=2.0.3
 
 export AD_MAPNIK_VERSION=2.1.0
 
-export AD_SWIG_VERSION=2.0.9
+export AD_SWIG_VERSION=2.0.10
 export AD_PERL_VERSION=5.18.0
 export AD_PERL_SHRT_VERSION=5.0
 export AD_PCRE_VERSION=8.33
@@ -171,7 +171,7 @@ mingleDownloadPackages () {
     mingleDownload "https://download.oracle.com/otn/other/occi/occivc9-winx64-111070-133869.zip"
     mingleDownload "https://github.com/downloads/mapnik/mapnik/mapnik-v$AD_MAPNIK_VERSION.tar.bz2"
     mingleDownload "https://github.com/onepremise/mapnik/archive/master.zip" "mapnik-latest.zip"
-    mingleDownload "http://downloads.sourceforge.net/project/swig/swigwin/swigwin-$AD_SWIG_VERSION/swigwin-$AD_SWIG_VERSION.zip"
+    mingleDownload "http://downloads.sourceforge.net/project/swig/swig/swig-$AD_SWIG_VERSION/swig-$AD_SWIG_VERSION.tar.gz"
     mingleDownload "http://www.cpan.org/src/$AD_PERL_SHRT_VERSION/perl-$AD_PERL_VERSION.tar.gz"
     mingleDownload "http://sourceforge.net/projects/pcre/files/pcre/$AD_PCRE_VERSION/pcre-$AD_PCRE_VERSION.tar.gz/download" "pcre-$AD_PCRE_VERSION.tar.gz"
     mingleDownload "http://search.cpan.org/CPAN/authors/id/S/SH/SHAY/dmake-4.12-20090907-SHAY.zip"
@@ -1713,14 +1713,16 @@ buildInstallPerl() {
 
     cd win32 || mingleError $? "cd failed, aborting!"
 
+    local _perl_install=`echo $MINGLE_BASE|sed 's/\//\\\\/g'`
+
     echo "Executing make..."
     echo
 
-    cmd /c "dmake MINGLE_BASE*=c:\\projects\\tools\\MinGW-AD64S"
+    cmd /c "dmake MINGLE_BASE*=$_perl_install"
 
     echo "Executing make install..."
     echo
-    cmd /c "dmake install MINGLE_BASE*=c:\\projects\\tools\\MinGW-AD64S"
+    cmd /c "dmake install MINGLE_BASE*=$_perl_install"
 
     cd ../..
 }
@@ -1749,7 +1751,7 @@ buildInstallPCRE() {
 }
 
 buildInstallSwig() {
-    local _project="swigwin-*"
+    local _project="swig-*"
 
     buildInstallGeneric "$_project" true false "" true true "" "" "swig" "" "swig -version"
 }
