@@ -34,7 +34,7 @@ The following projects are fully building in the environment setup:
 * libpng
 * libtiff
 * expat
-* Tcl
+* Tcl/Tk
 * ICU
 * freetype
 * polarssl
@@ -45,6 +45,10 @@ The following projects are fully building in the environment setup:
 * SQLite
 * Postgres
 * Berkeley DB
+* Perl
+* PCRE
+* SVN
+* Git
 * libproj
 * projdatumgrid
 * libgeotiff
@@ -59,6 +63,7 @@ The following projects are fully building in the environment setup:
 * python2.7.3
 * python3.3 (Very Experimental)
 * GDB w/python debugger
+* CUnit
 * waf
 * apr
 * apr-util
@@ -137,5 +142,5 @@ Please Choose from the following:
 Consulting
 ============
 
-https://www.houghtonassociates.com
-(email) opensource@houghtonassociates.com
+* https://www.houghtonassociates.com
+* (email) opensource@houghtonassociates.com
