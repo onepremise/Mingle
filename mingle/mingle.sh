@@ -2694,8 +2694,6 @@ suiteAllExceptMapnik() {
     suitePython
     suiteDebugTest
     suiteBoost
-    buildInstallAPR
-    buildInstallAPRUtil
     suitePerl
     suiteSwig
     suiteSCMTools
