@@ -1713,14 +1713,14 @@ buildInstallPerl() {
 
     cd win32 || mingleError $? "cd failed, aborting!"
 
-    local _perl_install=`echo $MINGLE_BASE|sed 's/\//\\\\/g'`
+    local _perl_install=`echo $MINGLE_BASE|sed -e 's/^\/\(.\)/\1:/' -e 's/\//\\\\/g'`
 
-    echo "Executing make..."
+    echo "Executing dmake MINGLE_BASE*=$_perl_install..."
     echo
 
     cmd /c "dmake MINGLE_BASE*=$_perl_install"
 
-    echo "Executing make install..."
+    echo "Executing dmake install MINGLE_BASE*=$_perl_install..."
     echo
     cmd /c "dmake install MINGLE_BASE*=$_perl_install"
 
