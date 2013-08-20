@@ -968,7 +968,7 @@ buildInstallGit() {
 
         make LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 CFLAGS='-g -O2 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' prefix=/mingw CC=gcc INSTALL=/bin/install|| mingleError $? "make failed, aborting!"
 
-        make install LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 CFLAGS='-g -O2 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' prefix=/mingw CC=gcc INSTALL=/bin/install|| mingleError $? "make install failed, aborting!"
+        make install LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 CFLAGS='-g -O2 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' prefix=/mingw CC=gcc INSTALL=/bin/install|| mingleError $? "make install failed, aborting!"
 
         cd ..
     else
@@ -1713,7 +1713,7 @@ buildInstallPerl() {
 
     cd win32 || mingleError $? "cd failed, aborting!"
 
-    local _perl_install=`echo $MINGLE_BASE|sed -e 's/^\/\(.\)/\1:/' -e 's/\//\\\\/g'`
+    local _perl_install=`echo $MINGLE_BASE|sed -e 's/^\/\(.\)/\1:/'`
 
     echo "Executing dmake MINGLE_BASE*=$_perl_install..."
     echo
@@ -1792,9 +1792,94 @@ buildInstallPostGIS () {
 }
 
 initializePostGISDB () {
+    echo
     echo "Creating PostGIS Database..."
 
-    psql -U postgres -f /opt/local/share/postgresql90/contrib/hstore.sql
+    local _dbpath=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
+
+    export PGPASSWORD=temp123
+
+    initdb -U postgres -D $_dbpath -E 'UTF8' --lc-collate='English_United States.1252' --lc-ctype='English_United States.1252'
+
+    # Tune Parameters for postgresql.conf
+    # autovacuum = off
+    # checkpoint_segments = 20
+    # shared_buffers = 512MB # min 128kB
+    # work_mem = 256MB # min 64kB
+    # maintenance_work_mem = 512MB # min 1MB
+    # synchronous_commit = off
+
+    echo
+    echo "Updating postgresql.conf..."
+
+    cat $_dbpath/postgresql.conf|sed 's/^\#autovacuum = on/autovacuum = off/g'>$_dbpath/update.conf
+    mv $_dbpath/update.conf $_dbpath/postgresql.conf
+
+    cat $_dbpath/postgresql.conf|sed 's/^\#checkpoint_segments = ./checkpoint_segments = 20/g'>$_dbpath/update.conf
+    mv $_dbpath/update.conf $_dbpath/postgresql.conf
+
+    cat $_dbpath/postgresql.conf|sed 's/^shared_buffers = 32MB/shared_buffers = 512MB/g'>$_dbpath/update.conf
+    mv $_dbpath/update.conf $_dbpath/postgresql.conf
+
+    cat $_dbpath/postgresql.conf|sed 's/^\#work_mem = 1MB/work_mem = 256MB/g'>$_dbpath/update.conf
+    mv $_dbpath/update.conf $_dbpath/postgresql.conf
+
+    cat $_dbpath/postgresql.conf|sed 's/^\#maintenance_work_mem = 16MB/maintenance_work_mem = 512MB/g'>$_dbpath/update.conf
+    mv $_dbpath/update.conf $_dbpath/postgresql.conf
+
+    cat $_dbpath/postgresql.conf|sed 's/^\#synchronous_commit = on/synchronous_commit = off/g'>$_dbpath/update.conf
+    mv $_dbpath/update.conf $_dbpath/postgresql.conf
+
+    #pg_ctl" register -N "pgsql-8.4 test" -D "C:\postgres\data" -U postgres -P "somepassword"
+
+    pg_ctl start -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+    #pg_ctl stop -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+
+    echo "Setting up OSM database, user, and granting permissions..."
+
+    psql postgres postgres <<< "CREATE USER osm WITH PASSWORD 'osm';"
+    psql postgres postgres <<< "CREATE DATABASE osm WITH OWNER = osm ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'English_United States.1252' LC_CTYPE = 'English_United States.1252' CONNECTION LIMIT = -1;"
+    psql postgres postgres <<< "GRANT ALL PRIVILEGES ON DATABASE osm to osm;"
+    psql postgres postgres <<< "ALTER USER osm WITH SUPERUSER;"
+
+    export PGPASSWORD=osm
+
+    echo
+    echo "Deploying PostGIS..."
+
+    psql -d osm -U osm -c 'create extension hstore'
+    psql -U osm -d osm -f /mingw/share/postgresql/contrib/postgis-2.0/postgis.sql
+    psql -U osm -d osm -f /mingw/share/postgresql/contrib/postgis-2.0/spatial_ref_sys.sql
+
+    echo
+    echo "Initialization Complete."
+    echo
+    echo "Your OSM dbname=osm, username=osm, password=osm."
+    echo "However, I recommend updating your password for production use as a start."
+}
+
+importOSMUSData() {
+  echo "Importing US OSM data to Postgres..."
+
+  cd $MINGLE_BUILD_DIR
+
+  if [ -e database-data ]; then
+      mkdir database-data
+  fi
+
+  mingleDownload "https://vanguard.houghtonassociates.com/browse/OSM-OSM2PSQL-59/artifact/JOB1/cygwin-package/cygwin-package.zip"
+
+  mingleDecompress "cygwin-package.zip"
+
+  mv -u cygwin-package/* database-data
+
+  cd database-data
+
+  wget -c --no-check-certificate http://download.geofabrik.de/north-america-latest.osm.pbf
+
+  ./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1600 --hstore --number-processes=4 -r pbf north-america-latest.osm.pbf
+
+  cd ..
 }
 
 ad_isDateNewerThanFileModTime() {
@@ -2926,7 +3011,7 @@ minglePrintSelections() {
 }
 
 mingleGetSelections() {
-    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "Database Tools" "Python Tools" "Debugging and Testing" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "All" "Quit")
+    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "Database Tools" "Python Tools" "Debugging and Testing" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "All" "Create PostGIS DB" "Import US OSM Data" "Quit")
 }
 
 mingleProcessSelectionNum() {
@@ -3016,6 +3101,14 @@ mingleProcessSelection() {
         ;;
     "All")
         suiteAll
+        break
+        ;;
+    "Create PostGIS DB")
+        initializePostGISDB
+        break
+        ;;
+    "Import US OSM Data")
+        importOSMUSData
         break
         ;;
     *)
