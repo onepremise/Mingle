@@ -38,7 +38,7 @@ IF %ERRORLEVEL% EQU 0 (
 REM ===========================================================================
 REM SET Environment Variables and create the package cache directory
 REM ===========================================================================
-for /f "delims=" %%i in (mingle\mingle.cfg) do @echo set %%i>>mingle_config.bat
+for /f "delims=" %%i in (mingle\mingle.cfg) do @echo set %%i>>%CD%\mingle_config.bat
 
 if exist mingle_config.bat (
     call mingle_config.bat
@@ -50,7 +50,7 @@ if exist mingle_config.bat (
 )
 
 if not exist "%MINGLE_CACHE%" (
-    mkdir %MINGLE_CACHE%
+    mkdir "%MINGLE_CACHE%"
 )
 
 REM ===========================================================================
