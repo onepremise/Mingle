@@ -1792,7 +1792,14 @@ buildInstallPostGIS () {
 }
 
 updatePostgresSqlConf() {
-    echo
+    local _variable=$1
+    local _value=$2
+    local _dbpath=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
+    
+    echo "Updating $_variable = $_value..."
+    
+    sed -e 's/[#]*\('$_variable'\)\s*=\s*[[:alnum:]\.\-]*/\1 = '$_value'/g' $_dbpath/postgresql.conf>$_dbpath/update.conf
+    mv $_dbpath/update.conf $_dbpath/postgresql.conf    
 }
 
 initializePostGISDB () {
@@ -1815,29 +1822,25 @@ initializePostGISDB () {
 
     echo
     echo "Updating postgresql.conf..."
+    
+    if [ ! -e $_dbpath/postgresql.conf.bak ]; then
+        cp $_dbpath/postgresql.conf $_dbpath/postgresql.conf.bak
+    fi
+    
+    updatePostgresSqlConf 'checkpoint_segments' 64
+    updatePostgresSqlConf 'checkpoint_timeout' '15min'
+    updatePostgresSqlConf 'checkpoint_completion_target' '0\.9'
+    
+    updatePostgresSqlConf 'shared_buffers' '2GB'
+    updatePostgresSqlConf 'work_mem' '256MB'
+    updatePostgresSqlConf 'maintenance_work_mem' '1GB'
+    updatePostgresSqlConf 'synchronous_commit' 'off'
+    updatePostgresSqlConf 'wal_level' 'minimal'
 
-    cat $_dbpath/postgresql.conf|sed 's/^\#autovacuum = on/autovacuum = off/g'>$_dbpath/update.conf
-    mv $_dbpath/update.conf $_dbpath/postgresql.conf
-
-    cat $_dbpath/postgresql.conf|sed 's/^\#checkpoint_segments = ./checkpoint_segments = 20/g'>$_dbpath/update.conf
-    mv $_dbpath/update.conf $_dbpath/postgresql.conf
-
-    cat $_dbpath/postgresql.conf|sed 's/^shared_buffers = 32MB/shared_buffers = 512MB/g'>$_dbpath/update.conf
-    mv $_dbpath/update.conf $_dbpath/postgresql.conf
-
-    cat $_dbpath/postgresql.conf|sed 's/^\#work_mem = 1MB/work_mem = 256MB/g'>$_dbpath/update.conf
-    mv $_dbpath/update.conf $_dbpath/postgresql.conf
-
-    cat $_dbpath/postgresql.conf|sed 's/^\#maintenance_work_mem = 16MB/maintenance_work_mem = 512MB/g'>$_dbpath/update.conf
-    mv $_dbpath/update.conf $_dbpath/postgresql.conf
-
-    cat $_dbpath/postgresql.conf|sed 's/^\#synchronous_commit = on/synchronous_commit = off/g'>$_dbpath/update.conf
-    mv $_dbpath/update.conf $_dbpath/postgresql.conf
-
-    #pg_ctl" register -N "pgsql-8.4 test" -D "C:\postgres\data" -U postgres -P "somepassword"
+    #pg_ctl register -N "PostGIS Database" -D $_dbpath -U postgres -P temp123
 
     pg_ctl start -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
-    #pg_ctl stop -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+    #pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
 
     echo "Setting up OSM database, user, and granting permissions..."
 
@@ -1863,15 +1866,23 @@ initializePostGISDB () {
 }
 
 importOSMUSData() {
+  echo "Tune Database for Import..."
+  pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+  
+  updatePostgresSqlConf 'autovacuum' 'off'
+  updatePostgresSqlConf 'fsync' 'off'
+  
+  pg_ctl start -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+  
   echo "Importing US OSM data to Postgres..."
 
   cd $MINGLE_BUILD_DIR
 
-  if [ -e database-data ]; then
+  if [ ! -e database-data ]; then
       mkdir database-data
   fi
 
-  mingleDownload "https://vanguard.houghtonassociates.com/browse/OSM-OSM2PSQL-59/artifact/JOB1/cygwin-package/cygwin-package.zip"
+  mingleDownload "https://vanguard.houghtonassociates.com/browse/OSM-OSM2PSQL-60/artifact/JOB1/cygwin-package/cygwin-package.zip"
 
   mingleDecompress "cygwin-package.zip"
 
@@ -1879,9 +1890,16 @@ importOSMUSData() {
 
   cd database-data
 
-  wget -c --no-check-certificate http://download.geofabrik.de/north-america-latest.osm.pbf
+  ##wget -c --no-check-certificate http://download.geofabrik.de/north-america-latest.osm.pbf
 
-  ./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1600 --hstore --number-processes=4 -r pbf north-america-latest.osm.pbf
+  ./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1650 --hstore --number-processes=4 -r pbf north-america-latest.osm.pbf
+
+  pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+  
+  updatePostgresSqlConf 'autovacuum' 'on'
+  updatePostgresSqlConf 'fsync' 'on'
+  
+  pg_ctl start -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
 
   cd ..
 }
