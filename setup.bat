@@ -144,11 +144,13 @@ IF EXIST "mingw64\bin\lib" (
     RMDIR /S /Q mingw64\bin\lib
 )
 
-IF NOT EXIST "msys.lnk" (
+IF EXIST "msys.lnk" (
+    DEL msys.lnk
+)
+
 ECHO "Creating shortcut..."
 ECHO.
 powershell -command ". .\mingle\createShortcut.ps1; createShortcut -TargetPath '%CD%\msys\msys.bat' -LinkPath '.\msys.lnk'" 
-)
 
 REM ===========================================================================
 REM RESET EXECUTION POLICY

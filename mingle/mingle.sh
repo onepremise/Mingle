@@ -1791,6 +1791,10 @@ buildInstallPostGIS () {
     buildInstallGeneric "$_project" true false "" true true "--with-jsondir=/mingw" "" "/mingw/lib/postgresql/postgis-2.0.dll"
 }
 
+updatePostgresSqlConf() {
+    echo
+}
+
 initializePostGISDB () {
     echo
     echo "Creating PostGIS Database..."
