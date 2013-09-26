@@ -1,3 +1,39 @@
+$ diff -u subversion-1.7.9/autogen.sh subversion-1.7.9/autogen2.sh
+--- subversion-1.7.9/autogen.sh 2012-12-21 23:00:34 -0500
++++ subversion-1.7.9/autogen2.sh        2013-09-03 22:36:51 -0400
+@@ -136,7 +136,7 @@
+   echo "Generating SWIG code..."
+   # Generate build-outputs.mk in non-release-mode, so that we can
+   # build the SWIG-related files
+-  "$PYTHON" ./gen-make.py build.conf || gen_failed=1
++  "$PYTHON" ./gen-make.py ./build.conf || gen_failed=1
+
+   # Build the SWIG-related files
+   make -f autogen-standalone.mk autogen-swig
+@@ -147,10 +147,10 @@
+
+ if test -n "$SKIP_DEPS"; then
+   echo "Creating build-outputs.mk (no dependencies)..."
+-  "$PYTHON" ./gen-make.py $RELEASE_ARGS -s build.conf || gen_failed=1
++  "$PYTHON" ./gen-make.py $RELEASE_ARGS -s ./build.conf || gen_failed=1
+ else
+   echo "Creating build-outputs.mk..."
+-  "$PYTHON" ./gen-make.py $RELEASE_ARGS build.conf || gen_failed=1
++  "$PYTHON" ./gen-make.py $RELEASE_ARGS ./build.conf || gen_failed=1
+ fi
+
+ if test -n "$RELEASE_MODE"; then
+--- subversion-1.7.9/configure.ac       2012-10-02 13:18:00 -0400
++++ subversion-1.7.9/configure2.ac      2013-09-11 00:26:00 -0400
+@@ -327,7 +327,7 @@
+
+ AC_MSG_CHECKING([whether to avoid circular linkage at all costs])
+ case $host in
+-  *-*-cygwin*)
++  *-*-cygwin* | *mingw*)
+     AC_MSG_RESULT([yes])
+     AC_DEFINE([SVN_AVOID_CIRCULAR_LINKAGE_AT_ALL_COSTS_HACK], 1,
+               [Define if circular linkage is not possible on this platform.])
 --- subversion-1.7.9/build/get-py-info.py	2009-11-16 14:07:18 -0500
 +++ subversion-1.7.9/build/get-py-info2.py	2013-08-05 13:08:34 -0400
 @@ -79,7 +79,7 @@
