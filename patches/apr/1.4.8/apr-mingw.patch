@@ -22,3 +22,17 @@ Index: configure.in
  else
      AC_ERROR([could not determine the proper format for apr_size_t])
  fi
+--- apr-1.4.8/strings/apr_snprintf.c    2011-07-29 13:30:34 -0400
++++ apr-1.4.8/strings/apr_snprintf3.c   2013-09-12 22:41:23 -0400
+@@ -849,6 +849,11 @@
+             else if (*fmt == 'l') {
+                 var_type = IS_LONG;
+                 fmt++;
++                 /* Catch the %lld type modifier for long long and its ilk */
++               if (*fmt == 'l') {
++                   var_type = IS_QUAD;
++                   fmt++;
++                }
+             }
+             else if (*fmt == 'h') {
+                 var_type = IS_SHORT;
