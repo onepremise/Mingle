@@ -94,6 +94,15 @@ $ diff -u perl-5.18.0/win32/config.gc perl-5.18.0/win32/config2.gc
  installsiteman1dir=''
  installsiteman3dir=''
  installsitescript=''
+@@ -761,7 +761,7 @@
+ known_extensions='~static_ext~ ~dynamic_ext~ ~nonxs_ext~'
+ ksh=''
+ ld='~ARCHPREFIX~g++'
+-lddlflags='-mdll ~LINK_FLAGS~'
++lddlflags='-shared ~LINK_FLAGS~'
+ ldflags='~LINK_FLAGS~'
+ ldflags_uselargefiles=''
+ ldlibpthname=''
 @@ -783,8 +783,8 @@
  ln=''
  lns='copy'
@@ -135,7 +144,7 @@ $ diff -u perl-5.18.0/win32/config.gc perl-5.18.0/win32/config2.gc
  osname='MSWin32'
  osvers='4.0'
 -otherlibdirs=''
-+otherlibdirs='~INST_TOP~\lib\perl~INST_VER~'
++otherlibdirs='~INST_TOP~\lib\perl~INST_VER~;~INST_TOP~\lib\perl~INST_VER~\site\lib'
  package='perl5'
  pager='more /e'
  passcat=''
@@ -245,6 +254,15 @@ $ diff -u perl-5.18.0/win32/config.gc perl-5.18.0/win32/config2.gc
  trnl='\012'
  troff=''
  ttyname_r_proto='0'
+@@ -1041,7 +1041,7 @@
+ useperlio='undef'
+ useposix='true'
+ usereentrant='undef'
+-userelocatableinc='undef'
++userelocatableinc='define'
+ usesfio='false'
+ useshrplib='true'
+ usesitecustomize='undef'
 @@ -1049,7 +1049,7 @@
  usethreads='undef'
  usevendorprefix='undef'
@@ -318,3 +336,41 @@ $ diff -u perl-5.18.0/win32/makefile.mk perl-5.18.0/win32/makefile3.mk
      $self->{DEV_NULL} ||= '> NUL';
  
      $self->{FIXIN}    ||= $self->{PERL_CORE} ? 
+--- perl-5.18.0/win32/win32.h	2013-04-30 22:52:56 -0400
++++ perl-5.18.0/win32/win32-2.h	2013-09-04 16:00:06 -0400
+@@ -255,8 +255,8 @@
+ 
+ #ifdef __MINGW32__		/* Minimal Gnu-Win32 */
+ 
+-typedef long		uid_t;
+-typedef long		gid_t;
++typedef int			uid_t;
++typedef int			gid_t;
+ #ifndef _environ
+ #define _environ	environ
+ #endif
+--- perl-5.18.0/cpan/ExtUtils-MakeMaker/lib/ExtUtils/MM_Win32.pm	2013-04-30 22:52:56 -0400
++++ perl-5.18.0/cpan/ExtUtils-MakeMaker/lib/ExtUtils/MM_Win322.pm	2013-09-12 17:44:49 -0400
+@@ -150,7 +150,7 @@
+ sub init_tools {
+     my ($self) = @_;
+ 
+-    $self->{NOOP}     ||= 'rem';
++    $self->{NOOP}     ||= '@echo';
+     $self->{DEV_NULL} ||= '> NUL';
+ 
+     $self->{FIXIN}    ||= $self->{PERL_CORE} ? 
+@@ -350,10 +350,8 @@
+ ');
+     if ($GCC) {
+       push(@m,  
+-       q{	}.$DLLTOOL.q{ --def $(EXPORT_LIST) --output-exp dll.exp
+-	$(LD) -o $@ -Wl,--base-file -Wl,dll.base $(LDDLFLAGS) }.$ldfrom.q{ $(OTHERLDFLAGS) $(MYEXTLIB) $(PERL_ARCHIVE) $(LDLOADLIBS) dll.exp
+-	}.$DLLTOOL.q{ --def $(EXPORT_LIST) --base-file dll.base --output-exp dll.exp
+-	$(LD) -o $@ $(LDDLFLAGS) }.$ldfrom.q{ $(OTHERLDFLAGS) $(MYEXTLIB) $(PERL_ARCHIVE) $(LDLOADLIBS) dll.exp });
++       q{	$(LD) -o $@ -Wl,--out-implib,$(INST_ARCHAUTODIR)\\lib$(BASEEXT).dll.a $(LDDLFLAGS) $(LDFROM) $(OTHERLDFLAGS) $(MYEXTLIB) $(PERL_ARCHIVE) $(LDLOADLIBS) });
++
+     } elsif ($BORLAND) {
+       push(@m,
+        q{	$(LD) $(LDDLFLAGS) $(OTHERLDFLAGS) }.$ldfrom.q{,$@,,}
+
