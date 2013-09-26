@@ -41,14 +41,22 @@ The following projects are fully building in the environment setup:
 * openssl
 * libxml2
 * fontconfig
+* textinfo
 * curl
+* curl - ca-bundle.crt
+* Google Protobuf
+* Google Protobuf-c
 * SQLite
 * Postgres
 * Berkeley DB
 * Perl
+* Perl - SVN
+* Perl - CPANMinus, Encode, LWP, DBPerl, DBFile
 * PCRE
 * SVN
 * Git
+* Git - ca-bundle.crt
+* Git-SVN
 * libproj
 * projdatumgrid
 * libgeotiff
@@ -62,6 +70,8 @@ The following projects are fully building in the environment setup:
 * boost
 * python2.7.3
 * python3.3 (Very Experimental)
+* Scons
+* Serf
 * GDB w/python debugger
 * CUnit
 * waf
@@ -70,6 +80,8 @@ The following projects are fully building in the environment setup:
 * swig
 * pycairo
 * mapnik
+* osm2pgsql
+* Automation tasks for setting up PostgresDB and importing OSM Data
 
 This build includes python27 with the sqlite3 extention:
 
@@ -120,22 +132,26 @@ You can install more packages at anytime by running mingle in the msys terminal:
 
 ```
 $ mingle
-
 Welcome to Mingle!
 
 We are going to setup your build environment. Let's get started!
 
 Please Choose from the following:
 ---------------------------------------------------------------------
-1) Base                       10) Image Libraries
-2) XML Libraries              11) Math Libraries
-3) Font Libraries             12) Graphics Libraries
-4) Encryption Libraries       13) Geospatial Libraries
-5) Networking Libraries       14) Manpik 2.1.0
-6) Database Tools             15) Mapnik Developer Release
-7) Python Tools               16) Manpik Tools
-8) Debugger                   17) All
-9) Boost Libraries            18) Quit
+ 1) Base                            15) Math Libraries
+ 2) XML Libraries                   16) Graphics Libraries
+ 3) Font Libraries                  17) Geospatial Libraries
+ 4) Encryption Libraries            18) Manpik 2.1.0
+ 5) Networking Libraries            19) Mapnik Developer Release
+ 6) CA Certs                        20) Mapnik Tools
+ 7) Database Tools                  21) osm2pgsql
+ 8) Python Toolkit                  22) All
+ 9) Perl Toolkit                    23) Create PostGIS DB
+10) Text Editors and Converters     24) Import US OSM Data
+11) Debugging and Testing           25) Full PostGIS Setup and US Data
+12) Boost Libraries                 26) Uninstall PostGIS DB
+13) SCM Tools                       27) Quit
+14) Image Libraries
 #?
 ```
 

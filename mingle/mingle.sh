@@ -11,6 +11,15 @@
 #  12-11-12             Initial Coding                  JAH
 #
 #=============================================================
+if [ -e mingle/mingle-api.sh ]; then
+    source mingle/mingle-api.sh
+elif [ -e /mingw/lib/mingle/mingle-api.sh ]; then
+    source /mingw/lib/mingle/mingle-api.sh
+else
+    echo
+    echo ERROR: Unable to find mingle-api, required to build and install packages!
+    echo
+fi
 
 export AD_MFOUR=1.4.16
 export AD_AUTOCONF=2.69
@@ -48,6 +57,7 @@ export AD_TK_VERSION=8.6.0
 
 export AD_APR_VERSION=1.4.8
 export AD_APRUTIL_VERSION=1.5.2
+export AD_SERF_VERSION=1.3.1
 export AD_SVN_VERSION=1.7.9
 export AD_GIT_VERSION=
 
@@ -62,8 +72,6 @@ export AD_BOOST_VERSION=1_"$AD_BOOST_MINOR_VERSION"_0
 
 export AD_FONT_CONFIG=2.10.0
 export AD_FREETYPE_VERSION=2.4.10
-
-export AD_SQLITE_VERSION=3071500
 
 export AD_LIBPNG_MAJOR=1.6
 export AD_LIBPNG_MINOR=.2
@@ -88,10 +96,14 @@ export AD_PYTHON_VERSION=$AD_PYTHON_MAJOR$AD_PYTHON_MINOR
 export AD_SETUPTOOLS_VERSION=0.6c11
 export AD_NOSE_VERSION=1.2.1
 export AD_WAF_VERSION=1.7.11
+export AD_SCONS_VERSION=2.3.0
 
 export AD_JSONC_VERSION=master
 
+export AD_SQLITE_VERSION=3071500
 export AD_BERKELEY_DB=6.0.20
+export AD_PERL_DB=0.53
+export AD_PERL_FILE_DB=1.829
 export AD_POSTGRES_VERSION=9.2.2
 export AD_POSTGIS_VERSION=2.0.3
 
@@ -101,6 +113,14 @@ export AD_SWIG_VERSION=2.0.10
 export AD_PERL_VERSION=5.18.0
 export AD_PERL_SHRT_VERSION=5.0
 export AD_PCRE_VERSION=8.33
+
+export AD_TEXTINFO=5.1
+
+export AD_PROTO_BUF=2.5.0
+export AD_PROTO_BUF_C=0.15
+
+#export POSTGIS_PATH=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
+export POSTGIS_PATH=/g/var/lib/postgres/$AD_POSTGRES_VERSION/main
 
 mingleDownloadPackages () {
     echo "Checking Downloads..."
@@ -136,15 +156,19 @@ mingleDownloadPackages () {
     mingleDownload "http://sourceforge.net/projects/libjpeg-turbo/files/$AD_LIBJPEG_VERSION/libjpeg-turbo-$AD_LIBJPEG_VERSION-gcc64.exe/download" "libjpeg-turbo-$AD_LIBJPEG_VERSION-gcc64.exe"
     mingleDownload "http://www.freedesktop.org/software/fontconfig/release/fontconfig-$AD_FONT_CONFIG.tar.gz"
     mingleDownload "http://ftp.igh.cnrs.fr/pub/nongnu/freetype/freetype-$AD_FREETYPE_VERSION.tar.gz"
-    mingleDownload "ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng`echo $AD_LIBPNG_MAJOR|sed 's/\.//'`/libpng-$AD_LIBPNG_VERSION.tar.gz"
+    mingleDownload "ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng`echo $AD_LIBPNG_MAJOR|sed 's/\.//'`/libpng-$AD_LIBPNG_VERSION.tar.gz"
     mingleDownload "http://www.zlib.net/zlib-$AD_ZLIB_VERSION.tar.gz"
     mingleDownload "ftp://ftp.remotesensing.org/pub/libtiff/tiff-$AD_TIFF_VERSION.tar.gz"
     mingleDownload "http://curl.haxx.se/download/curl-$AD_LIBCURL_VERSION.tar.bz2"
 
     mingleDownload "http://apache.tradebit.com/pub//apr/apr-$AD_APR_VERSION.tar.gz"
     mingleDownload "http://apache.tradebit.com/pub//apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
+    mingleDownload "https://serf.googlecode.com/files/serf-$AD_SERF_VERSION.tar.bz2"
 
     mingleDownload "http://download.oracle.com/berkeley-db/db-$AD_BERKELEY_DB.tar.gz"
+    mingleDownload "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/BerkeleyDB-$AD_PERL_DB.tar.gz"
+    mingleDownload "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/DB_File-$AD_PERL_FILE_DB.tar.gz"
+    
     mingleDownload "http://archive.apache.org/dist/subversion/subversion-$AD_SVN_VERSION.tar.gz"
     mingleDownload "https://github.com/onepremise/git/archive/master.zip" "git-master.zip"
     mingleDownload "http://ftp.gnome.org/pub/GNOME/sources/libsigc++/$AD_LIBSIGC_PATH_VERSION/libsigc++-$AD_LIBSIGC_VERSION.tar.xz"
@@ -165,6 +189,7 @@ mingleDownloadPackages () {
     mingleDownload "http://www.python.org/ftp/python/$AD_PYTHON_VERSION/Python-$AD_PYTHON_VERSION.tgz"
     mingleDownload "https://pypi.python.org/packages/source/s/setuptools/setuptools-0.6c11.tar.gz"
     mingleDownload "https://pypi.python.org/packages/source/n/nose/nose-$AD_NOSE_VERSION.tar.gz"
+    mingleDownload "http://sourceforge.net/settings/mirror_choices?projectname=scons&filename=scons/$AD_SCONS_VERSION/scons-$AD_SCONS_VERSION.tar.gz"
     mingleDownload "http://waf.googlecode.com/files/waf-$AD_WAF_VERSION.tar.bz2"
     mingleDownload "http://www.cairographics.org/releases/py2cairo-$AD_PYCAIRO_VERSION.tar.bz2"
     mingleDownload "http://ftp.postgresql.org/pub/source/v$AD_POSTGRES_VERSION/postgresql-$AD_POSTGRES_VERSION.tar.gz"
@@ -172,9 +197,13 @@ mingleDownloadPackages () {
     mingleDownload "https://github.com/downloads/mapnik/mapnik/mapnik-v$AD_MAPNIK_VERSION.tar.bz2"
     mingleDownload "https://github.com/onepremise/mapnik/archive/master.zip" "mapnik-latest.zip"
     mingleDownload "http://downloads.sourceforge.net/project/swig/swig/swig-$AD_SWIG_VERSION/swig-$AD_SWIG_VERSION.tar.gz"
+    
+    mingleDownload "http://search.cpan.org/CPAN/authors/id/S/SH/SHAY/dmake-4.12-20090907-SHAY.zip"
     mingleDownload "http://www.cpan.org/src/$AD_PERL_SHRT_VERSION/perl-$AD_PERL_VERSION.tar.gz"
     mingleDownload "http://sourceforge.net/projects/pcre/files/pcre/$AD_PCRE_VERSION/pcre-$AD_PCRE_VERSION.tar.gz/download" "pcre-$AD_PCRE_VERSION.tar.gz"
-    mingleDownload "http://search.cpan.org/CPAN/authors/id/S/SH/SHAY/dmake-4.12-20090907-SHAY.zip"
+    mingleDownload "https://raw.github.com/miyagawa/cpanminus/master/cpanm"
+    mingleDownload "http://ftp.gnu.org/gnu/texinfo/texinfo-$AD_TEXTINFO.tar.gz"
+    
     mingleDownload "https://github.com/openstreetmap/mapnik-stylesheets/archive/master.zip" "mapnik-stylesheets.zip"
     #mingleDownload "https://github.com/mapnik/node-mapnik/archive/master.zip" "node-mapnik.zip"
     #mingleDownload "http://nodejs.org/dist/v0.10.0/node-v0.10.0.tar.gz"
@@ -182,6 +211,10 @@ mingleDownloadPackages () {
     mingleDownload "https://bitbucket.org/springmeyer/tilelite/get/c1f84defd807.zip" "tilelite.zip"
     mingleDownload "https://github.com/json-c/json-c/archive/be002fbb96c484f89aee2c843b89bdd00b0a5e46.zip" "json-c-$AD_JSONC_VERSION.zip"
     mingleDownload "http://download.osgeo.org/postgis/source/postgis-$AD_POSTGIS_VERSION.tar.gz"
+    
+    mingleDownload "https://protobuf.googlecode.com/files/protobuf-$AD_PROTO_BUF.tar.gz"
+    #mingleDownload "https://protobuf-c.googlecode.com/files/protobuf-c-$AD_PROTO_BUF_C.tar.gz"
+    mingleDownload "https://github.com/onepremise/protobuf-c/archive/master.zip" "protobuf-c-latest.zip"
 }
 
 updateGCC() {
@@ -199,21 +232,13 @@ updateGCC() {
 }
 
 updateFindCommand() {
-    echo
-    echo "Update Find Command..."
-    local _project="findutils-*"
-
-    # Don't use mingle decomp until the find command has been updated.
-    if ls $MINGLE_CACHE/findutils-*-bin.tar.lzma &> /dev/null; then
-        lzma -d $MINGLE_CACHE/findutils-*-bin.tar.lzma || mingleError $? "failed to decompress find, aborting!"
+    if [ ! -e $MINGLE_BASE/msys/bin/find.exe ]; then
+      echo
+      echo "Update Find Command..."
+      cp $MINGLE_BASE/mingle/bin/find.exe /bin || mingleError $? "failed to copy find, aborting!"
+      cp $MINGLE_BASE/mingle/bin/xargs.exe /bin || mingleError $? "failed to xargs find, aborting!"
+      echo
     fi
-        
-    tar xvf $MINGLE_CACHE/findutils-*-bin.tar || mingleError $? "failed to unarchive find, aborting!"
-    
-    cp bin/find.exe /bin || mingleError $? "failed to copy find, aborting!"
-    cp bin/xargs.exe /bin || mingleError $? "failed to xargs find, aborting!"
-
-    echo
 }
 
 #experimental
@@ -821,8 +846,30 @@ buildInstallLibXML2() {
 }
 
 buildInstallCurl() {
+    local _project="curl-*"
+    
+    if [ -e /mingw/lib/libcurl-1.a ]; then
+        echo "$_project Already Installed."
+        return;
+    fi
+    
+    mingleDecompress "$_project"
+    
+    local _projectDir=$(ad_getDirFromWC "$_project")
+    
+    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+    
     #buildInstallGeneric "curl-*" true false "" true true "--with-polarssl" "libcurl.a" "" "curl --version"
-    buildInstallGeneric "curl-*" true false "" true true "" "" "libcurl.a" "" "curl --version"
+    
+    ./buildconf
+    
+    cd ..
+    
+    if [ ! -e /mingw/share/curl ]; then
+        mkdir -p /mingw/share/curl
+    fi
+    
+    buildInstallGeneric "$_project" true false "" false true "--with-ca-bundle=$MINGLE_BASE/mingw64/share/curl/ca-bundle.crt" "" "libcurl.a" "" "curl --version"
 }
 
 buildInstallAPR() {
@@ -857,16 +904,39 @@ buildInstallAPR() {
 }
 
 buildInstallAPRUtil() {
-    export "CFLAGS=-I/mingw/include -D__MINGW__ -DAPU_DECLARE_STATIC"
-    export "LDFLAGS=-L/mingw/lib"
-    export "CPPFLAGS=-I/mingw/include -D__MINGW__  -DAPU_DECLARE_STATIC"
+    local _project="apr-util-*"
+    local _additionFlags="--with-apr=/mingw/bin/apr-1-config --with-expat=/mingw --with-berkeley-db=/mingw/include:/mingw/lib --with-sqlite3=/mingw --with-pgsql=/mingw"
+    local _binCheck="libaprutil-1.a"
+    local _exeToTest="apu-1-config --version"
 
-    buildInstallGeneric "apr-util-*" false false "" true true "--with-apr=/mingw/bin/apr-1-config --with-expat=/mingw" "" "libaprutil-1.a" "" "apu-1-config --version"
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then    
+        ad_clearEnv
+    
+        export "CFLAGS=-I/mingw/include -D__MINGW__ -DAPU_DECLARE_STATIC"
+        export "LDFLAGS=-L/mingw/lib"
+        export "CPPFLAGS=-I/mingw/include -D__MINGW__  -DAPU_DECLARE_STATIC"
+        
+        mingleDecompress "$_project"
+
+        local _projectdir=$(ad_getDirFromWC $_project)
+        
+        cd $_projectdir || mingleError $? "cd failed, aborting!"    
+
+        if [ ! -e apr-util-mingw.patch ]; then
+            cp $MINGLE_BASE/patches/apr-util/$AD_APRUTIL_VERSION/apr-util-mingw.patch .
+            ad_patch "apr-util-mingw.patch"
+        fi
+        
+        cd ..
+        
+        buildInstallGeneric "$_project" false true "-I build" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
+    fi
 }
 
 buildInstallBerkeleyDB() {
     local _project="db-*"
-    local _additionFlags="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --enable-mingw --enable-cxx --disable-replication"
+    local _additionFlags="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --enable-mingw --enable-cxx --disable-replication --enable-tcl --with-tcl=/mingw/lib --enable-stl --enable-compat185 --enable-dbm"
     local _binCheck="db_verify.exe"
     local _exeToTest="db_verify -V"
 
@@ -878,19 +948,23 @@ buildInstallBerkeleyDB() {
 
         ad_setDefaultEnv
         #ad_clearEnv
+        
+        export "LDFLAGS=$LDFLAGS -ltcl86"
 
         mingleDecompress "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
         cd $_projectdir || mingleError $? "cd failed, aborting!"
+        
+        if [ ! -e db-mingw.patch ]; then
+            cp $MINGLE_BASE/patches/db/$AD_BERKELEY_DB/db-mingw.patch .
+            ad_patch "db-mingw.patch"
+        fi        
 
         cd dist
 
         ./s_config
-        #aclocal -I aclocal -I aclocal_java
-        #autoconf
-        #autoheader
 
         cd ../build_unix
         
@@ -906,7 +980,7 @@ buildInstallBerkeleyDB() {
 
 buildInstallSVN() {
     local _project="subversion-*"
-    local _additionFlags="--prefix=/mingw"
+    local _additionFlags="--libdir=/mingw/lib/perl/site/lib --with-swig --with-berkeley-db --enable-bdb6 PERL=/mingw/bin/perl --with-apr-util=/mingw --with-apr=/mingw --with-serf=/mingw MAKE=dmake"
     local _binCheck="svn.exe"
     local _exeToTest="svn --version"
 
@@ -916,9 +990,10 @@ buildInstallSVN() {
     
     ad_setDefaultEnv
 
-    export "CFLAGS=$CFLAGS -DAPU_DECLARE_STATIC"
-    export "LDFLAGS=$LDFLAGS -lole32 -lmlang -luuid"
-    export "CPPFLAGS=$CPPFLAGS -DAPU_DECLARE_STATIC"
+    export "CFLAGS=$CFLAGS -I$MINGLE_BASE\mingw64\include\apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
+    export "LDFLAGS=$LDFLAGS -L$MINGLE_BASE\mingw64\x86_64-w64-mingw32\lib -lole32 -lmlang -luuid -lws2_32"
+    export "CPPFLAGS=$CPPFLAGS -I$MINGLE_BASE\mingw64\include\apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
+    export "LIBS=-lserf-1 -lpsapi -version"
 
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -931,14 +1006,21 @@ buildInstallSVN() {
         if [ ! -e svn-mingw.patch ]; then
             cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/svn-mingw.patch .
             ad_patch "svn-mingw.patch"
+            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/bindings-mingw.patch .
+            ad_patch "bindings-mingw.patch"
+            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/auth-mingw.patch .
+            ad_patch "auth-mingw.patch"              
         fi
-
-        autoconf || mingleError $? "autoconf failed, aborting!"
-        ./configure "$_additionFlags" || mingleError $? "configure failed, aborting!"
 
         cd ..
 
-        ad_make "$_project"
+        buildInstallGeneric "$_project" false false "" false true "" "" "$_binCheck" "" ""
+        
+        cd $_projectdir || mingleError $? "cd failed, aborting!"
+        make check-swig-pl MAKE=dmake || mingleError $? "make check-swig-pl failed, aborting!"
+        make install-swig-pl MAKE=dmake || mingleError $? "make install-swig-pl failed, aborting!"
+        
+        cd ..
     else
         echo "Already Installed."
     fi
@@ -961,21 +1043,50 @@ buildInstallGit() {
         echo
         echo "Building $_project..."
         echo
+        
+        ad_clearEnv
 
         mingleDecompress "$_project"
 
         cd $_project
 
-        make LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 CFLAGS='-g -O2 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' prefix=/mingw CC=gcc INSTALL=/bin/install|| mingleError $? "make failed, aborting!"
+        make CFLAGS='-O2 -Icompat/win32 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 prefix=/mingw CC=gcc INSTALL=/bin/install sysconfdir=/mingw/etc|| mingleError $? "make failed, aborting!"
 
-        make install LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 CFLAGS='-g -O2 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' prefix=/mingw CC=gcc INSTALL=/bin/install|| mingleError $? "make install failed, aborting!"
+        make install CFLAGS='-O2 -Icompat/win32 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 prefix=/mingw CC=gcc INSTALL=/bin/install sysconfdir=/mingw/etc|| mingleError $? "make install failed, aborting!"
 
         cd ..
+        
+        git config --system http.sslcainfo $CURL_CA_BUNDLE
     else
         echo "Already Installed."          
     fi
     
     echo
+}
+
+buildInstallCABundle() {
+    local _project="curl-*"
+    
+    if [ -e /mingw/share/curl/ca-bundle.crt ]; then
+        echo "ca-bundle.crt Already Installed."
+        return;
+    fi
+    
+    mingleDecompress "$_project"
+    
+    local _projectDir=$(ad_getDirFromWC "$_project")
+    
+    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+    
+    ./buildconf
+    
+    ./configure
+    
+    make ca-bundle
+    
+    cp lib/ca-bundle.crt /mingw/share/curl || mingleError $? "failed to generate ca-bundle.crt, aborting!"
+    
+    cd ..
 }
 
 buildInstallFontConfig() {
@@ -1104,6 +1215,18 @@ buildInstallICU() {
         cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll || mingleError $? "cp failed, aborting!"
         
         cd ..
+        
+        ad_generateImportLibraryForDLL 'libicui18n.dll'
+        ad_generateImportLibraryForDLL 'libicudata.dll'
+        ad_generateImportLibraryForDLL 'libicudt.dll'
+        ad_generateImportLibraryForDLL 'libicuin.dll'
+        ad_generateImportLibraryForDLL 'libicuio.dll'
+        ad_generateImportLibraryForDLL 'libicule.dll'
+        ad_generateImportLibraryForDLL 'libiculx.dll'
+        ad_generateImportLibraryForDLL 'libicutest.dll'
+        ad_generateImportLibraryForDLL 'libicutu.dll'
+        ad_generateImportLibraryForDLL 'libicuuc.dll'
+        
         cd ..
     else
         echo "Already Installed."
@@ -1200,7 +1323,7 @@ buildInstallLibGeotiff() {
 }
 
 buildInstallLibgeos() {
-    buildInstallGeneric "geos-*" true false "" true true "" "" "libgeos.a" "" ""
+    buildInstallGeneric "geos-*" true true "-I macros" true true "" "" "libgeos.a" "" ""
 }
 
 buildInstallGDAL() {
@@ -1248,8 +1371,6 @@ buildInstallPython() {
         echo "Building $_project..."
         echo
 
-        ad_setDefaultEnv
-
         mingleDecompress $_project
 
         local _projectDir=$(ad_getDirFromWC "$_project")
@@ -1271,10 +1392,9 @@ buildInstallPython() {
 
         echo "Isolating dependencies..."
 
-        if [ ! -e dependencies ]; then
-            mkdir dependencies
-            mkdir dependencies/include
-            mkdir dependencies/lib
+        if [ ! -e dependencies/include/sys ]; then
+            mkdir -p dependencies/include/sys
+            mkdir -p dependencies/lib
         fi
 
         cp -rf /mingw/lib/tcl* dependencies/lib/
@@ -1301,14 +1421,23 @@ buildInstallPython() {
         cp -f /mingw/lib/libssl* dependencies/lib
         cp -rf /mingw/include/openssl* dependencies/include
         
+        cp -f /mingw/include/mingle/sys/utsname.h dependencies/include/sys
+        cp -f /mingw/lib/libmingle.a dependencies/lib
+        
         echo "# Edit this file for local setup changes">Modules/Setup.local
         echo "_socket socketmodule.c">>Modules/Setup.local
         echo "_ssl _ssl.c -DUSE_SSL -lssl -lcrypto -lws2_32">>Modules/Setup.local
 
         cd ..
   
-        export "CFLAGS=$CFLAGS -IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
-        export "LDFLAGS=$LDFLAGS -Ldependencies/lib"
+        export "CFLAGS=-IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
+        export "CFLAGS=$CFLAGS -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGLE__"
+
+        export "CPPFLAGS=-IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
+        export "CPPFLAGS=$CPPFLAGS -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGLE__"
+        
+        export "LDFLAGS=-Ldependencies/lib"
+        export "LIBS=-L/mingw/lib -lmingle"
                
         ad_configure "$_project" false "" true "--with-libs=-lmingle --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
@@ -1394,6 +1523,58 @@ buildInstallPyTest() {
     easy_install --install-dir=. pytest
 
     cd $_savedir
+}
+
+buildInstallScons() {
+    local _project="scons-*"
+
+    if [ ! -e /mingw/bin/waf ]; then
+        mingleDecompress "$_project"
+
+        local _projectdir=$(ad_getDirFromWC "$_project")
+
+        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+        
+        if [ ! -e scons-mingw.patch ]; then
+             cp $MINGLE_BASE/patches/scons/$AD_SCONS_VERSION/scons-mingw.patch . || mingleError $? "patch failed, aborting!"
+             ad_patch "scons-mingw.patch"
+        fi                
+
+        python setup.py install --install-lib '/mingw/lib' --install-scripts '/mingw/bin' --no-install-bat
+        mv /mingw/lib/scons-2.3.0-py2.7.egg-info `python -c "import sysconfig;print ssconfig.get_path('purelib')"`|| mingleError $? "scons install failed, aborting!"
+
+        cd ..
+    else
+        echo "$_project Already Installed."
+    fi    
+}
+
+buildInstallSerf() {
+    local _project="serf-*"
+
+    if [ ! -e /mingw/lib/libserf-1.dll ]; then
+        ad_setDefaultEnv
+        
+        mingleDecompress "$_project"
+
+        local _projectdir=$(ad_getDirFromWC "$_project")
+
+        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+        
+        if [ ! -e serf-mingw.patch ]; then
+             cp $MINGLE_BASE/patches/serf/$AD_SERF_VERSION/serf-mingw.patch . || mingleError $? "patch failed, aborting!"
+             ad_patch "serf-mingw.patch"
+        fi        
+
+        scons.py APR=/mingw/include/apr-1 CC=gcc APU=/mingw/bin OPENSSL=/mingw PREFIX=/mingw ZLIB=/mingw/include --debug=explain APR_STATIC=True
+        scons.py APR=/mingw/include/apr-1 CC=gcc APU=/mingw/bin OPENSSL=/mingw PREFIX=/mingw ZLIB=/mingw/include --debug=explain APR_STATIC=True install
+        
+        mv /mingw/lib/libserf-1.dll /mingw/bin || mingleError $? "Serf Install failed, aborting!"
+
+        cd ..
+    else
+        echo "$_project Already Installed."
+    fi 
 }
 
 buildInstallTileLite() {
@@ -1693,6 +1874,8 @@ buildInstallPerl() {
     echo
     echo "Building $_project..."
     echo
+    
+    ad_setDefaultEnv
 
     mingleDecompress "$_project"
 
@@ -1713,16 +1896,16 @@ buildInstallPerl() {
 
     cd win32 || mingleError $? "cd failed, aborting!"
 
-    local _perl_install=`echo $MINGLE_BASE|sed -e 's/^\/\(.\)/\1:/'`
+    local _perl_install=`echo $MINGLE_BASE|sed -e 's/^\/\(.\)/\1:/' -e 's/\//\\\\/g'`
 
     echo "Executing dmake MINGLE_BASE*=$_perl_install..."
     echo
 
-    cmd /c "dmake MINGLE_BASE*=$_perl_install"
+    dmake MINGLE_BASE*=$_perl_install
 
     echo "Executing dmake install MINGLE_BASE*=$_perl_install..."
     echo
-    cmd /c "dmake install MINGLE_BASE*=$_perl_install"
+    dmake install MINGLE_BASE*=$_perl_install
 
     cd ../..
 }
@@ -1747,13 +1930,99 @@ buildInstallPCRE() {
          ad_patch "pcre-mingw.patch"
     fi
 
-    buildInstallGeneric "$_project" true true "-Im4" true true "--disable-cpp --disable-shared --enable-newline-is-anycrlf --enable-utf8 --enable-unicode-properties" "" "xxx" "" ""
+    buildInstallGeneric "$_project" true true "-I m4" true true "--disable-cpp --disable-shared --enable-newline-is-anycrlf --enable-utf8 --enable-unicode-properties" "" "pcregrep" "" ""
+}
+
+buildInstallCPANMinus() {
+    if [ -e /mingw/bin/cpanm ]; then
+        echo "CPAN Minus Already Installed." 
+        echo
+        return     
+    fi
+    
+    cp $MINGLE_CACHE/cpanm /mingw/bin
+}
+
+buildInstallEncode() {
+    if [ -e /mingw/lib/perl/site/lib/Encode/Encoder.pm ]; then
+        echo "CPAN Encode Already Installed." 
+        echo
+        return     
+    fi
+    
+    cpanm Encode
+}
+
+buildInstallDBPerl() {
+    if [ -e /mingw/lib/perl/site/lib/BerkeleyDB.pm ] && [ -e /mingw/lib/perl/site/lib/DB_File.pm ]; then
+        echo "BerkeleyDB Encode Already Installed." 
+        echo
+        return     
+    fi
+    
+    local _project="BerkeleyDB-*"
+    
+    mingleDecompress "$_project"
+    
+    local _projectdir=$(ad_getDirFromWC $_project)
+    
+    cd $_project || mingleError $? "cd failed, aborting!"
+    
+    perl Makefile.PL INC=-I/mingw/include LIBS="-lpthread -ldb-6.0.dll"
+    dmake
+    dmake test
+    dmake install
+    
+    cd ..
+    
+    _project="DB_File-*"
+    
+    mingleDecompress "$_project"
+    
+    local _projectdir=$(ad_getDirFromWC $_project)    
+    
+    perl Makefile.PL INC=-I/mingw/include LIBS="-lpthread -ldb-6.0.dll"
+    dmake
+    dmake test
+    dmake install
+    
+    cd ..
+}
+
+buildInstallUserAgent() {
+    if [ -e /mingw/lib/perl/site/lib/LWP/UserAgent.pm ]; then
+        echo "CPAN Encode Already Installed." 
+        echo
+        return     
+    fi
+    
+    cpanm --local-lib /mingw/lib/perl/site LWP::UserAgent
+    
+    mv -rf /mingw/lib/perl/site/lib/perl5/* /mingw/lib/perl/site/lib
+    rmdir /mingw/lib/perl/site/lib/perl5
+    mv /mingw/lib/perl/site/bin/* /mingw/bin
+    rmdir /mingw/lib/perl/site/bin
+}
+
+buildInstallTextInfo() {
+    local _project="texinfo-*"
+    
+    buildInstallGeneric "$_project" true true "-I gnulib/m4" true true "" "" "texi2any" "" "texi2any --version"
 }
 
 buildInstallSwig() {
     local _project="swig-*"
+    
+    if [ -e /usr/local/bin/swig ]; then
+        echo "$_project Already Installed." 
+        echo
+        return
+    fi
 
     buildInstallGeneric "$_project" true false "" true true "" "" "swig" "" "swig -version"
+    
+    export "SWIG_LIB=/mingw/share/swig/2.0.10"
+    echo "export SWIG_LIB=/mingw/share/swig/2.0.10">>/etc/profile
 }
 
 buildInstallJSONC() {
@@ -1794,23 +2063,20 @@ buildInstallPostGIS () {
 updatePostgresSqlConf() {
     local _variable=$1
     local _value=$2
-    local _dbpath=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
     
     echo "Updating $_variable = $_value..."
     
-    sed -e 's/[#]*\('$_variable'\)\s*=\s*[[:alnum:]\.\-]*/\1 = '$_value'/g' $_dbpath/postgresql.conf>$_dbpath/update.conf
-    mv $_dbpath/update.conf $_dbpath/postgresql.conf    
+    sed -e "s/[#]*\("$_variable"\)\s*=\s*[[:alnum:]\.\_\%\'-]*/\1 = "$_value"/g" $POSTGIS_PATH/postgresql.conf>$POSTGIS_PATH/update.conf
+    mv $POSTGIS_PATH/update.conf $POSTGIS_PATH/postgresql.conf    
 }
 
 initializePostGISDB () {
     echo
     echo "Creating PostGIS Database..."
 
-    local _dbpath=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
-
     export PGPASSWORD=temp123
 
-    initdb -U postgres -D $_dbpath -E 'UTF8' --lc-collate='English_United States.1252' --lc-ctype='English_United States.1252'
+    initdb -U postgres -D $POSTGIS_PATH -E 'UTF8' --lc-collate='English_United States.1252' --lc-ctype='English_United States.1252'
 
     # Tune Parameters for postgresql.conf
     # autovacuum = off
@@ -1823,10 +2089,11 @@ initializePostGISDB () {
     echo
     echo "Updating postgresql.conf..."
     
-    if [ ! -e $_dbpath/postgresql.conf.bak ]; then
-        cp $_dbpath/postgresql.conf $_dbpath/postgresql.conf.bak
+    if [ ! -e $POSTGIS_PATH/postgresql.conf.bak ]; then
+        cp $POSTGIS_PATH/postgresql.conf $POSTGIS_PATH/postgresql.conf.bak
     fi
     
+    updatePostgresSqlConf 'autovacuum' 'on'
     updatePostgresSqlConf 'checkpoint_segments' 64
     updatePostgresSqlConf 'checkpoint_timeout' '15min'
     updatePostgresSqlConf 'checkpoint_completion_target' '0\.9'
@@ -1836,11 +2103,21 @@ initializePostGISDB () {
     updatePostgresSqlConf 'maintenance_work_mem' '1GB'
     updatePostgresSqlConf 'synchronous_commit' 'off'
     updatePostgresSqlConf 'wal_level' 'minimal'
+    
+    updatePostgresSqlConf 'log_directory' "'log'"
+    updatePostgresSqlConf 'log_filename' "'postgresql-%Y-%m-%d_%H%M%S.log'"
+    updatePostgresSqlConf 'log_destination' "'stderr'"
+    #updatePostgresSqlConf 'redirect_stderr' 'on'
+    updatePostgresSqlConf 'logging_collector' 'on'
+    updatePostgresSqlConf 'log_truncate_on_rotation' 'off'
+    updatePostgresSqlConf 'log_rotation_age' '7d'
+    updatePostgresSqlConf 'log_rotation_size' '10MB'
+    
+    updatePostgresSqlConf 'log_connections' 'on'
+    updatePostgresSqlConf 'log_disconnections' 'on'
+    updatePostgresSqlConf 'log_line_prefix' "'user=%u,db=%d,%m'"
 
-    #pg_ctl register -N "PostGIS Database" -D $_dbpath -U postgres -P temp123
-
-    pg_ctl start -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
-    #pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+    pg_ctl start -w -D "$POSTGIS_PATH"
 
     echo "Setting up OSM database, user, and granting permissions..."
 
@@ -1865,14 +2142,40 @@ initializePostGISDB () {
     echo "However, I recommend updating your password for production use as a start."
 }
 
-importOSMUSData() {
-  echo "Tune Database for Import..."
-  pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+installPostgresqlService() {
+    local _startup=$1
+    cd $POSTGIS_PATH
+    local _winpath=`pwd -W`
+    
+    pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+    pg_ctl register -w -N "PostGIS Database" -D $_winpath
+    
+    if $_startup; then
+        net start "PostGIS Database"
+    fi
+}
+
+uninstallPostgresql() {
+  cd $POSTGIS_PATH
+  local _winpath=`pwd -W`
   
+  net stop "PostGIS Database"
+  
+  pg_ctl unregister -w -N "PostGIS Database" -D $_winpath
+  
+  rm -rf $POSTGIS_PATH
+  
+  echo "Uninstall Complete."
+}
+
+importOSMUSData() {
+  local _downloadUrl="http://download.geofabrik.de/north-america-latest.osm.pbf"
+  echo "Tune Database for Import..."
+  
+  net stop "PostGIS Database"
   updatePostgresSqlConf 'autovacuum' 'off'
   updatePostgresSqlConf 'fsync' 'off'
-  
-  pg_ctl start -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+  net start "PostGIS Database"
   
   echo "Importing US OSM data to Postgres..."
 
@@ -1890,462 +2193,101 @@ importOSMUSData() {
 
   cd database-data
 
-  ##wget -c --no-check-certificate http://download.geofabrik.de/north-america-latest.osm.pbf
-
-  ./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1650 --hstore --number-processes=4 -r pbf north-america-latest.osm.pbf
-
-  pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+  if [ ! -e north-america-latest.osm.pbf ]; then
+      wget -c --no-check-certificate $_downloadUrl
+  else
+      echo
+      while :
+      do
+          read -p "A previous download of the US OSM data, north-america-latest.osm.pbf, was detected. Do you need to continue the download of north-america-latest.osm.pbf?" yn
+          case $yn in
+            [Yy]* ) wget -c --no-check-certificate $_downloadUrl; break;;
+            [Nn]* ) break;;
+            * ) echo "Please answer yes or no.";;
+      esac
+      done
+  fi
   
+  echo
+  echo "Importing north-america-latest.osm.pbf to the database. This may take several hours..."
+  echo
+  
+  ./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1400 --hstore -r pbf north-america-latest.osm.pbf
+  #./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1600 --hstore -r pbf us-northeast.osm.pbf
+  
+  net stop "PostGIS Database"
   updatePostgresSqlConf 'autovacuum' 'on'
   updatePostgresSqlConf 'fsync' 'on'
-  
-  pg_ctl start -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+  net start "PostGIS Database"
 
   cd ..
 }
 
-ad_isDateNewerThanFileModTime() {
-    local _checkdate=$1
-    local _filename=$2
-
-    if [ ! -e $_filename ]; then
-        return 0
-    fi
-
-    local _chkdtseconds=`date -d "$_checkdate" +%s`
-
-    local _getfiledate=`stat -c %y $_filename|sed 's/ .*//'`
-    local _cnvrtfieldate=`date -d "$_getfiledate" +%s`
-
-    echo "comparing provided date ($_checkdate, $_chkdtseconds), with filedate ($_getfiledate, $_cnvrtfieldate)."
-
-    if [ "$_chkdtseconds" -gt "$_cnvrtfieldate" ]; then
-        return 0
-    fi
-
-    return 1
+fullPostGISSetupWithImport() {
+    initializePostGISDB
+    installPostgresqlService false
+    importOSMUSData
 }
 
-ad_getDirFromWC() {
-    local _project="$1"
-    local _result=`find $MINGLE_BUILD_DIR -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
-
-    echo "$_result"
+buildInstalProtobuf() {
+    local _project="protobuf-*"
+    
+    buildInstallGeneric "$_project" true true "-I m4" true true "" "" "libprotobuf.a" "" ""
 }
 
-ad_getArchiveFromWC() {
-    local _project="$1"
-    local _result=`find $MINGLE_CACHE -maxdepth 1 -name "$_project" -prune -type f -print | head -1`
+buildInstallProtobufC() { 
+    #buildInstallGeneric "$_project" false true "" true true "" "" "xxxx" "" ""
 
-    echo "$_result"
-}
-
-ad_rename() {
-    local _wildcard="$1"
-    local _regex="$2"
+    local _project="protobuf-c-*"
+    local _configureFlags=""
+    local _binCheck="xxx"
+    local _exeToTest=""
     
-    echo "Renaming _wildcard=$1, _regex=$2 "
-    
-    find . -regex "$_wildcard" | while read line; do
-        A=`basename ${line} | sed $_regex`
-        B=`dirname ${line}`
-        
-        echo mv ${line} "${B}/${A}"
-        mv ${line} "${B}/${A}" || mingleError $? "rename failed, aborting!"
-    done
-}
-
-ad_relocate_bin_dlls() {
-    local _dllPrefix="$1"
-
-    echo "Checking for DLLS with prefix: $_dllPrefix.*.dll..."
-
-    find /mingw/lib -regex "/mingw/lib/$_dllPrefix.*\.dll" | while read line; do
-        echo "Copying ${line} to /mingw/bin..."
-        cp -u ${line} "/mingw/bin" || mingleError $? "ad_relocate_bin_dlls failed, aborting"
-    done
-}
-
-ad_fix_pkg_cfg() {
-    local _pkgconfigfile=/mingw/lib/pkgconfig/$1
-
-     sed 's/\\/\//g' $_pkgconfigfile>$_pkgconfigfile-2
-     mv $_pkgconfigfile-2 $_pkgconfigfile
-}
-
-ad_fix_shared_lib() {  
-    local _origPath=`pwd`
-    cd /mingw/lib || mingleError $? "ad_fix_shared_lib cd failed, aborting"
-    
-    local _libraryName=`ls $1*.a|sed -e 's/\.dll\.a//' -e 's/\.a//'|uniq|sort|head -1`
-    
-    echo "Parsed library name: $_libraryName"    
-    
-    if [ ! -e "$_libraryName".dll.a ] && [ -e "$_libraryName".a ]; then
-        cp -f "$_libraryName".a "$_libraryName".dll.a
-    fi
-    
-    #ad_rename "./icu.*.dll" "s/^icu/libicu/g"
-
-    if [ -e "$_libraryName.la" ]; then
-        echo "Updating $_libraryName.la..."
-        
-        sed -e "s/dlname='.*/dlname='..\/bin\/$_libraryName.dll'/g" $_libraryName.la>$_libraryName-2
-        mv $_libraryName-2 $_libraryName.la
-
-        sed -e "s/\(library_names='\).*/\1$_libraryName.dll.a'/g" $_libraryName.la>$_libraryName-2
-        mv $_libraryName-2 $_libraryName.la
-
-        sed -e "s/\(old_library='\).*/\1$_libraryName.a'/g" $_libraryName.la>$_libraryName-2
-        mv $_libraryName-2 $_libraryName.la
-    else
-        echo "$_libraryName.la doesn't exist!. Generating..."
-    fi
-    
-    cd "$_origPath" || mingleError $? "ad_fix_shared_lib cd failed, aborting"
-}
-
-ad_clearEnv() {
     echo
-    echo "Resetting environment flags..."
-    echo
-
-    unset PKG_CONFIG_PATH
-    unset CFLAGS
-    unset LDFLAGS
-    unset CPPFLAGS
-    unset CRYPTO
-    unset CC
-
-    cd $MINGLE_BUILD_DIR
-}
-
-ad_setDefaultEnv() {
-    echo
-    echo "Resetting environment flags to default..."
-    echo
-
-    export "PKG_CONFIG_PATH=/mingw/lib/pkgconfig"
-    #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
-    export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
-    export "LDFLAGS=-L/mingw/lib"
-    export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
-    export "CRYPTO=POLARSSL"
-    export "CC=x86_64-w64-mingw32-gcc"
-
-    cd $MINGLE_BUILD_DIR
-}
-
-ad_patch() {
-    local _patchFile=$1
-    local _workingDir=`pwd`
-
-    if [ "$MINGLE_BUILD_DIR" == "$_workingDir" ]; then
-        echo
-        echo "Patching failed! Patch should be ran from project directory."
-        echo
-
-        mingleError -1 "Patching failed! Patch should be ran from project directory."
-    fi
-
-    patch --ignore-whitespace -f -p1 < $_patchFile
-}
-
-ad_configure() {
-    local _project=$1
-    local _runACLocal=$2
-    local _aclocalFlags=$3
-    local _runAutoconf=$4
-    local _additionFlags=$5
-    
-    local _projectDir=$(ad_getDirFromWC "$_project")
-
-    cd $_projectDir || mingleError $? "ad_configure cd failed, aborting!"
-
-    if [ -e "autogen.sh" ]; then
-        ./autogen.sh
-    elif [ -e "configure.ac" ] || [ -e "configure.in" ]; then
-        if [ -e "/mingw/bin/autoconf" ];then
-            echo
-
-            if $_runACLocal; then
-                echo "Executing aclocal..."
-                
-                if [ -n "$_aclocalFlags" ]; then
-                    aclocal "$_aclocalFlags" || mingleError $? "ad_configure aclocal failed, aborting!"
-                else
-                    aclocal || mingleError $? "ad_configure aclocal failed, aborting!"
-                fi
-            fi
-
-            if $_runAutoconf; then
-                echo "Executing autoconf..."
-                autoconf || mingleError $? "ad_configure autoconf failed, aborting!"
-            fi
-
-            echo
-        fi
-        
-        if [ -e "/mingw/bin/autoheader" ];then
-            echo
-            echo "Executing autoheader..."
-
-            autoheader
-        fi
-    fi
-        
-    if [ -e "configure" ]; then
-        local _counter=1
-        local _retries=3
-        local _options="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32"
-
-        echo
-        echo "Using CFLAGS: $CFLAGS"
-        echo "Using CPPFLAGS: $CPPFLAGS"
-        echo "Using LDFLAGS: $LDFLAGS"
-
-        echo
-        echo "executing: ./configure $_options $_additionFlags"
-        echo
-
-        local _newflags="$_options $_additionFlags"
-
-        ./configure $_newflags &>out.txt
-        while [ $? -ge 1 ]
-        do
-            if [ $_counter -gt $_retries ]; then
-                mingleError 9999 "Max configure retries reached. Build Failed!"
-            fi
-
-            local _test=`cat out.txt|grep "unrecognized option"|sed -e "s/^.*\(--.*\)'/\1/"`
-
-            if [ -z "$_test" ]; then
-                _test=`cat out.txt|grep "error: no such option:"|sed -e "s/^.*\(--.*\)/\1/"`
-                if [ -z "$_test" ]; then
-                    cat out.txt
-                    mingleError 9999 "Configuration Failed for $_project!"
-                fi
-            fi
-
-            _newflags=`echo "$_newflags "|sed -e "s/$_test[^ ]* //"`
-            _counter=$(( $_counter + 1 ))
-
-            echo
-            echo "Retrying without option: $_test..."
-            echo
-
-            echo
-            echo "executing: ./configure $_newflags"
-            echo
-            
-            ./configure $_newflags &>out.txt
-        done
-
-        cat out.txt
-
-        if [ -e "out.txt" ]; then
-            rm out.txt
-        fi
-    fi
-        
-    cd ..
-}
-
-ad_make_clean() {
-    local _project=$1
-
-    echo
-    echo "Executing make clean for $_project..."
+    echo "Building $_project..."
     echo
     
-    local _projectDir=$(ad_getDirFromWC "$_project")
-
-    cd $_projectDir || mingleError $? "cd failed, aborting"
-    
-    make distclean || make clean
-
-    cd ..
-}
-
-# Use single quotes for parameter defines, ex: TEST='cmd -h'
-ad_make() {
-    local _project=$1
-    local _makeParameters="$2"
-    
-    local _projectDir=$(ad_getDirFromWC "$_project")
-    cd $_projectDir || mingleError $? "cd failed, aborting"
-
-    echo
-    echo "Executing make $_makeParameters..."
-    echo
-
-    if [ -n "$_makeParameters" ]; then    
-        make "$_makeParameters" || mingleError $? "make failed, aborting!"
-
-        echo
-        echo "Executing make install $_makeParameters..."
-        echo
-        make install "$_makeParameters" || mingleError $? "make install failed, aborting"
-    else
-        make || mingleError $? "make failed, aborting!"
-
-        echo
-        echo "Executing make install $_makeParameters..."
-        echo
-        make install || mingleError $? "make install failed, aborting"
-    fi
-
-    cd ..
-}
-
-ad_boost_jam() {
-    local _project=$1
-    
-    local _projectDir=$(ad_getDirFromWC "$_project")
-    cd $_projectDir || mingleError $? "ad_boost_jam cd failed, aborting!"
-    
-    #this is needed for boost https://svn.boost.org/trac/boost/ticket/6350
-    cp $MINGLE_BASE/mingle/mingw.jam tools/build/v2/tools || mingleError $? "ad_boost_jam mingw.jam copy failed, aborting!"
-
-    
-   ./bootstrap.sh --with-icu --prefix=/mingw --with-toolset=mingw || mingleError $? "ad_boost_jam boostrap failed, aborting"
-   
-    bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 threadapi=win32 variant=debug,release link=static,shared threading=multi define=MS_WIN64 define=BOOST_USE_WINDOWS_H --define=__MINGW32__ --define=_WIN64 --define=MS_WIN64 install || mingleError $? "ad_boost_jam bjam failed, aborting"
-    
-    cd ..
-}
-
-ad_build() {
-    local _project=$1
-    
-    local _projectDir=$(ad_getDirFromWC "$_project")
-    cd $_projectDir || mingleError $? "cd failed, aborting"
-    
-    ./build.sh  || mingleError $? "ad_build build.sh failed, aborting"
-    
-    cd ..
-}
-
-ad_exec_script() {
-    local _project="$1"
-    local _postBuildCommand="$2"
-    
-    local _projectDir=$(ad_getDirFromWC "$_project")
-    cd $_projectDir || mingleError $? "cd failed, aborting"
-        
-    if [ ! -z "$_postBuildCommand" ]; then
-        echo "Executing post command: '$_postBuildCommand'"
-        `$_postBuildCommand`
-    fi
-        
-    cd ..
-}
-
-ad_run_test() {
-    local _exeToTest=$1
-    
-    if [ ! -z "$_exeToTest" ]; then
-        echo
-        echo "Executing $_exeToTest..."
-        if ! $_exeToTest; then
-            mingleError -1 "Build failed, aborting!"
-        fi 
-    fi    
-}
-
-ad_getShortLibName() {
-    local _project="$1"
-    local _shortProjectName=`echo $_project|sed s/-.*//g`
-    
-    local _sub=`echo ${_project[@]:0:3}`
-    
-    if [ "$_sub" != "lib" ]; then
-        _shortProjectName="lib$_shortProjectName"
-    fi
-    
-    echo $_shortProjectName
-}
-
-buildInstallGeneric() {
-    local _project="$1"
-    local _cleanEnv=$2 #true/false
-    local _runACLocal=$3 #true/false
-    local _aclocalFlags="$4"
-    local _runAutoconf=$5 #true/false
-    local _runConfigure=$6 #true/false
-    local _configureFlags="$7"
-    local _makeParameters="$8"
-    local _binCheck="$9"
-    local _postBuildCommand="${10}"
-    local _exeToTest="${11}"
-
-    cd $MINGLE_BUILD_DIR
-
-    echo
-    echo "Generic Build Initiated:"
-    echo "  _project:          $_project"
-    echo "  _cleanEnv:         $_cleanEnv"
-    echo "  _runACLocal:       $_runACLocal"
-    echo "  _aclocalFlags:     $_aclocalFlags"
-    echo "  _runAutoconf:      $_runAutoconf"
-    echo "  _runConfigure:     $_runConfigure"
-    echo "  _configureFlags:   $_configureFlags"
-    echo "  _makeParameters:   $_makeParameters"
-    echo "  _binCheck:         $_binCheck"
-    echo "  _postBuildCommand: $_postBuildCommand"
-    echo "  _exeToTest:        $_exeToTest"
-    echo
     echo "Checking for binary $_binCheck..."
-    echo
-    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
-        echo
-        echo "Building $_project..."
-        echo
-
-        if $_cleanEnv; then
-            ad_setDefaultEnv
-        fi
-
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then 
         mingleDecompress "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
-
-        if $_runConfigure; then
-            ad_configure "$_project" $_runACLocal "$_aclocalFlags" $_runAutoconf "$_configureFlags"
-        fi
-
-        local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"`
-
-        if [ -e "$_projectDir/bootstrap.sh" ] && [ ! -z "$_jamCheck" ]; then
-            ad_boost_jam "$_project"
-        elif [ -e "$_projectDir/build.sh" ]; then
-            ad_build "$_project"
-        else
-            ad_make "$_project" "$_makeParameters"
-        fi
+ 
+        ad_clearEnv
+ 
+        export "CFLAGS=-I/mingw/include/mingle -I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"
+        export "LDFLAGS=-L/mingw/lib -lmingle -lws2_32"
+        export "CPPFLAGS=-I/mingw/include/mingle -I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"
         
-        local _result=`echo "$_configureFlags"|grep "\-\-enable\-shared"`
+        cd $_projectDir || mingleError $? "cd failed, aborting!"
         
-        if [ ! -z "$_result" ]; then
-            echo "Shared Library Enabled."
-            
-            local _shortProjectName=$(ad_getShortLibName $_project)
-            
-            echo "Short Name: $_shortProjectName"
-            
-            ad_fix_shared_lib "$_shortProjectName"
-        fi
+        ./autogen.sh
+        #CFLAGS are not needed for generating protobuf-c libtool wrapper
+        sed 's/^LTCFLAGS=.*/LTCFLAGS="-D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"/g' libtool>libtool2
+        mv -f libtool2 libtool
         
-        ad_exec_script "$_project" "$_postBuildCommand"
+        cd ..
 
-        cd $MINGLE_BUILD_DIR
+        ad_make "$_project"
     else
         echo "Already Installed."
     fi
     
     ad_run_test "$_exeToTest"
     
-    echo    
+    echo       
+}
+    
+buildInstallOsm2pgsql() {
+    local _project="osm2pgsql-master-*"
+    
+    export "CFLAGS=-I/mingw/include -DWIN32 -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"
+    export "LDFLAGS=-L/mingw/lib -lmingle"
+    export "CPPFLAGS=-I/mingw/include -DWIN32 -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"    
+    export "CC=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
+    export "CXX=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
+    
+    buildInstallGeneric "$_project" false true "-I m4" true true "--with-zlib=/mingw --with-bzip2=/mingw --with-geos=/mingw/bin/geos-config --with-libxml2=/mingw/bin/xml2-config --with-proj=/mingw --with-postgresql=/mingw/bin/pg_config.exe --with-protobuf-c=yes --with-protobuf-c-inc=/mingw/include --with-protobuf-c-lib='-L/mingw/lib -lprotobuf-c -lmingle'" "" "osm2pgsql.exe" "" "osm2pgsql.exe  --version"
 }
 
 MINGLE_SUITE_BASE=false
@@ -2353,8 +2295,10 @@ MINGLE_SUITE_XML=false
 MINGLE_SUITE_FONTS=false
 MINGLE_SUITE_ENCYPT=false
 MINGLE_SUITE_NETWORK=false
+MINGLE_SUITE_CA=false
 MINGLE_SUITE_DB=false
 MINGLE_SUITE_PERL=false
+MINGLE_SUITE_TEXT=false
 MINGLE_SUITE_SWIG=false
 MINGLE_SUITE_PYTHON=false
 MINGLE_SUITE_DEBUG=false
@@ -2366,6 +2310,7 @@ MINGLE_SUITE_GRAPHICS=false
 MINGLE_SUITE_GEO_SPATIAL=false
 MINGLE_MAPNIK=false
 MINGLE_MAPNIK_TOOLS=false
+MINGLE_OSM2PGSQL=false
 MINGLE_EXCLUDE_DEP=false
 
 suiteBase() {
@@ -2470,6 +2415,23 @@ suiteNetworking() {
     fi
 
     buildInstallCurl
+    buildInstalProtobuf
+    buildInstallProtobufC
+}
+
+suiteCABundle() {
+    if $MINGLE_SUITE_CA ; then
+        return;
+    else
+        MINGLE_SUITE_CA=true
+    fi
+    
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteNetworking
+        suitePerl
+    fi
+    
+    buildInstallCABundle
 }
 
 suiteDatabase() {
@@ -2513,6 +2475,7 @@ suitePython() {
     buildInstallNose
     buildInstallWAF
     buildInstallWerkzeug
+    buildInstallScons
 }
 
 suitePerl() {
@@ -2534,6 +2497,31 @@ suitePerl() {
 
     buildInstallPerl
     buildInstallPCRE
+    buildInstallCPANMinus
+    buildInstallEncode
+    buildInstallDBPerl
+    buildInstallUserAgent
+}
+
+suiteTextEditorsConvertors() {
+    if $MINGLE_SUITE_TEXT ; then
+        return;
+    else
+        MINGLE_SUITE_TEXT=true
+    fi
+
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suitePerl
+    fi
+
+    buildInstallTextInfo
 }
 
 suiteSwig() {
@@ -2621,6 +2609,9 @@ suiteSCMTools() {
         buildInstallAPRUtil
         suitePerl
         suiteSwig
+        suiteTextEditorsConvertors
+        buildInstallSerf
+        suiteCABundle
     fi
 
     buildInstallSVN
@@ -2791,6 +2782,20 @@ suiteMapnikTools() {
     #buildInstallNodeMapnik
 }
 
+suiteOSM2PTSQL() {
+    if $MINGLE_OSM2PGSQL; then
+        return;
+    else
+        MINGLE_OSM2PGSQL=true
+    fi
+    
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteNetworking
+    fi
+    
+    buildInstallOsm2pgsql
+}
+
 suiteAllExceptMapnik() {
     suiteBase
     suiteXML
@@ -2803,6 +2808,7 @@ suiteAllExceptMapnik() {
     suiteBoost
     suitePerl
     suiteSwig
+    suiteTextEditorsConvertors
     suiteSCMTools
     suiteImageTools
     suiteMathLibraries
@@ -2812,193 +2818,6 @@ suiteAllExceptMapnik() {
 
 suiteAll() {
     suiteAllExceptMapnik
-}
-
-mingleError() {
-    local _errorNum=$1
-    local _errorMsg="$2"
-
-    if [ -z "$_errorMsg" ]; then
-        _errorMsg="The build failed."
-    fi
-
-    if [ $_errorNum -eq 0 ]; then
-        _errorNum=9999
-    fi
-
-    echo
-    echo "Current Project Dir: `pwd`"
-    echo
-    echo "`date +%m-%d-%y\ %T`, $_errorNum $_errorMsg"
-    echo "`date +%m-%d-%y\ %T`, \"$_errorNum\" \"$_errorMsg\"">$MINGLE_BUILD_DIR/mingle_error.log
-    echo
-
-    exit $_errorNum
-}
-
-mingleReportToolVersions() {
-    echo
-    echo "Running Bash Version:"
-    echo
-    bash --version
-    echo
-}
-
-MINGLE_INITIALIZE=false
-
-mingleInitialize() {
-    if ! $MINGLE_INITIALIZE; then
-        config="/mingw/etc/mingle.cfg"
-        STOREPATH=`pwd`
-
-        mingleReportToolVersions
-
-        echo "Configuration:"
-
-        while read line
-        do
-            LINE="$line"
-            if [ "${LINE:0:1}" = "#" ] ; then
-                echo "Skipping disabled variable: $LINE"
-            else
-                BASHEXPORT=`echo $LINE|sed -e '0,/RE/s/\%/\$/' -e 's/\%//'`
-                echo "Exporting: $BASHEXPORT"
-                export "`eval echo $BASHEXPORT`"
-            fi
-        done <"$config"
-
-        MINGLE_CACHE=`echo "$MINGLE_CACHE" | sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g'`
-
-        if [ -n "$altPath" ]; then
-            export "MINGLE_BUILD_DIR=$altPath"
-        fi
-
-        echo MINGLE_BASE=$MINGLE_BASE
-        echo MINGLE_BUILD_DIR=$MINGLE_BUILD_DIR
-        echo MINGLE_CACHE=$MINGLE_CACHE
-
-        if [ ! -e "$MINGLE_CACHE" ]; then
-            mkdir -p $MINGLE_CACHE || mingleError $? "failed to create cache directory, aborting!"
-        fi
-
-        if [ ! -e "$MINGLE_BUILD_DIR" ]; then
-            mkdir -p $MINGLE_BUILD_DIR || mingleError $? "failed to create build directory, aborting!"
-        fi
-
-        if [ ! -e "/usr/local" ]; then
-            mkdir /usr/local || mingleError $? "failed to create directory, aborting!"
-        fi
-
-        if [ ! -e "/usr/local/bin" ]; then
-            mkdir /usr/local/bin || mingleError $? "failed to create directory, aborting!"
-        fi
-
-        if [ ! -e "/usr/local/include" ]; then
-            mkdir /usr/local/include || mingleError $? "failed to create directory, aborting!"
-        fi
-
-        if [ ! -e "/usr/local/lib" ]; then
-            mkdir /usr/local/lib || mingleError $? "failed to create directory, aborting!"
-        fi
-
-        MINGLE_INITIALIZE=true
-    fi
-
-    cd $MINGLE_BUILD_DIR
-
-    if [ -e "mingle_error.log" ]; then
-        rm mingle_error.log
-    fi
-}
-
-mingleDownload() {
-    local _url="$1"
-    local _outputFile="$2"
-    local _file="`echo $_url|sed 's/.*\///'`"
-    local _alreadyDownloaded=false
-
-    if [ -z "$_outputFile" ]; then
-        _outputFile=$_file
-    fi
-
-    mingleInitialize
-
-    local _savedir=`pwd`
-
-    cd $MINGLE_CACHE
-
-    echo
-    echo "Downloading $_url"...
-
-    if [ -e "$_outputFile" ]; then
-        _alreadyDownloaded=true
-    else
-        local _tarcheck="`echo $_outputFile|sed 's/\(.*\)\..*/\1/'`"
-        if [ ${_tarcheck: -4} == ".tar" ] && [ -e "$_tarcheck" ]; then
-            _alreadyDownloaded=true
-        fi
-    fi
-
-    if ! $_alreadyDownloaded; then
-        if echo $_url|grep -i 'https://'; then
-            wget  --no-check-certificate $_url -O $_outputFile || mingleError $? "Download failed for $_file, aborting!"
-        else
-            wget $_url -O $_outputFile || mingleError $? "Download failed for $_file, aborting!"
-        fi
-    else
-        echo "$_outputFile has already been downloaded."
-    fi
-
-    echo
-
-    cd $_savedir
-}
-
-mingleDecompress() {
-    local _project="$1"
-    local _projectDir=$(ad_getDirFromWC "$_project")
-
-    if [ -z "$_projectDir" ]; then
-        local _decompFile=$(ad_getArchiveFromWC "$_project")
-
-        if [ ! -e "$_decompFile" ]; then
-            mingleError $? "Failed to find archive for: $_project, aborting!"
-        fi
-
-        cd $MINGLE_BUILD_DIR
-            
-        echo "Decompressing $_decompFile"...
-            
-        if [ ${_decompFile: -4} == ".tgz" ]; then
-            tar xzvf "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
-        elif [ ${_decompFile: -3} == ".gz" ]; then
-            gzip -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
-        elif [ ${_decompFile: -3} == ".xz" ]; then
-            xz -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
-        elif [ ${_decompFile: -4} == ".bz2" ]; then
-            bzip2 -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
-        elif [ ${_decompFile: -3} == ".7z" ]; then
-            7za x "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
-        elif [ ${_decompFile: -4} == ".zip" ]; then
-            unzip -q -n "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
-        elif [ ${_decompFile: -5} == ".lzma" ]; then
-            lzma -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
-        fi
-        
-        _decompFile=$(ad_getArchiveFromWC "$_project")
-        
-        if [ ${_decompFile: -4} == ".tar" ]; then
-            tar xvf "$_decompFile" || mingleError $? "Failed to unarchive $_decompFile, aborting!"
-        fi
-    fi
-}
-
-mingleCleanup() {
-    cd "$STOREPATH"
-
-    echo
-    echo "Finished Building Modules."
-    echo
 }
 
 mingleGetMaxSetting() {
@@ -3033,7 +2852,7 @@ minglePrintSelections() {
 }
 
 mingleGetSelections() {
-    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "Database Tools" "Python Tools" "Debugging and Testing" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "All" "Create PostGIS DB" "Import US OSM Data" "Quit")
+    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "CA Certs" "Database Tools" "Python Toolkit" "Perl Toolkit" "Text Editors and Converters" "Debugging and Testing" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "osm2pgsql" "All" "Create PostGIS DB" "Import US OSM Data" "Full PostGIS Setup and US Data" "Uninstall PostGIS DB" "Quit")
 }
 
 mingleProcessSelectionNum() {
@@ -3085,11 +2904,17 @@ mingleProcessSelection() {
     "Networking Libraries")
         suiteNetworking
         ;;
+    "CA Certs")
+        suiteCABundle
+        ;;
     "Database Tools")
         suiteDatabase
         ;;
-    "Python Tools")
+    "Python Toolkit")
         suitePython
+        ;;
+    "Perl Toolkit")
+        suitePerl
         ;;
     "Debugging and Testing")
         suiteDebugTest
@@ -3097,6 +2922,9 @@ mingleProcessSelection() {
     "Boost Libraries")
         suiteBoost
         ;;
+    "Text Editors and Converters")
+        suiteTextEditorsConvertors
+        ;;       
     "SCM Tools")
         suiteSCMTools
         ;;
@@ -3121,16 +2949,28 @@ mingleProcessSelection() {
     "Mapnik Tools")
         suiteMapnikTools
         ;;
+    "osm2pgsql")
+        suiteOSM2PTSQL
+        ;;
     "All")
         suiteAll
         break
         ;;
     "Create PostGIS DB")
         initializePostGISDB
+        #installPostgresqlService
         break
         ;;
     "Import US OSM Data")
         importOSMUSData
+        break
+        ;;
+    "Full PostGIS Setup and US Data")
+        fullPostGISSetupWithImport
+        break
+        ;;
+    "Uninstall PostGIS DB")
+        uninstallPostgresql
         break
         ;;
     *)
@@ -3181,7 +3021,6 @@ mingleMenu() {
         mingleProcessSelection "$_s"
     done
 }
-
 
 # Initialize our own variables:
 verbose=0
