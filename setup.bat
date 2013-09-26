@@ -192,6 +192,8 @@ IF NOT EXIST "msys\etc\profile" (
     ECHO.
     COPY mingle\profile msys\etc 
     msys\bin\bash -l -c "echo \"export MINGLE_BASE=%CD%\"|sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g'>>/etc/profile"
+    msys\bin\bash -l -c "echo \"export CURL_CA_BUNDLE=$MINGLE_BASE/mingw64/share/curl/ca-bundle.crt\">>/etc/profile"
+    msys\bin\bash -l -c "echo \"export GIT_SSL_CAPATH=$MINGLE_BASE/mingw64/share/curl/ca-bundle.crt\">>/etc/profile"
 ) ELSE (
     ECHO.
     ECHO "Updating MSYS profile..."
@@ -211,7 +213,12 @@ IF NOT EXIST "mingw64\etc" (
     mkdir mingw64\etc
 )
 
+IF NOT EXIST "mingw64\lib\mingle" (
+    mkdir mingw64\lib\mingle
+)
+
 XCOPY /Y /Q /D mingle\mingle.sh mingw64\bin
+XCOPY /Y /Q /D /S mingle\mingle\mingle-api.sh mingw64\lib\mingle
 XCOPY /Y /Q /D mingle\mingle.cfg mingw64\etc
 
 IF EXIST "mingw64\bin\mingle.sh" (
