@@ -1,0 +1,1682 @@
+Common subdirectories: original/db-6.0.20/db-6.0.20/lang/tcl/docs and db-6.0.20/lang/tcl/docs
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_db.c db-6.0.20/lang/tcl/tcl_db.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_db.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_db.c	2013-09-03 12:02:28 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/db_page.h"
+@@ -32,7 +32,7 @@
+ #endif
+ static int	tcl_DbPut __P((Tcl_Interp *, int, Tcl_Obj * CONST*, DB *));
+ static int	tcl_DbStat __P((Tcl_Interp *, int, Tcl_Obj * CONST*, DB *));
+-static int	tcl_DbStatPrint __P((Tcl_Interp *, 
++static int	tcl_DbStatPrint __P((Tcl_Interp *,
+     int, Tcl_Obj * CONST*, DB *));
+ static int	tcl_DbTruncate __P((Tcl_Interp *, int, Tcl_Obj * CONST*, DB *));
+ #ifdef CONFIG_TEST
+@@ -50,7 +50,7 @@
+ static int	tcl_DbGetjoin __P((Tcl_Interp *, int, Tcl_Obj * CONST*, DB *));
+ static int	tcl_DbCount __P((Tcl_Interp *, int, Tcl_Obj * CONST*, DB *));
+ static int	tcl_second_call __P((DB *, const DBT *, const DBT *, DBT *));
+-static int	tcl_foreign_call __P((DB *, const DBT *, DBT *, 
++static int	tcl_foreign_call __P((DB *, const DBT *, DBT *,
+     const DBT *, int *));
+ 
+ /*
+@@ -107,7 +107,7 @@
+ 		"compact_stat",
+ #endif
+ 		"associate",
+-		"associate_foreign",		
++		"associate_foreign",
+ 		"close",
+ 		"count",
+ 		"cursor",
+@@ -156,7 +156,7 @@
+ 		DBCOMPACT_STAT,
+ #endif
+ 		DBASSOCIATE,
+-		DBASSOCFOREIGN,		
++		DBASSOCFOREIGN,
+ 		DBCLOSE,
+ 		DBCOUNT,
+ 		DBCURSOR,
+@@ -465,9 +465,9 @@
+ 		ret = dbp->get_dbname(dbp, &filename, &dbname);
+ 		if ((result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret),
+ 		    "db get_dbname")) == TCL_OK) {
+-			myobjv[0] = filename == NULL ? NewStringObj("", 0) : 
++			myobjv[0] = filename == NULL ? NewStringObj("", 0) :
+ 			    NewStringObj(filename, strlen(filename));
+-			myobjv[1] = dbname == NULL ? NewStringObj("", 0) : 
++			myobjv[1] = dbname == NULL ? NewStringObj("", 0) :
+ 			    NewStringObj(dbname, strlen(dbname));
+ 			res = Tcl_NewListObj(2, myobjv);
+ 		}
+@@ -880,7 +880,7 @@
+ 	i = 2;
+ 
+ 	while (i < objc) {
+-		if (Tcl_GetIndexFromObj(interp, objv[i], dbstatprtopts, 
++		if (Tcl_GetIndexFromObj(interp, objv[i], dbstatprtopts,
+ 		    "option", TCL_EXACT, &optindex) != TCL_OK) {
+ 			result = IS_HELP(objv[i]);
+ 			goto error;
+@@ -973,11 +973,11 @@
+ 			break;
+ 	}
+ 
+-	/* 
++	/*
+ 	 * If it looks like there might be aux dbs, free the DBTCL_INFOs,
+ 	 * and try to close the dbs if we want.
+ 	 */
+-	recdbp = dbip->hrdbp; 
++	recdbp = dbip->hrdbp;
+ 	secdbp = dbip->hsdbp;
+ 	if (recdbp != NULL && secdbp != NULL) {
+ 		rdbip = _PtrToInfo(recdbp);
+@@ -988,13 +988,13 @@
+ 		if (handle_only == 0) {
+ 			recdbp->api_internal = NULL;
+ 			ret = recdbp->close(recdbp, flag);
+-			result = _ReturnSetup(interp, 
++			result = _ReturnSetup(interp,
+ 			    ret, DB_RETOK_STD(ret), "db close");
+ 
+ 			secdbp->api_internal = NULL;
+ 			ret = secdbp->close(secdbp, flag);
+ 			if (result == TCL_OK)
+-				result = _ReturnSetup(interp, 
++				result = _ReturnSetup(interp,
+ 				    ret, DB_RETOK_STD(ret), "db close");
+ 		}
+ 	}
+@@ -1010,12 +1010,12 @@
+ 		dbp->api_internal = NULL;
+ 		ret = (dbp)->close(dbp, flag);
+ 
+-		/* 
+-		 * As long as the first two close(s) above were ok, 
+-		 * then we check this one. 
++		/*
++		 * As long as the first two close(s) above were ok,
++		 * then we check this one.
+ 		 */
+ 		if (result == TCL_OK)
+- 			result = _ReturnSetup(interp, 
++ 			result = _ReturnSetup(interp,
+ 			    ret, DB_RETOK_STD(ret), "db close");
+ 	}
+ 
+@@ -1105,7 +1105,7 @@
+ 	/*
+ 	 * We need to determine where the end of required args are.  If we are
+ 	 * using a QUEUE/RECNO/HEAP db and -append,  or -multiple_key
+-	 * is specified, then there is just one req arg (data).  Otherwise 
++	 * is specified, then there is just one req arg (data).  Otherwise
+ 	 * there are two (key data).
+ 	 *
+ 	 * We preparse the list to determine this since we need to know
+@@ -1221,12 +1221,12 @@
+ 	}
+ 
+ 	if (sort_multiple != 0 && multiflag == 0) {
+-		Tcl_SetResult(interp, 
++		Tcl_SetResult(interp,
+ 	    "-sort_multiple must be used with -multiple and -multiple_key",
+ 		    TCL_STATIC);
+ 		result = TCL_ERROR;
+ 	} else if (sort_multiple != 0 && type != DB_BTREE) {
+-		Tcl_SetResult(interp, 
++		Tcl_SetResult(interp,
+ 		    "-sort_multiple must be used on btree database",
+ 		    TCL_STATIC);
+ 		result = TCL_ERROR;
+@@ -1289,7 +1289,7 @@
+ 				DB_ASSERT(dbp->env, ptr != NULL);
+ 			}
+ 		} else if (type == DB_HEAP) {
+-			/* 
++			/*
+ 			 * For heap we need to translate each record number in
+ 			 * the passed in array into an RID.  Bulk put can only
+ 			 * be used to update existing heap records, so we don't
+@@ -1307,7 +1307,7 @@
+ 			rkey.data = &recno;
+ 			rkey.ulen = rkey.size = sizeof(db_recno_t);
+ 			rkey.flags = DB_DBT_USERMEM;
+-	
++
+ 			/* Set up the DB ptr for the recno db */
+ 			recdbp = ((DBTCL_INFO *)dbp->api_internal)->hrdbp;
+ 
+@@ -1390,7 +1390,7 @@
+ 				DB_ASSERT(dbp->env, ptr != NULL);
+ 			}
+ 		} else if (type == DB_HEAP) {
+-			/* 
++			/*
+ 			 * For heap we need to translate each record number in
+ 			 * the passed in array into an RID.  Bulk put can only
+ 			 * be used to update existing heap records, so we don't
+@@ -1408,7 +1408,7 @@
+ 			rkey.data = &recno;
+ 			rkey.ulen = rkey.size = sizeof(db_recno_t);
+ 			rkey.flags = DB_DBT_USERMEM;
+-	
++
+ 			/* Set up the DB ptr for the recno db */
+ 			recdbp = ((DBTCL_INFO *)dbp->api_internal)->hrdbp;
+ 
+@@ -1468,10 +1468,10 @@
+ 				return (result);
+ 		}
+ 	} else if (type == DB_HEAP) {
+-		/* 
++		/*
+ 		 * With heap we have 2 puts, one to the heap db and one
+ 		 * to the recno db.  Use the key passed in completely
+-		 * for the recno, and hkey for heap.   The hkey will 
++		 * for the recno, and hkey for heap.   The hkey will
+ 		 * become the data for the recno db put.
+ 		 */
+ 		memset(&hkey, 0, sizeof(hkey));
+@@ -1485,7 +1485,7 @@
+ 		key.data = &recno;
+ 		key.ulen = key.size = sizeof(db_recno_t);
+ 		key.flags = DB_DBT_USERMEM;
+-	
++
+ 		/* Set up the DB ptr for the recno db */
+ 		recdbp = ((DBTCL_INFO *)dbp->api_internal)->hrdbp;
+ 
+@@ -1493,7 +1493,7 @@
+ 		 * If DB_APPEND is set, we want to append to the heap.  If
+ 		 * there's no flag set and the recno exists, we want to update
+ 		 * the existing record (which means we need to find the heap rid
+-		 * in the recno db and we can skip the recno put.)  If the 
++		 * in the recno db and we can skip the recno put.)  If the
+ 		 * recno does not exist, then we want to append to the heap.
+ 		 */
+ 		if (flag == DB_APPEND) {
+@@ -1512,7 +1512,7 @@
+ 			else if (ret == DB_NOTFOUND || ret == DB_KEYEMPTY)
+ 				hflag = DB_APPEND;
+ 			else {
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_DBPUT(ret), "db put heap");
+ 				goto out;
+ 			}
+@@ -1542,7 +1542,7 @@
+ 	_debug_check();
+ 	if (type != DB_HEAP) {
+ 		ret = dbp->put(dbp, txn, &key, &data, flag | multiflag);
+-		result = _ReturnSetup(interp, ret, DB_RETOK_DBPUT(ret), 
++		result = _ReturnSetup(interp, ret, DB_RETOK_DBPUT(ret),
+ 		    "db put");
+ 	} else {
+ 		/* Do put into heap db first, then recno db. */
+@@ -1553,11 +1553,11 @@
+ 		}
+ 		result = _ReturnSetup(interp, ret,
+ 		    DB_RETOK_DBPUT(ret), "db put heap");
+-		if (ret) 
++		if (ret)
+ 			goto out;
+ 
+-		/* set up data for recno put (the heaps key) and do put 
+-		 * if we have not already gotten the recno record 
++		/* set up data for recno put (the heaps key) and do put
++		 * if we have not already gotten the recno record
+ 		 */
+ 		hkey.flags = DB_DBT_USERMEM;
+ 		if (!skiprecno) {
+@@ -1566,25 +1566,25 @@
+ 		    	    "db put");
+ 		}
+ 
+-		/* 
+-		 * If for some reason the recno put does not work and the 
++		/*
++		 * If for some reason the recno put does not work and the
+ 		 * heap one does, lets try and delete the heap record if
+ 		 * we are not in a txn -- just for consistency.  Ignore the
+ 		 * return value, because we want to preserve ret.
+ 		 */
+-		if (!skiprecno && txn == NULL && ret != 0) 
++		if (!skiprecno && txn == NULL && ret != 0)
+ 			(void)dbp->del(dbp, txn, &hkey, 0);
+ 	}
+ 
+ 	/* We may have a returned record number. */
+ 	if (ret == 0 &&
+-	    (type == DB_QUEUE || type == DB_RECNO || type == DB_HEAP) && 
++	    (type == DB_QUEUE || type == DB_RECNO || type == DB_HEAP) &&
+ 	    flag == DB_APPEND) {
+ 		res = Tcl_NewWideIntObj((Tcl_WideInt)recno);
+ 		Tcl_SetObjResult(interp, res);
+ 	}
+ 
+-	
++
+ out:	if (freedata && data.data != NULL)
+ 		__os_free(dbp->env, data.data);
+ 	if (freekey && key.data != NULL)
+@@ -1778,7 +1778,7 @@
+ 		case DBGET_RECNO:
+ 			end = objc - 1;
+ 			userecno = 1;
+-			if (type != DB_RECNO && 
++			if (type != DB_RECNO &&
+ 			    type != DB_QUEUE && type != DB_HEAP) {
+ 				FLAG_CHECK(flag);
+ 				flag = DB_SET_RECNO;
+@@ -1859,7 +1859,7 @@
+ 	/* Find out whether the primary key should also be a recno. */
+ 	if (ispget && dbp->s_primary != NULL) {
+ 		(void)dbp->s_primary->get_type(dbp->s_primary, &ptype);
+-		useprecno = ptype == DB_RECNO || 
++		useprecno = ptype == DB_RECNO ||
+ 			ptype == DB_QUEUE || ptype == DB_HEAP;
+ 	} else
+ 		useprecno = 0;
+@@ -1908,9 +1908,9 @@
+ 	retlist = Tcl_NewListObj(0, NULL);
+ 	save.flags |= DB_DBT_MALLOC;
+ 
+-	/* 
++	/*
+ 	 *If we are using heap, either as a primary db or through a
+-	 * secondary relationship, then set up rdata.  The data will 
++	 * secondary relationship, then set up rdata.  The data will
+ 	 * contain a key for heap.
+ 	 */
+ 	if (type == DB_HEAP || ptype == DB_HEAP) {
+@@ -2058,7 +2058,7 @@
+ 				pkey.size = save.size;
+ 				data.data = NULL;
+ 				data.size = 0;
+-				/* 
++				/*
+ 				 * If the primary is heap, we need to translate
+ 				 * the given recno to the RID stored in the db.
+ 				 */
+@@ -2070,7 +2070,7 @@
+ 					ret = recdbp->get(recdbp, txn,
+ 					    &pkey, &rdata, hflag | rmw | mflag);
+ 					if (ret != 0) {
+-						result = _ReturnSetup(interp, 
++						result = _ReturnSetup(interp,
+ 						    ret, DB_RETOK_DBGET(ret),
+ 						    "db get");
+ 						goto out;
+@@ -2079,16 +2079,16 @@
+ 			}
+ 			F_SET(&pkey, DB_DBT_MALLOC);
+ 			_debug_check();
+-			/* 
+-			 * In case data has DB_DBT_PARTIAL set, we want 
++			/*
++			 * In case data has DB_DBT_PARTIAL set, we want
+ 			 * to use rdata if we are heap.
+ 			 */
+-			ret = dbp->pget(dbp, txn, &key, 
++			ret = dbp->pget(dbp, txn, &key,
+ 			    ptype == DB_HEAP ? &rdata : &pkey, &data, flag | rmw);
+-			/* 
++			/*
+ 			 * If the primary database is a heap, we need to
+ 			 * translate the RID returned in rdata into a recno using
+-			 * the auxiliary database.		       
++			 * the auxiliary database.
+ 			 */
+ 			if (ptype == DB_HEAP && flag != DB_GET_BOTH) {
+ 				rid.pgno = ((DB_HEAP_RID *)rdata.data)->pgno;
+@@ -2101,23 +2101,23 @@
+ 				ret = heapdbp->get(heapdbp,
+ 				    txn, &hkey, &pkey, hflag | rmw | mflag);
+ 			}
+-	
++
+ 		} else if (type != DB_HEAP) {
+ 			_debug_check();
+ 			ret = dbp->get(dbp,
+ 			    txn, &key, &data, flag | rmw | mflag);
+ 		} else {
+ 			_debug_check();
+-			/* 
++			/*
+ 			 * On the recno access we want to get the entire
+ 			 * data as this is the heap key.  Substitute
+ 			 * rdata to get this data,  and ignore DB_GET_BOTH
+ 			 * if set at this point by using hflag.   Other
+ 			 * incorrect flags will get flagged within get code.
+ 			 */
+-			recdbp = ((DBTCL_INFO *)dbp->api_internal)->hrdbp; 
+-			FLD_CLR(hflag, DB_GET_BOTH);			
+-			ret = recdbp->get(recdbp, 
++			recdbp = ((DBTCL_INFO *)dbp->api_internal)->hrdbp;
++			FLD_CLR(hflag, DB_GET_BOTH);
++			ret = recdbp->get(recdbp,
+ 			    txn, &key, &rdata, hflag | rmw);
+ 			if (ret == 0) {
+ 				/* The rdata will be the key for the heap get. */
+@@ -2151,7 +2151,7 @@
+ 					    retlist, *(db_recno_t *)key.data,
+ 					    data.data, data.size);
+ 			else if (type == DB_HEAP)
+-				/* We return the key from the recno, and 
++				/* We return the key from the recno, and
+ 				 * data from the heap.
+ 				 */
+ 				if (ispget)
+@@ -2408,7 +2408,7 @@
+ 	memset(&hkey, 0, sizeof(hkey));
+ 	memset(&rkey, 0, sizeof(rkey));
+ 	memset(&rdata, 0, sizeof(rdata));
+- 
++
+ 	/*
+ 	 * The first arg must be -glob, -txn or a list of keys.
+ 	 */
+@@ -2485,12 +2485,12 @@
+ 	(void)dbp->get_type(dbp, &type);
+ 
+ 	if (sort_multiple != 0 && multiflag == 0) {
+-		Tcl_SetResult(interp, 
++		Tcl_SetResult(interp,
+ 	    "-sort_multiple must be used with -multiple and -multiple_key",
+ 		    TCL_STATIC);
+ 		result = TCL_ERROR;
+ 	} else if (sort_multiple != 0 && type != DB_BTREE) {
+-		Tcl_SetResult(interp, 
++		Tcl_SetResult(interp,
+ 		    "-sort_multiple must be used on btree database",
+ 		    TCL_STATIC);
+ 		result = TCL_ERROR;
+@@ -2552,8 +2552,8 @@
+ 			memset(&key, 0, sizeof(key));
+ 			memset(&rkey, 0, sizeof(rkey));
+ 			if (type == DB_HEAP) {
+-				key.ulen = DB_ALIGN((u_int32_t)elemc * 
+-				    (sizeof(DB_HEAP_RID) + 
++				key.ulen = DB_ALIGN((u_int32_t)elemc *
++				    (sizeof(DB_HEAP_RID) +
+ 				    sizeof(u_int32_t) * 2),
+ 				    1024UL);
+ 				rkey.ulen = DB_ALIGN((u_int32_t)klen +
+@@ -2587,12 +2587,12 @@
+ 					DB_ASSERT(dbp->env, ptr != NULL);
+ 				}
+ 			} else if (type == DB_HEAP) {
+-				/* 
++				/*
+ 				 * For heap we need to translate each record
+ 				 * number in the passed in array into an RID.
+ 				 * Bulk put can only be used to update existing
+ 				 * heap records, so we don't need to worry about
+-				 * writing to the aux recno db. 
++				 * writing to the aux recno db.
+ 				 */
+ 				memset(&hkey, 0, sizeof(hkey));
+ 				hkey.data = &rid;
+@@ -2606,9 +2606,9 @@
+ 				data.data = &recno;
+ 				data.ulen = data.size = sizeof(db_recno_t);
+ 				data.flags = DB_DBT_USERMEM;
+-	
++
+ 				/* Set up the DB ptr for the recno db */
+-				recdbp = 
++				recdbp =
+ 				    ((DBTCL_INFO *)dbp->api_internal)->hrdbp;
+ 
+ 				DB_MULTIPLE_WRITE_INIT(ptr, &key);
+@@ -2703,12 +2703,12 @@
+ 					DB_ASSERT(dbp->env, ptr != NULL);
+ 				}
+ 			} else if (type == DB_HEAP) {
+-				/* 
++				/*
+ 				 * For heap we need to translate each record
+ 				 * number in the passed in array into an RID.
+ 				 * Bulk put can only be used to update existing
+ 				 * heap records, so we don't need to worry about
+-				 * writing to the aux recno db. 
++				 * writing to the aux recno db.
+ 				 */
+ 				memset(&hkey, 0, sizeof(hkey));
+ 				hkey.data = &rid;
+@@ -2722,9 +2722,9 @@
+ 				data.data = &recno;
+ 				data.ulen = data.size = sizeof(db_recno_t);
+ 				data.flags = DB_DBT_USERMEM;
+-	
++
+ 				/* Set up the DB ptr for the recno db */
+-				recdbp = 
++				recdbp =
+ 				    ((DBTCL_INFO *)dbp->api_internal)->hrdbp;
+ 
+ 				DB_MULTIPLE_WRITE_INIT(ptr, &key);
+@@ -2801,7 +2801,7 @@
+ 		_debug_check();
+ 		if (type != DB_HEAP)
+ 			ret = dbp->del(dbp, txn, &key, dflag | multiflag);
+-		else if (multiflag == DB_MULTIPLE || 
++		else if (multiflag == DB_MULTIPLE ||
+ 		    multiflag == DB_MULTIPLE_KEY) {
+ 			ret = recdbp->del(
+ 			    recdbp, txn, &rkey, dflag | DB_MULTIPLE);
+@@ -2811,17 +2811,17 @@
+ 			rdata.ulen = sizeof(DB_HEAP_RID);
+ 			rdata.flags = DB_DBT_USERMEM;
+ 			if (rdata.data == NULL) {
+-				ret = __os_malloc(dbp->env, 
++				ret = __os_malloc(dbp->env,
+ 				    rdata.ulen, &rdata.data);
+ 				if (ret != 0) {
+-					Tcl_SetResult(interp, 
++					Tcl_SetResult(interp,
+ 				    	    db_strerror(ret), TCL_STATIC);
+ 					return(TCL_ERROR);
+ 				}
+ 			}
+-			/* 
+-			 * 3 steps for delete, first get the key from the 
+-			 * recno db and create heap key, second delete 
++			/*
++			 * 3 steps for delete, first get the key from the
++			 * recno db and create heap key, second delete
+ 			 * recno record, third delete heap record.
+ 			 */
+ 			recdbp = ((DBTCL_INFO *)dbp->api_internal)->hrdbp;
+@@ -2868,9 +2868,9 @@
+ 		if (ret != 0)
+ 			break;
+ 	}
+-	
++
+ 	if (result == TCL_OK)
+-		result = _ReturnSetup(interp, 
++		result = _ReturnSetup(interp,
+ 		    ret, DB_RETOK_DBDEL(ret), "db del");
+ 
+ 	/*
+@@ -3151,7 +3151,7 @@
+ 		/* Now call associate. */
+ 		_debug_check();
+ 
+-		ret = dbp->associate(dbp, 
++		ret = dbp->associate(dbp,
+ 		    txn, sdbp, tcl_second_call, flag);
+ 	} else {
+ 		/*
+@@ -3197,7 +3197,7 @@
+ 	result = TCL_OK;
+ 	flag = 0;
+ 	if (objc < 2) {
+-		Tcl_WrongNumArgs(interp, 2, objv, 
++		Tcl_WrongNumArgs(interp, 2, objv,
+ 		    "?args? ?callback? secondary");
+ 		return (TCL_ERROR);
+ 	}
+@@ -3223,7 +3223,7 @@
+ 			break;
+ 		case DBAF_NULLIFY:
+ 			if (i > (objc - 1)) {
+-				Tcl_WrongNumArgs(interp, 2, 
++				Tcl_WrongNumArgs(interp, 2,
+ 				    objv, "?-nullify ?callback?? secondary");
+ 				result = TCL_ERROR;
+ 				break;
+@@ -3436,7 +3436,7 @@
+ 
+ 	if (result != TCL_OK) {
+ 		__db_errx(sdbp->env,
+-		    "Tcl foreign callback function failed with code %d", 
++		    "Tcl foreign callback function failed with code %d",
+ 		    result);
+ 		return (EINVAL);
+ 	}
+@@ -3881,7 +3881,7 @@
+ 	 * If it's a heap, queue or recno database, we must make sure to
+ 	 * treat the key as a recno rather than as a byte string.
+ 	 */
+-	if (dbp->type == DB_HEAP || 
++	if (dbp->type == DB_HEAP ||
+ 	    dbp->type == DB_RECNO || dbp->type == DB_QUEUE) {
+ 		result = _GetUInt32(interp, objv[2], &recno);
+ 		if (result == TCL_OK) {
+@@ -3909,7 +3909,7 @@
+ 		key.data = ktmp;
+ 	}
+ 	_debug_check();
+-	
++
+ 	/* If it's a heap, translate recno to rid. */
+ 	if (dbp->type == DB_HEAP) {
+ 		recdbp = ((DBTCL_INFO *)dbp->api_internal)->hrdbp;
+@@ -3919,7 +3919,7 @@
+ 			count = 0;
+ 			goto out1;
+ 		} else if (ret != 0) {
+-			result = _ReturnSetup(interp, ret, 
++			result = _ReturnSetup(interp, ret,
+ 			    DB_RETOK_DBGET(ret), "db get heap");
+ 			return (result);
+ 		}
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_db_pkg.c db-6.0.20/lang/tcl/tcl_db_pkg.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_db_pkg.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_db_pkg.c	2013-09-03 12:03:29 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/db_page.h"
+@@ -312,48 +312,48 @@
+ 				/* Use ip->i_name - newname is overwritten */
+ 				res = NewStringObj(newname, strlen(newname));
+ 				_SetInfoData(ip, dbp);
+-				/* 
++				/*
+ 				 * If we are a DB_HEAP, we need to finish
+ 				 * setting up the DB_RECNO db which was
+ 				 * started in bdb_DbOpen call.
+ 				 */
+ 				if (dbp->type == DB_HEAP) {
+-					snprintf(newname, 
++					snprintf(newname,
+ 					    sizeof(newname), "db%d", db_id);
+-					hrip = _NewInfo(interp, 
+-					    NULL, newname, I_AUX);	
++					hrip = _NewInfo(interp,
++					    NULL, newname, I_AUX);
+ 					if (hrip != NULL) {
+ 						db_id++;
+ 						hrdbp = ip->hrdbp;
+ 						_SetInfoData(hrip, hrdbp);
+ 						hrdbp->api_internal = hrip;
+ 						hrip->hrdbp = dbp;
+-						if (hrdbp->dbenv->db_errpfx 
++						if (hrdbp->dbenv->db_errpfx
+ 						    == NULL)
+ 							hrdbp->set_errpfx(
+ 							  hrdbp, hrip->i_name);
+ 					} else {
+-						Tcl_SetResult(interp, 
++						Tcl_SetResult(interp,
+ 						    "Could not set up info",
+ 						    TCL_STATIC);
+ 						result = TCL_ERROR;
+ 					}
+-					snprintf(newname, 
++					snprintf(newname,
+ 					    sizeof(newname), "db%d", db_id);
+-					hsip = _NewInfo(interp, 
+-					    NULL, newname, I_AUX);	
++					hsip = _NewInfo(interp,
++					    NULL, newname, I_AUX);
+ 					if (hsip != NULL) {
+ 						db_id++;
+ 						hsdbp = ip->hsdbp;
+ 						_SetInfoData(hsip, hsdbp);
+ 						hsdbp->api_internal = hsip;
+ 						hsip->hsdbp = dbp;
+-						if (hsdbp->dbenv->db_errpfx 
++						if (hsdbp->dbenv->db_errpfx
+ 						    == NULL)
+ 							hsdbp->set_errpfx(
+ 							  hsdbp, hsip->i_name);
+ 					} else {
+-						Tcl_SetResult(interp, 
++						Tcl_SetResult(interp,
+ 						    "Could not set up info",
+ 						    TCL_STATIC);
+ 						result = TCL_ERROR;
+@@ -1540,7 +1540,7 @@
+ 		case TCL_ENV_ZEROLOG:
+ 			if ((ret =
+ 			    dbenv->log_set_config(dbenv, DB_LOG_ZERO, 1)) != 0)
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "set_log_config");
+ 			break;
+ #endif
+@@ -1776,7 +1776,7 @@
+ 			}
+ 			arg = Tcl_GetStringFromObj(objv[i++], NULL);
+ 			tcl_EnvSetMsgfile(interp, dbenv, ip, arg);
+-			break;			
++			break;
+ 		case TCL_ENV_ERRPFX:
+ 			if (i >= objc) {
+ 				Tcl_WrongNumArgs(interp, 2, objv,
+@@ -2891,7 +2891,7 @@
+ 				(*dbp)->set_msgfile(*dbp, errip->i_msg);
+ 				set_msg = 1;
+ 			}
+-			break;			
++			break;
+ 		case TCL_DB_ERRPFX:
+ 			if (i >= objc) {
+ 				Tcl_WrongNumArgs(interp, 2, objv,
+@@ -2986,19 +2986,19 @@
+ 	/* Open the database. */
+ 	ret = (*dbp)->open(*dbp, txn, db, subdb, type, open_flags, mode);
+ 	result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret), "db open");
+-	/* 
++	/*
+ 	 * We may have been cleanly opened with DB_UNKNOWN, and we need to know
+ 	 * if we opened a heap.
+ 	 */
+ 	if (ret == 0)
+ 		(void)(*dbp)->get_type(*dbp, &type);
+-	
+-	/* 
++
++	/*
+ 	 * If we cleanly created a heap database, then we need to initiate the
+ 	 * db handle for the auxiliary recno db.   To have heap work like
+ 	 * the other record based am, we pass along record numbers.  The
+ 	 * recno db maps the record number to the actual record id used
+-	 * by the heap am.   This is all done underneath the covers.  
++	 * by the heap am.   This is all done underneath the covers.
+ 	 */
+ 	if (ret == 0 && type == DB_HEAP) {
+ 		/* Setup recno db mapping recno to RID. */
+@@ -3029,9 +3029,9 @@
+ 			subdbr[nlen] = '1';
+ 			subdbr[nlen+1] = '\0';
+ 		}
+-			
+-		/* 
+-		 * Use same flags as heap, note: heap does not use of 
++
++		/*
++		 * Use same flags as heap, note: heap does not use of
+ 		 * DB_AFTER/DB_BEFORE on cursor puts, but recno can.
+ 		 * Since we use the same set flags, use of DB_RENUMBER gets
+ 		 * caught above when heap db is created and heap create
+@@ -3052,18 +3052,18 @@
+ 		/* set up encryption if needed */
+ 		if (encenble && passwd != NULL) {
+ 			if (encenble == 1)
+-				ret = hrdbp->set_encrypt(hrdbp, 
++				ret = hrdbp->set_encrypt(hrdbp,
+ 				    passwd, DB_ENCRYPT_AES);
+ 			else
+ 				ret = hrdbp->set_encrypt(hrdbp, passwd, 0);
+ 		}
+ 		(void)(*dbp)->get_lk_exclusive((*dbp), &excl, &nowait);
+-		if (excl) 
++		if (excl)
+ 			(void)hrdbp->set_lk_exclusive(hrdbp, nowait);
+-		ret = hrdbp->open(hrdbp, 
++		ret = hrdbp->open(hrdbp,
+ 		    txn, dbr, subdbr, DB_RECNO, open_flags, mode);
+ 		if (ret) {
+-			result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret), 
++			result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret),
+ 		   	    "db open");
+ 			goto error;
+ 		}
+@@ -3086,8 +3086,8 @@
+ 
+ 		/* Disable blobs in case they are enabled environment wide. */
+ 		(void)hsdbp->set_blob_threshold(hsdbp, 0, 0);
+-		/* 
+-		 * Use same flags as heap, note: heap does not use of 
++		/*
++		 * Use same flags as heap, note: heap does not use of
+ 		 * DB_AFTER/DB_BEFORE on cursor puts, but recno can.
+ 		 * Since we use the same set flags, use of DB_RENUMBER gets
+ 		 * caught above when heap db is created and heap create
+@@ -3108,17 +3108,17 @@
+ 		/* set up encryption if needed */
+ 		if (encenble) {
+ 			if (encenble == 1)
+-				ret = hsdbp->set_encrypt(hsdbp, 
++				ret = hsdbp->set_encrypt(hsdbp,
+ 				    passwd, DB_ENCRYPT_AES);
+ 			else
+ 				ret = hsdbp->set_encrypt(hsdbp, passwd, 0);
+ 		}
+-		if (excl) 
++		if (excl)
+ 			(void)hsdbp->set_lk_exclusive(hsdbp, nowait);
+-		ret = hsdbp->open(hsdbp, 
++		ret = hsdbp->open(hsdbp,
+ 		    txn, dbr, subdbr, DB_BTREE, open_flags, mode);
+ 		if (ret) {
+-			result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret), 
++			result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret),
+ 		   	    "db open");
+ 			goto error;
+ 		}
+@@ -3182,7 +3182,7 @@
+ 		    errip->i_msg != stdout && errip->i_msg != stderr) {
+ 			(void)fclose(errip->i_msg);
+ 			errip->i_msg = NULL;
+-		}		
++		}
+ 		*dbp = NULL;
+ 	}
+ 	return (result);
+@@ -3673,7 +3673,7 @@
+ 
+ 	result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret), "db remove");
+ 
+-	/* 
++	/*
+ 	 * If the heap auxiliary databases exist, remove them too. If we have an
+ 	 * environment, just try the dbremove and ignore ENOENT, instead of
+ 	 * trying to create a path to the file.  Without an environment, we can
+@@ -3712,34 +3712,34 @@
+ 		} else if (__os_exists(NULL, dbr, NULL) == 0) {
+ 			/* additional files not set up as subdbs */
+ 			subdb = NULL;
+-			
++
+ 			ret = db_create(&dbp, dbenv, 0);
+ 			if (ret) {
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "db_create");
+ 				goto error;
+ 			}
+ 
+ 			/*
+ 			 * XXX
+-			 * Remove restriction if error handling not tied to env. 
++			 * Remove restriction if error handling not tied to env.
+ 			 *
+ 			 * The DB->set_err* functions overwrite the
+ 			 * environment. So, if we are using an env, don't
+ 			 * overwrite it; if not using an env, then configure
+-			 * error handling.  
++			 * error handling.
+ 			 */
+ 			dbp->set_errpfx(dbp, "DbRemove");
+ 			dbp->set_errcall(dbp, _ErrorFunc);
+-			
++
+ 			if (passwd != NULL) {
+ 				ret = dbp->set_encrypt(dbp, passwd, enc_flag);
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "set_encrypt");
+ 			}
+ 			if (set_flags != 0) {
+ 				ret = dbp->set_flags(dbp, set_flags);
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "set_flags");
+ 			}
+ 
+@@ -3747,8 +3747,8 @@
+ 			/* if file doesnt exist, ignore error */
+ 			if (ret == ENOENT)
+ 				ret = 0;
+-		
+-			result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret), 
++
++			result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret),
+ 			    "db remove associated recno");
+ 		}
+ 
+@@ -3764,31 +3764,31 @@
+ 		} else if (__os_exists(NULL, dbr, NULL) == 0) {
+ 			ret = db_create(&dbp, dbenv, 0);
+ 			if (ret) {
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "db_create");
+ 				goto error;
+ 			}
+ 
+ 			/*
+ 			 * XXX
+-			 * Remove restriction if error handling not tied to env. 
++			 * Remove restriction if error handling not tied to env.
+ 			 *
+ 			 * The DB->set_err* functions overwrite the
+ 			 * environment. So, if we are using an env, don't
+ 			 * overwrite it; if not using an env, then configure
+-			 * error handling.  
++			 * error handling.
+ 			 */
+ 			dbp->set_errpfx(dbp, "DbRemove");
+ 			dbp->set_errcall(dbp, _ErrorFunc);
+ 
+ 			if (passwd != NULL) {
+ 				ret = dbp->set_encrypt(dbp, passwd, enc_flag);
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "set_encrypt");
+ 			}
+ 			if (set_flags != 0) {
+ 				ret = dbp->set_flags(dbp, set_flags);
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "set_flags");
+ 			}
+ 
+@@ -4040,7 +4040,7 @@
+ 	else
+ 		ret = dbp->rename(dbp, db, subdb, newname, 0);
+ 	result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret), "db rename");
+-	/* 
++	/*
+ 	 * If the heap auxiliary databases exist, rename them too. If we have an
+ 	 * environment, just try the dbrename and ignore ENOENT, instead of
+ 	 * trying to create a path to the file.  Without an environment, we can
+@@ -4072,7 +4072,7 @@
+ 			subdbr[subdblen+1] = '\0';
+ 		}
+ 
+-		if ((ret = __os_malloc(env, 
++		if ((ret = __os_malloc(env,
+ 		    (size_t)newlen + 2, &newnamer)) != 0) {
+ 			Tcl_SetResult(interp, db_strerror(ret), TCL_STATIC);
+ 			return (0);
+@@ -4080,7 +4080,7 @@
+ 		memcpy(newnamer, newname, (size_t)newlen);
+ 		newnamer[newlen] = '1';
+ 		newnamer[newlen+1] = '\0';
+-	
++
+ 		if (dbenv != NULL) {
+ 			ret = dbenv->dbrename(dbenv,
+ 			    txn, dbr, subdbr, newnamer, iflags);
+@@ -4089,34 +4089,34 @@
+ 		} else if (__os_exists(NULL, dbr, NULL) == 0) {
+ 			/* additional files not set up as subdbs */
+ 			subdb = NULL;
+-			
++
+ 			ret = db_create(&dbp, dbenv, 0);
+ 			if (ret) {
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "db_create");
+ 				goto error;
+ 			}
+ 
+ 			/*
+ 			 * XXX
+-			 * Remove restriction if error handling not tied to env. 
++			 * Remove restriction if error handling not tied to env.
+ 			 *
+ 			 * The DB->set_err* functions overwrite the
+ 			 * environment. So, if we are using an env, don't
+ 			 * overwrite it; if not using an env, then configure
+-			 * error handling.  
++			 * error handling.
+ 			 */
+ 			dbp->set_errpfx(dbp, "DbRename");
+ 			dbp->set_errcall(dbp, _ErrorFunc);
+-			
++
+ 			if (passwd != NULL) {
+ 				ret = dbp->set_encrypt(dbp, passwd, enc_flag);
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "set_encrypt");
+ 			}
+ 			if (set_flags != 0) {
+ 				ret = dbp->set_flags(dbp, set_flags);
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "set_flags");
+ 			}
+ 
+@@ -4124,8 +4124,8 @@
+ 			/* if file doesnt exist, ignore error */
+ 			if (ret == ENOENT)
+ 				ret = 0;
+-		
+-			result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret), 
++
++			result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret),
+ 			    "db rename associated recno");
+ 		}
+ 
+@@ -4143,31 +4143,31 @@
+ 		} else if (__os_exists(NULL, dbr, NULL) == 0) {
+ 			ret = db_create(&dbp, dbenv, 0);
+ 			if (ret) {
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "db_create");
+ 				goto error;
+ 			}
+ 
+ 			/*
+ 			 * XXX
+-			 * Remove restriction if error handling not tied to env. 
++			 * Remove restriction if error handling not tied to env.
+ 			 *
+ 			 * The DB->set_err* functions overwrite the
+ 			 * environment. So, if we are using an env, don't
+ 			 * overwrite it; if not using an env, then configure
+-			 * error handling.  
++			 * error handling.
+ 			 */
+ 			dbp->set_errpfx(dbp, "DbRename");
+ 			dbp->set_errcall(dbp, _ErrorFunc);
+ 
+ 			if (passwd != NULL) {
+ 				ret = dbp->set_encrypt(dbp, passwd, enc_flag);
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "set_encrypt");
+ 			}
+ 			if (set_flags != 0) {
+ 				ret = dbp->set_flags(dbp, set_flags);
+-				result = _ReturnSetup(interp, ret, 
++				result = _ReturnSetup(interp, ret,
+ 				    DB_RETOK_STD(ret), "set_flags");
+ 			}
+ 
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_dbcursor.c db-6.0.20/lang/tcl/tcl_dbcursor.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_dbcursor.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_dbcursor.c	2013-09-03 12:03:21 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -191,7 +191,7 @@
+ 	dbp = dbc->dbp;
+ 	hrdbp = ((DBTCL_INFO *)dbp->api_internal)->hrdbp;
+ 	hsdbp = ((DBTCL_INFO *)dbp->api_internal)->hsdbp;
+-	
++
+ 	memset(&hkey, 0, sizeof(DBT));
+ 	hkey.data = &rid;
+ 	hkey.size = hkey.ulen = sizeof(DB_HEAP_RID);
+@@ -216,7 +216,7 @@
+ 	ret = dbc->del(dbc, 0);
+ 	if ((t_ret = hrdbp->del(hrdbp, dbc->txn, &key, 0)) != 0 && ret == 0)
+ 		ret = t_ret;
+-	
++
+ err:	result = _ReturnSetup(
+ 	    interp, ret, DB_RETOK_DBCDEL(ret), "dbc delete");
+ 	return result;
+@@ -473,7 +473,7 @@
+ 			ret = dbc->get(dbc, &hkey, &tmpdata, DB_CURRENT);
+ 			result = _ReturnSetup(interp,
+ 			    ret, DB_RETOK_DBGET(ret), "dbc get");
+-			
++
+ 			hsdbp = ((DBTCL_INFO *)thisdbp->api_internal)->hsdbp;
+ 			key.data = &recno;
+ 			key.ulen = sizeof(db_recno_t);
+@@ -496,16 +496,16 @@
+ 		ret = hrdbp->put(hrdbp, dbc->txn, &key, &hkey, 0);
+ 		result = _ReturnSetup(interp,
+ 		    ret, DB_RETOK_DBCPUT(ret), "dbc put recno");
+-		
+-		/* 
+-		 * To keep the consistency, if the put in recno db fails, 
++
++		/*
++		 * To keep the consistency, if the put in recno db fails,
+ 		 * the current key and data will be removed from the heap db.
+ 		 */
+ 		if (dbc->txn == NULL && ret != 0)
+-			(void)thisdbp->del(thisdbp, NULL, &hkey, 0); 
++			(void)thisdbp->del(thisdbp, NULL, &hkey, 0);
+ 	}
+ 	if (ret == 0 &&
+-	    (flag == DB_AFTER || flag == DB_BEFORE) && 
++	    (flag == DB_AFTER || flag == DB_BEFORE) &&
+ 	    (type == DB_RECNO || type == DB_HEAP)) {
+ 		res = Tcl_NewWideIntObj((Tcl_WideInt)*(db_recno_t *)key.data);
+ 		Tcl_SetObjResult(interp, res);
+@@ -793,7 +793,7 @@
+ 		if (result != TCL_OK)
+ 			break;
+ 	}
+-  
++
+ 	if (result != TCL_OK)
+ 		goto out;
+ 	heapflag = flag & ~DB_OPFLAGS_MASK;
+@@ -965,9 +965,9 @@
+ 
+ 	_debug_check();
+ 
+-	/* 
++	/*
+ 	 * Heap cannot be a secondary, so with type == DB_HEAP we know that
+-	 * ispget is false. 
++	 * ispget is false.
+ 	 */
+ 	if (type == DB_HEAP && (op == DB_GET_BOTH ||
+ 	    op == DB_GET_BOTH_RANGE || op == DB_SET || op == DB_SET_RANGE)) {
+@@ -984,9 +984,9 @@
+ 		key.flags |= DB_DBT_USERMEM;
+ 
+ 		/*
+-		 *  This is a noncursor get on recno db, use heapflag because 
++		 *  This is a noncursor get on recno db, use heapflag because
+ 		 *  the cursor op flags have been removed.
+-		 */  
++		 */
+ 		ret = hrdbp->get(hrdbp, dbc->txn, &rkey, &key, heapflag);
+ 		if (ret != 0) {
+ 			result = _ReturnSetup(
+@@ -1002,7 +1002,7 @@
+ 	 * a recno primary key and we need to translate that to an RID.  (ptype
+ 	 * is only set if we're doing a pget.)
+ 	 */
+-	if (ptype == DB_HEAP && 
++	if (ptype == DB_HEAP &&
+ 	    (op == DB_GET_BOTH || op == DB_GET_BOTH_RANGE)) {
+ 		rkey.data = &precno;
+ 		rkey.size = rkey.ulen = sizeof(db_recno_t);
+@@ -1035,7 +1035,7 @@
+ 			hkey.flags = DB_DBT_USERMEM;
+ 			ret = phsdbp->pget(phsdbp,
+ 			    dbc->txn, &hkey, &data, &tmpdata, 0);
+-		} 
++		}
+ 
+ 	} else
+ 		ret = dbc->get(dbc, &key, &data, flag);
+@@ -1078,14 +1078,14 @@
+ 				rkey.size = rkey.ulen = sizeof(db_recno_t);
+ 				rkey.flags = DB_DBT_USERMEM;
+ 
+-				ret = hsdbp->pget(hsdbp, dbc->txn, &key, 
++				ret = hsdbp->pget(hsdbp, dbc->txn, &key,
+ 				    &rkey, &rdata, heapflag);
+ 				result = _ReturnSetup(
+ 				    interp, ret, DB_RETOK_DBGET(ret), "db get");
+ 				if (result == TCL_ERROR)
+ 					goto out;
+ 				retlist = Tcl_NewListObj(0, NULL);
+-				if (ret != 0) 
++				if (ret != 0)
+ 					goto out1;
+ 			}
+ 			result = _SetListRecnoElem(interp, retlist,
+@@ -1094,7 +1094,7 @@
+ 			if (ispget)
+ 				result = _Set3DBTList(interp, retlist, &key, 0,
+ 				    &data,
+-				    (ptype == DB_HEAP || 
++				    (ptype == DB_HEAP ||
+ 					ptype == DB_RECNO || ptype == DB_QUEUE),
+ 				    &pdata);
+ 			else
+@@ -1115,7 +1115,7 @@
+ out:
+ 	if (key.data != NULL && F_ISSET(&key, DB_DBT_MALLOC))
+ 		__os_ufree(dbc->env, key.data);
+-	if (key.data != NULL && F_ISSET(&key, DB_DBT_USERMEM) && 
++	if (key.data != NULL && F_ISSET(&key, DB_DBT_USERMEM) &&
+ 	    key.data != &rid)
+ 		__os_free(dbc->env, key.data);
+ 	if (data.data != NULL && F_ISSET(&data, DB_DBT_MALLOC))
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_dbstream.c db-6.0.20/lang/tcl/tcl_dbstream.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_dbstream.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_dbstream.c	2013-09-03 12:03:37 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -295,7 +295,7 @@
+ 	ret = dbs->write(dbs, &data, offset, 0);
+ 	result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret),
+ 	    "dbstream write");
+-		
++
+ out:	if (freedata && data.data != NULL)
+ 		__os_free(NULL, data.data);
+ 	return (result);
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_env.c db-6.0.20/lang/tcl/tcl_env.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_env.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_env.c	2013-09-03 12:03:41 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/lock.h"
+@@ -746,7 +746,7 @@
+ 		break;
+ 	case ENVREPMGRGETLOCAL:
+ 		result = tcl_RepGetLocalSite(interp, objc, objv, dbenv);
+-		break;	
++		break;
+ 	case ENVREPMGRSITELIST:
+ 		result = tcl_RepMgrSiteList(interp, objc, objv, dbenv);
+ 		break;
+@@ -1770,7 +1770,7 @@
+ 	if (objc < 3) {
+ 		Tcl_WrongNumArgs(interp, 2, objv, "?args? target");
+ 		return (TCL_ERROR);
+-	} 
++	}
+ 	while (i < (objc - 1)) {
+ 		if (Tcl_GetIndexFromObj(interp, objv[i], buwhich, "option",
+ 		    TCL_EXACT, &optindex) != TCL_OK)
+@@ -2255,7 +2255,7 @@
+ 	/*
+ 	 * Note that when this list grows to more than 32 event types, the code
+ 	 * below (the shift operation) will be broken.
+-	 */ 
++	 */
+ 
+ 	if (objc > 3) {
+ 		Tcl_WrongNumArgs(interp, 2, objv, "?-clear?");
+@@ -2296,7 +2296,7 @@
+ 			 * For this reason, set up the event info first
+ 			 * (myobjv[1]), and only when that is done set up the
+ 			 * event name (myobjv[0])
+-			 */ 
++			 */
+ 			switch (event_names[i].flag) {
+ 			case DB_EVENT_PANIC:
+ 				myobjv[1] = Tcl_NewIntObj(ip->
+@@ -2825,7 +2825,7 @@
+ 	result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret),
+ 	    "env dbremove");
+ 
+-	/* 
++	/*
+ 	 * If we are heap, we have auxiliary dbs.  However in order to tell if
+ 	 * we are heap we have to open the db to get its type.  So we will just
+ 	 * try the dbremove and ignore ENOENT.
+@@ -3026,7 +3026,7 @@
+ 	result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret),
+ 	    "env dbrename");
+ 
+-	/* 
++	/*
+ 	 * If we are heap, we have auxiliary dbs.  However in order to tell if
+ 	 * we are heap we have to open the db to get its type.  So we will just
+ 	 * try the dbrename and ignore ENOENT.
+@@ -3058,7 +3058,7 @@
+ 			subdbr[subdblen+1] = '\0';
+ 		}
+ 
+-		if ((ret = __os_malloc(dbenv->env, 
++		if ((ret = __os_malloc(dbenv->env,
+ 		    (size_t)newlen + 2, &newnamer)) != 0) {
+ 			Tcl_SetResult(interp, db_strerror(ret), TCL_STATIC);
+ 			return (0);
+@@ -3070,7 +3070,7 @@
+ 		ret = dbenv->dbrename(dbenv, txn, dbr, subdbr, newnamer, flag);
+ 		if (ret == ENOENT)
+ 			ret = 0;
+-		
++
+ 		result = _ReturnSetup(interp, ret, DB_RETOK_STD(ret),
+ 		    "db rename associated recno");
+ 		if (ret != 0)
+@@ -3572,7 +3572,7 @@
+ 	int objc;			/* How many arguments? */
+ 	Tcl_Obj *CONST objv[];		/* The argument objects */
+ 	DB_ENV *dbenv;			/* Environment pointer */
+-{	
++{
+ 	static const char *envstatprtopts[] = {
+ 		"-all",
+ 		"-clear",
+@@ -3592,7 +3592,7 @@
+ 	i = 2;
+ 
+ 	while (i < objc) {
+-		if (Tcl_GetIndexFromObj(interp, objv[i], envstatprtopts, 
++		if (Tcl_GetIndexFromObj(interp, objv[i], envstatprtopts,
+ 		    "option", TCL_EXACT, &optindex) != TCL_OK) {
+ 			result = IS_HELP(objv[i]);
+ 			goto error;
+@@ -3617,7 +3617,7 @@
+ 
+ 	_debug_check();
+ 	ret = dbenv->stat_print(dbenv, flag);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "dbenv stat_print");
+ error:
+ 	return (result);
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_internal.c db-6.0.20/lang/tcl/tcl_internal.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_internal.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_internal.c	2013-09-03 12:03:45 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -153,7 +153,7 @@
+ 	if (p->i_msg != NULL && p->i_msg != stderr && p->i_msg != stdout) {
+ 		(void)fclose(p->i_msg);
+ 		p->i_msg = NULL;
+-	}	
++	}
+ 	if (p->i_errpfx != NULL)
+ 		__os_free(NULL, p->i_errpfx);
+ 	if (p->i_compare != NULL) {
+@@ -419,7 +419,7 @@
+ 		hsdbp = (dbcip != NULL) ? dbcip->i_parent->hsdbp : NULL;
+ 		txn = (dbc != NULL) ? dbc->txn : NULL;
+ 	}
+-	
++
+ 	DB_MULTIPLE_INIT(pointer, data);
+ 	result = TCL_OK;
+ 
+@@ -590,7 +590,7 @@
+ 
+ #ifdef CONFIG_TEST
+ /*
+- * PUBLIC: #ifdef CONFIG_TEST 
++ * PUBLIC: #ifdef CONFIG_TEST
+  * PUBLIC: void _EventFunc __P((DB_ENV *, u_int32_t, void *));
+  * PUBLIC: #endif
+  */
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_lock.c db-6.0.20/lang/tcl/tcl_lock.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_lock.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_lock.c	2013-09-03 12:03:48 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -351,7 +351,7 @@
+ 	i = 2;
+ 
+ 	while (i < objc) {
+-		if (Tcl_GetIndexFromObj(interp, objv[i], lkstatprtopts, 
++		if (Tcl_GetIndexFromObj(interp, objv[i], lkstatprtopts,
+ 		    "option", TCL_EXACT, &optindex) != TCL_OK) {
+ 			result = IS_HELP(objv[i]);
+ 			goto error;
+@@ -385,10 +385,10 @@
+ 
+ 	_debug_check();
+ 	ret = dbenv->lock_stat_print(dbenv, flag);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "dbenv lock_stat_print");
+ error:
+-	return (result);	
++	return (result);
+ 
+ }
+ 
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_log.c db-6.0.20/lang/tcl/tcl_log.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_log.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_log.c	2013-09-03 12:03:51 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/log.h"
+@@ -434,7 +434,7 @@
+ 	i = 2;
+ 
+ 	while (i < objc) {
+-		if (Tcl_GetIndexFromObj(interp, objv[i], logstatprtopts, 
++		if (Tcl_GetIndexFromObj(interp, objv[i], logstatprtopts,
+ 		    "option", TCL_EXACT, &optindex) != TCL_OK) {
+ 			result = IS_HELP(objv[i]);
+ 			goto error;
+@@ -456,7 +456,7 @@
+ 
+ 	_debug_check();
+ 	ret = dbenv->log_stat_print(dbenv, flag);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "dbenv log_stat_print");
+ error:
+ 	return (result);
+@@ -475,7 +475,7 @@
+ 	int objc;			/* How many arguments? */
+ 	Tcl_Obj *CONST objv[];		/* The argument objects */
+ 	DB_ENV *dbenv;			/* Environment pointer */
+-{	
++{
+ 	DB_LOG_VERIFY_CONFIG lvc;
+ 	int result, ret;
+ 
+@@ -485,7 +485,7 @@
+ 	memset(&lvc, 0, sizeof(lvc));
+ 	_debug_check();
+ 	ret = dbenv->log_verify(dbenv, &lvc);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "dbenv log_verify");
+ 	return (result);
+ 
+@@ -746,7 +746,7 @@
+ 	Tcl_Interp *interp;		/* Interpreter */
+ 	DB_ENV *dbenv;			/* Environment pointer */
+ 	Tcl_Obj *which;			/* {which on|off} */
+-	Tcl_Obj *onoff;		
++	Tcl_Obj *onoff;
+ {
+ 	static const char *confonoff[] = {
+ 		"off",
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_mp.c db-6.0.20/lang/tcl/tcl_mp.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_mp.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_mp.c	2013-09-03 12:03:55 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -522,7 +522,7 @@
+ /*
+  * tcl_MpStatPrint --
+  *
+- * PUBLIC: int tcl_MpStatPrint __P((Tcl_Interp *, int, 
++ * PUBLIC: int tcl_MpStatPrint __P((Tcl_Interp *, int,
+  * PUBLIC:     Tcl_Obj * CONST*, DB_ENV *));
+  */
+ int
+@@ -551,7 +551,7 @@
+ 	i = 2;
+ 
+ 	while (i < objc) {
+-		if (Tcl_GetIndexFromObj(interp, objv[i], mpstatprtopts, 
++		if (Tcl_GetIndexFromObj(interp, objv[i], mpstatprtopts,
+ 		    "option", TCL_EXACT, &optindex) != TCL_OK) {
+ 			result = IS_HELP(objv[i]);
+ 			goto error;
+@@ -576,7 +576,7 @@
+ 
+ 	_debug_check();
+ 	ret = dbenv->memp_stat_print(dbenv, flag);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "dbenv memp_stat_print");
+ error:
+ 	return (result);
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_mutex.c db-6.0.20/lang/tcl/tcl_mutex.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_mutex.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_mutex.c	2013-09-03 12:03:58 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -329,7 +329,7 @@
+ 	i = 2;
+ 
+ 	while (i < objc) {
+-		if (Tcl_GetIndexFromObj(interp, objv[i], mutstatprtopts, 
++		if (Tcl_GetIndexFromObj(interp, objv[i], mutstatprtopts,
+ 		    "option", TCL_EXACT, &optindex) != TCL_OK) {
+ 			result = IS_HELP(objv[i]);
+ 			goto error;
+@@ -351,7 +351,7 @@
+ 
+ 	_debug_check();
+ 	ret = dbenv->mutex_stat_print(dbenv, flag);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "dbenv mutex_stat_print");
+ error:
+ 	return (result);
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_rep.c db-6.0.20/lang/tcl/tcl_rep.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_rep.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_rep.c	2013-09-03 12:04:01 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -225,7 +225,7 @@
+ 
+ /*
+  * tcl_RepGetAckPolicy
+- *	Get Replication Manager acknowledgement policy 
++ *	Get Replication Manager acknowledgement policy
+  *
+  * PUBLIC: int tcl_RepGetAckPolicy
+  * PUBLIC:     __P((Tcl_Interp *, int, Tcl_Obj * CONST *, DB_ENV *));
+@@ -300,7 +300,7 @@
+ /*
+  * tcl_RepNumberToName
+  *	Map a #define'd int value to the corresponding name.
+- */ 
++ */
+ static int
+ tcl_RepNumberToName(map, value, namep)
+ 	const NAMEMAP *map;
+@@ -1036,7 +1036,7 @@
+ 	MAKE_STAT_LIST("Election winner", sp->st_election_cur_winner);
+ 	MAKE_STAT_LIST("Election winner generation number",
+ 	    sp->st_election_gen);
+-	MAKE_STAT_LIST("Election data generation number", 
++	MAKE_STAT_LIST("Election data generation number",
+ 	    sp->st_election_datagen);
+ 	MAKE_STAT_LSN("Election max LSN", &sp->st_election_lsn);
+ 	MAKE_STAT_LIST("Election sites", sp->st_election_nsites);
+@@ -1071,7 +1071,7 @@
+ 	int objc;			/* How many arguments? */
+ 	Tcl_Obj *CONST objv[];		/* The argument objects */
+ 	DB_ENV *dbenv;			/* Environment pointer */
+-{	
++{
+ 	static const char *repstatprtopts[] = {
+ 		"-all",
+ 		"-clear",
+@@ -1089,7 +1089,7 @@
+ 	i = 2;
+ 
+ 	while (i < objc) {
+-		if (Tcl_GetIndexFromObj(interp, objv[i], repstatprtopts, 
++		if (Tcl_GetIndexFromObj(interp, objv[i], repstatprtopts,
+ 		    "option", TCL_EXACT, &optindex) != TCL_OK) {
+ 			result = IS_HELP(objv[i]);
+ 			goto error;
+@@ -1111,7 +1111,7 @@
+ 
+ 	_debug_check();
+ 	ret = dbenv->rep_stat_print(dbenv, flag);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "dbenv rep_stat_print");
+ error:
+ 	return (result);
+@@ -1611,7 +1611,7 @@
+ 	int objc;			/* How many arguments? */
+ 	Tcl_Obj *CONST objv[];		/* The argument objects */
+ 	DB_ENV *dbenv;			/* Environment pointer */
+-{	
++{
+ 	static const char *repmgrstatprtopts[] = {
+ 		"-all",
+ 		"-clear",
+@@ -1629,7 +1629,7 @@
+ 	i = 2;
+ 
+ 	while (i < objc) {
+-		if (Tcl_GetIndexFromObj(interp, objv[i], repmgrstatprtopts, 
++		if (Tcl_GetIndexFromObj(interp, objv[i], repmgrstatprtopts,
+ 		    "option", TCL_EXACT, &optindex) != TCL_OK) {
+ 			result = IS_HELP(objv[i]);
+ 			goto error;
+@@ -1651,7 +1651,7 @@
+ 
+ 	_debug_check();
+ 	ret = dbenv->repmgr_stat_print(dbenv, flag);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "dbenv repmgr_stat_print");
+ error:
+ 	return (result);
+@@ -1715,7 +1715,7 @@
+ 		    (u_long)len, (u_long)DB_TXN_TOKEN_SIZE);
+ 		Tcl_SetResult(interp, msg, TCL_VOLATILE);
+ 		return (TCL_ERROR);
+-	}		
++	}
+ 
+ 	_debug_check();
+ 	ret = dbenv->txn_applied(dbenv, (DB_TXN_TOKEN*)arg, timeout, 0);
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_seq.c db-6.0.20/lang/tcl/tcl_seq.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_seq.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_seq.c	2013-09-03 12:04:05 -0400
+@@ -10,7 +10,7 @@
+ #ifdef HAVE_64BIT_TYPES
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -132,7 +132,7 @@
+ 		break;
+ 	case SEQSTATPRT:
+ 		result = tcl_SeqStatPrint(interp, objc, objv, seq);
+-		break;		
++		break;
+ 	case SEQGETCACHESIZE:
+ 		if (objc != 2) {
+ 			Tcl_WrongNumArgs(interp, 1, objv, NULL);
+@@ -265,7 +265,7 @@
+ 	int objc;			/* How many arguments? */
+ 	Tcl_Obj *CONST objv[];		/* The argument objects */
+ 	DB_SEQUENCE *seq;		/* Environment pointer */
+-{	
++{
+ 	static const char *seqstatprtopts[] = {
+ 		"-clear",
+ 		 NULL
+@@ -281,7 +281,7 @@
+ 	i = 2;
+ 
+ 	while (i < objc) {
+-		if (Tcl_GetIndexFromObj(interp, objv[i], seqstatprtopts, 
++		if (Tcl_GetIndexFromObj(interp, objv[i], seqstatprtopts,
+ 		    "option", TCL_EXACT, &optindex) != TCL_OK) {
+ 			result = IS_HELP(objv[i]);
+ 			goto error;
+@@ -300,7 +300,7 @@
+ 
+ 	_debug_check();
+ 	ret = seq->stat_print(seq, flag);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "seq stat_print");
+ error:
+ 	return (result);
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_txn.c db-6.0.20/lang/tcl/tcl_txn.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_txn.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_txn.c	2013-09-03 12:04:08 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -475,7 +475,7 @@
+ 	int objc;			/* How many arguments? */
+ 	Tcl_Obj *CONST objv[];		/* The argument objects */
+ 	DB_ENV *dbenv;			/* Environment pointer */
+-{	
++{
+ 	static const char *txnprtopts[] = {
+ 		"-all",
+ 		"-clear",
+@@ -515,7 +515,7 @@
+ 
+ 	_debug_check();
+ 	ret = dbenv->txn_stat_print(dbenv, flag);
+-	result = _ReturnSetup(interp, 
++	result = _ReturnSetup(interp,
+ 	    ret, DB_RETOK_STD(ret), "dbenv txn_stat_print");
+ error:
+ 	return (result);
+@@ -704,7 +704,7 @@
+ 		ret = _GetUInt32(interp, objv[2], &timeout);
+ 		if (ret != TCL_OK)
+ 			return (TCL_ERROR);
+-		ret = txnp->set_timeout(txnp, (db_timeout_t)timeout, 
++		ret = txnp->set_timeout(txnp, (db_timeout_t)timeout,
+ 		    DB_SET_TXN_TIMEOUT);
+ 		result =
+ 		    _ReturnSetup(interp, ret, DB_RETOK_STD(ret), "set_timeout");
+diff -u original/db-6.0.20/db-6.0.20/lang/tcl/tcl_util.c db-6.0.20/lang/tcl/tcl_util.c
+--- original/db-6.0.20/db-6.0.20/lang/tcl/tcl_util.c	2013-06-25 15:14:30 -0400
++++ db-6.0.20/lang/tcl/tcl_util.c	2013-09-03 12:04:12 -0400
+@@ -9,7 +9,7 @@
+ #include "db_config.h"
+ 
+ #include "db_int.h"
+-#ifdef HAVE_SYSTEM_INCLUDE_FILES
++#if defined(HAVE_SYSTEM_INCLUDE_FILES) || defined(__MINGW32__)
+ #include <tcl.h>
+ #endif
+ #include "dbinc/tcl_db.h"
+@@ -134,7 +134,7 @@
+ 	 * unwrapped and duplicated in line; but by the time you account for
+ 	 * HAVE_MUTEX_SUPPORT, checking for MUTEX_INVALID, etc., you've created
+ 	 * a maintenance burden, and it's just not worth it.
+-	 */ 
++	 */
+ 	MUTEX_LOCK(dbenv->env, mutex);
+ 	return (0);
+ }
+

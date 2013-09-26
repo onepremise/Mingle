@@ -1,0 +1,12 @@
+--- subversion-1.8.3/subversion/libsvn_subr/auth.c	2013-08-20 18:39:34 -0400
++++ subversion-1.8.3/subversion/libsvn_subr/auth2.c	2013-09-20 12:13:39 -0400
+@@ -504,7 +504,7 @@
+     }
+   else
+     {
+-#if defined(SVN_HAVE_GPG_AGENT)
++#if defined(SVN_HAVE_GPG_AGENT) && !defined(WIN32)
+       if (strcmp(provider_name, "gpg_agent") == 0 &&
+           strcmp(provider_type, "simple") == 0)
+         {
+

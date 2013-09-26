@@ -1,0 +1,161 @@
+--- subversion-1.8.3/subversion/bindings/swig/perl/native/Makefile.PL.in	2012-12-14 01:05:48 -0500
++++ subversion-1.8.3/subversion/bindings/swig/perl/native/Makefile2.PL.in	2013-09-20 13:44:24 -0400
+@@ -35,14 +35,26 @@
+ my $svnlib_builddir = "${top_builddir}/subversion";
+ my $swig_srcdir = "${svnlib_srcdir}/bindings/swig";
+ my $swig_builddir = "${svnlib_builddir}/bindings/swig";
++my $swig_ldflags = '@SWIG_LDFLAGS@';
++my $sqlite_ldflags = '@SVN_SQLITE_LIBS@';
++my $berkeley_db="@SVN_DB_LIBS@";
++my $addsearchpath='';
++
++foreach my $val (@ldvalues) {
++    if ((index($val, '-L') != -1) && (index($addsearchpath, $val) == -1)) {
++        $val =~ s/-L//;
++        $addsearchpath.=" $val";
++    } 
++}
+ 
+ my @modules = qw/client delta fs ra repos wc/;
+ my @ldpaths = (abs_path($swig_builddir) . "/perl/libsvn_swig_perl/.libs",
+                map { abs_path($svnlib_builddir) . "/libsvn_$_/.libs" }
+                    @modules, qw/diff subr ra_local ra_svn ra_serf
+-                                fs_base fs_util fs_fs/);
++                                fs_base fs_util fs_fs/, $addsearchpath);                                
+ 
+-my @ldmodules = map {"-lsvn_$_-1"} (@modules, qw/diff subr/);
++my @ldmodules = map {"-lsvn_$_-1"} (qw/client ra ra_svn ra_local ra_neon
++               ra_serf repos fs fs_base fs_util fs_fs wc delta diff subr/);
+ 
+ my $apr_shlib_path_var = '@SVN_APR_SHLIB_PATH_VAR@';
+ my $cppflags = '@CPPFLAGS@';
+@@ -64,8 +76,8 @@
+ 
+ # According to the log of r7937, the flags guarded by the conditional break
+ # the build on FreeBSD if not conditionalized.
+-my $apr_ldflags = '@SVN_APR_LIBS@'
+-   if $^O eq 'darwin' or $^O eq 'cygwin';
++my $apr_ldflags = '@SVN_APRUTIL_LIBS@ @SVN_APR_LIBS@'
++   if $^O eq 'darwin' or $^O eq 'cygwin' or $^O eq 'MSWin32';
+ 
+ chomp $apr_shlib_path_var;
+ 
+@@ -81,8 +93,9 @@
+     OBJECT => q/$(O_FILES)/,
+     LIBS => [join(' ', $apr_ldflags,
+                   (map {"-L$_"} @ldpaths),
+-                  @ldmodules, '-lsvn_swig_perl-1',
+-                  `$swig -perl -ldflags`)],
++                  '-lsvn_swig_perl-1',@ldmodules,
++                  $apr_ldflags, $swig_ldflags, $sqlite_ldflags, 
++                  $berkeley_db)],
+     test => { TESTS => "$swig_srcdir/perl/native/t/*.t" }
+ );
+ 
+@@ -92,6 +105,8 @@
+     $_;
+ }
+ 
++resetMMCallbacks();
++
+ WriteMakefile(%config, NAME => 'SVN::_Core', C => ['core.c'],
+         PM => {map { ("$swig_srcdir/perl/native/$_.pm" =>
+                       "\$(INST_LIBDIR)/$_.pm") }
+@@ -106,6 +121,7 @@
+        );
+ 
+ for (@modules) {
++    resetMMCallbacks();
+     WriteMakefile(%config,
+       MAKEFILE=> "Makefile.$_",
+       NAME    => "SVN::_".perlish($_),
+@@ -113,6 +129,89 @@
+      );
+ }
+ 
++sub resetMMCallbacks { 
++    #package MY; # SUPER needs package context, $self is not sufficient
++
++    #use strict;
++    #use Config; 
++ 
++    print("Reset calls...\n\n");
++
++    *MY::dynamic_lib = sub {
++    	my $self = shift(@_);
++    	
++    	package MY;
++    	
++    	my $txt = $self->SUPER::dynamic_lib(@_);
++    	
++    	#$txt =~ s/LD_RUN_PATH=\S*\s*//;
++    	
++    	my @lines = grep /\S/, split /\n/, $txt;
++    	
++    	my $newline;
++    	
++    	foreach (@lines) {
++    	    my $line=$_;
++    	    $line=~ s/dll.exp//g;
++    	    
++    	    #we don't need to use dll tool with -share link option
++    	    if ((index($line, 'dlltool') == -1) && (index($line, '--base-file') == -1)) {
++	        print "$line\n";
++	        $newline.= "$line\n";
++	    }
++        }
++        
++     	return($newline);
++    };
++    
++    *MY::const_config = sub {
++       my $self = shift;
++       package MY;
++       # Don't use the old -mdll link option to generate dlls. This cause loading conflicts from previous symbol exports.
++       # Issue warrants further investigation, but for now we can link in gcc using -shared
++       $self->{LDDLFLAGS} =~ s/-mdll/-shared -Wl,--out-implib,$self->{INST_ARCHAUTODIR}\\lib$self->{BASEEXT}.dll.a/g;
++       
++       $self->SUPER::const_config(@_);
++    };
++
++    *MY::const_loadlibs = sub {
++        my $self = shift;
++        
++	# Don't see how this ever worked on other platforms. The library dependicies are incorrectly ordered.
++	if ($^O eq "MSWin32" && $Config{cc} =~ /^gcc/i) {
++	    $self->{LDLOADLIBS} = "$self->{LDLOADLIBS} @SVN_ZLIB_LIBS@ @SVN_XML_LIBS@ $self->{PERL_ARCHIVE} -liconv -lrpcrt4 -lMswsock -pthread @LIBS@";
++	    #$self->{LDLOADLIBS} = "$self->{LDLOADLIBS} @SVN_ZLIB_LIBS@ @SVN_XML_LIBS@ $self->{PERL_ARCHIVE} @SVN_XML_LIBS@ @SVN_SERF_LIBS@ -liconv -lrpcrt4 -lMswsock -pthread";
++	    
++            #if ($self->{BASEEXT} ne "_Core") {
++            #    $self->{LDLOADLIBS}.=" $self->{INST_ARCHLIB}\\auto\\SVN\\_Core\\lib_Core.dll.a";
++            #}   
++            #$self->{LIBPERL_A} = $self->{PERL_ARCHIVE};
++	    #$self->{PERL_ARCHIVE} = "";
++	    #$self->{CCFLAGS} =~ s/-s\s*//g;
++            #$self->{CCFLAGS} =~ s/-O.\s*//g;
++	}
++	
++	package MY;
++	return $self->SUPER::const_loadlibs(@_);
++    };
++
++    # Link order: $(LDDLFLAGS) $(LDFROM) $(OTHERLDFLAGS) $(MYEXTLIB) $(PERL_ARCHIVE) $(LDLOADLIBS)
++    *MY::post_constants = sub {
++        my $self = shift;
++        
++	if ($^O eq "MSWin32" && $Config{cc} =~ /^gcc/i) {
++            print "LDDLFLAGS=$self->{LDDLFLAGS}\n";
++	    print "LDFROM=$self->{LDFROM}\n";
++            print "OTHERLDFLAGS=$self->{OTHERLDFLAGS}\n";
++            print "MYEXTLIB=$self->{MYEXTLIB}\n";        
++            print "PERL_ARCHIVE=$self->{PERL_ARCHIVE}\n";
++            print "LDLOADLIBS=$self->{LDLOADLIBS}\n";
++	}
++	package MY;
++	return $self->SUPER::post_constants;
++    };
++}
++
+ # the dependencies need to be fixed
+ 
+ sub MY::postamble {

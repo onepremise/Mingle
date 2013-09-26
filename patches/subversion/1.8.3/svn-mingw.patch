@@ -1,0 +1,76 @@
+$ diff -u subversion-1.7.9/autogen.sh subversion-1.7.9/autogen2.sh
+--- subversion-1.7.9/autogen.sh 2012-12-21 23:00:34 -0500
++++ subversion-1.7.9/autogen2.sh        2013-09-03 22:36:51 -0400
+@@ -136,7 +136,7 @@
+   echo "Generating SWIG code..."
+   # Generate build-outputs.mk in non-release-mode, so that we can
+   # build the SWIG-related files
+-  "$PYTHON" ./gen-make.py build.conf || gen_failed=1
++  "$PYTHON" ./gen-make.py ./build.conf || gen_failed=1
+
+   # Build the SWIG-related files
+   make -f autogen-standalone.mk autogen-swig
+@@ -147,10 +147,10 @@
+
+ if test -n "$SKIP_DEPS"; then
+   echo "Creating build-outputs.mk (no dependencies)..."
+-  "$PYTHON" ./gen-make.py $RELEASE_ARGS -s build.conf || gen_failed=1
++  "$PYTHON" ./gen-make.py $RELEASE_ARGS -s ./build.conf || gen_failed=1
+ else
+   echo "Creating build-outputs.mk..."
+-  "$PYTHON" ./gen-make.py $RELEASE_ARGS build.conf || gen_failed=1
++  "$PYTHON" ./gen-make.py $RELEASE_ARGS ./build.conf || gen_failed=1
+ fi
+
+ if test -n "$RELEASE_MODE"; then
+--- subversion-1.7.9/configure.ac       2012-10-02 13:18:00 -0400
++++ subversion-1.7.9/configure2.ac      2013-09-11 00:26:00 -0400
+@@ -327,7 +327,7 @@
+
+ AC_MSG_CHECKING([whether to avoid circular linkage at all costs])
+ case $host in
+-  *-*-cygwin*)
++  *-*-cygwin* | *mingw*)
+     AC_MSG_RESULT([yes])
+     AC_DEFINE([SVN_AVOID_CIRCULAR_LINKAGE_AT_ALL_COSTS_HACK], 1,
+               [Define if circular linkage is not possible on this platform.])
+--- subversion-1.7.9/build/get-py-info.py	2009-11-16 14:07:18 -0500
++++ subversion-1.7.9/build/get-py-info2.py	2013-08-05 13:08:34 -0400
+@@ -79,7 +79,7 @@
+   """Get list of Python linker options"""
+ 
+   # Initialize config variables
+-  assert os.name == "posix"
++  # assert os.name == "posix"
+   options = sysconfig.get_config_var('LDSHARED').split()
+   fwdir = sysconfig.get_config_var('PYTHONFRAMEWORKDIR')
+ 
+
+--- subversion-1.7.9/build/ac-macros/swig.m4	2011-06-22 10:45:03 -0400
++++ subversion-1.7.9/build/ac-macros/swig2.m4	2013-08-05 13:06:55 -0400
+@@ -138,7 +138,7 @@
+     AC_CACHE_CHECK([for apr_int64_t Python/C API format string],
+                    [svn_cv_pycfmt_apr_int64_t], [
+       if test "x$svn_cv_pycfmt_apr_int64_t" = "x"; then
+-        AC_EGREP_CPP([MaTcHtHiS +\"lld\" +EnDeNd],
++        AC_EGREP_CPP([MaTcHtHiS +\"I64d\" +EnDeNd],
+                      [#include <apr.h>
+                       MaTcHtHiS APR_INT64_T_FMT EnDeNd],
+                      [svn_cv_pycfmt_apr_int64_t="L"])
+
+--- subversion-1.7.9/subversion/libsvn_subr/win32_xlate.c	2010-09-07 03:28:10 -0400
++++ subversion-1.7.9/subversion/libsvn_subr/win32_xlate2.c	2013-08-05 22:47:56 -0400
+@@ -32,6 +32,12 @@
+    apr.h, so we can't detect this case here. */
+ 
+ /* winsock2.h includes windows.h */
++#if defined(__LCC__) || defined(__GNUC__)
++#define INITGUID 1
++#include <windows.h>
++DEFINE_GUID(IID_IMultiLanguage,0x275c23e1,0x3747,0x11d0,0x9f,0xea,0,0xaa,0,0x3f,0x86,0x46);
++#endif
++
+ #include <winsock2.h>
+ #include <Ws2tcpip.h>
+ #include <mlang.h>
+

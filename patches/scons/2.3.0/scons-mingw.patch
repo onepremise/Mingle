@@ -1,0 +1,20 @@
+--- scons-2.3.0/engine/SCons/Node/FS.py	2013-03-03 09:48:40 -0500
++++ scons-2.3.0/engine/SCons/Node/FS2.py	2013-09-19 01:45:34 -0400
+@@ -1124,6 +1124,7 @@
+             self.pathTop = os.getcwd()
+         else:
+             self.pathTop = path
++            
+         self.defaultDrive = _my_normcase(_my_splitdrive(self.pathTop)[0])
+ 
+         self.Top = self.Dir(self.pathTop)
+@@ -2126,7 +2127,7 @@
+         self.root = self
+ 
+         # Handle all the types of drives:
+-        if drive == '':
++        if drive == '' or (sys.version.upper().find('GCC') >= 0):
+             # No drive, regular UNIX root or Windows default drive.
+             name = OS_SEP 
+             dirname = OS_SEP
+
