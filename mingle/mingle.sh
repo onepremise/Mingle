@@ -1185,49 +1185,55 @@ buildInstallICU() {
         #Apply patch http://bugs.icu-project.org/trac/ticket/9728
         echo "Applying patch from http://bugs.icu-project.org/trac/ticket/9728..."
 
-        wget http://bugs.icu-project.org/trac/export/32780/icu/trunk/source/common/unicode/platform.h
-        wget http://bugs.icu-project.org/trac/export/32780/icu/trunk/source/common/unicode/umachine.h
-        wget http://bugs.icu-project.org/trac/export/32780/icu/trunk/source/common/unicode/ustring.h
-        wget http://bugs.icu-project.org/trac/export/32780/icu/trunk/source/test/intltest/strtest.cpp
+        #wget http://bugs.icu-project.org/trac/export/32780/icu/trunk/source/common/unicode/platform.h
+        #wget http://bugs.icu-project.org/trac/export/32780/icu/trunk/source/common/unicode/umachine.h
+        #wget http://bugs.icu-project.org/trac/export/32780/icu/trunk/source/common/unicode/ustring.h
+        #wget http://bugs.icu-project.org/trac/export/32780/icu/trunk/source/test/intltest/strtest.cpp
 
-        mv platform.h icu/source/common/unicode/
-        mv umachine.h icu/source/common/unicode/
-        mv ustring.h icu/source/common/unicode/
-        mv strtest.cpp icu/source/test/intltest/
-
-        cd icu/source
+        #mv platform.h icu/source/common/unicode/
+        #mv umachine.h icu/source/common/unicode/
+        #mv ustring.h icu/source/common/unicode/
+        #mv strtest.cpp icu/source/test/intltest/
+        cd icu || mingleError $? "cd failed, aborting!"
+		
+	    if [ ! -e icu-mingw.patch ]; then
+            cp $MINGLE_BASE/patches/icu/$AD_ICU_VERSION/icu-mingw.patch .
+            ad_patch "icu-mingw.patch"
+        fi	
+		
+        cd source || mingleError $? "cd failed, aborting!"
 
         ./runConfigureICU MinGW  --prefix=/mingw
 
         make || mingleError $? "make failed, aborting!"
         make install || mingleError $? "make install failed, aborting!"
         
-        cp -f /mingw/lib/icu*.dll /mingw/bin
+        mv -f /mingw/lib/icu*.dll /mingw/bin
         
-        local _origPath=`pwd`
-        cd /mingw/lib
-        ad_rename "./icu.*.dll" "s/^icu/libicu/g"
-        cd "$_origPath"
+        #local _origPath=`pwd`
+        #cd /mingw/lib
+        #ad_rename "./icu.*.dll" "s/^icu/libicu/g"
+        #cd "$_origPath"
         
-        cp /mingw/lib/libicuuc50.dll /mingw/bin/icuuc50.dll || mingleError $? "cp failed, aborting!"
-        cp /mingw/lib/libicudt50.dll /mingw/bin/icudt50.dll || mingleError $? "cp failed, aborting!"
-        cp /mingw/lib/libicuin.dll /mingw/lib/libicui18n.dll || mingleError $? "cp failed, aborting!"
-        cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll || mingleError $? "cp failed, aborting!"
+        #cp /mingw/lib/libicuuc50.dll /mingw/bin/icuuc50.dll || mingleError $? "cp failed, aborting!"
+        #cp /mingw/lib/libicudt50.dll /mingw/bin/icudt50.dll || mingleError $? "cp failed, aborting!"
+        #cp /mingw/lib/libicuin.dll /mingw/lib/libicui18n.dll || mingleError $? "cp failed, aborting!"
+        #cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll || mingleError $? "cp failed, aborting!"
         
-        cd ..
+        #cd ..
         
-        ad_generateImportLibraryForDLL 'libicui18n.dll'
-        ad_generateImportLibraryForDLL 'libicudata.dll'
-        ad_generateImportLibraryForDLL 'libicudt.dll'
-        ad_generateImportLibraryForDLL 'libicuin.dll'
-        ad_generateImportLibraryForDLL 'libicuio.dll'
-        ad_generateImportLibraryForDLL 'libicule.dll'
-        ad_generateImportLibraryForDLL 'libiculx.dll'
-        ad_generateImportLibraryForDLL 'libicutest.dll'
-        ad_generateImportLibraryForDLL 'libicutu.dll'
-        ad_generateImportLibraryForDLL 'libicuuc.dll'
+        #ad_generateImportLibraryForDLL 'libicui18n.dll'
+        #ad_generateImportLibraryForDLL 'libicudata.dll'
+        #ad_generateImportLibraryForDLL 'libicudt.dll'
+        #ad_generateImportLibraryForDLL 'libicuin.dll'
+        #ad_generateImportLibraryForDLL 'libicuio.dll'
+        #ad_generateImportLibraryForDLL 'libicule.dll'
+        #ad_generateImportLibraryForDLL 'libiculx.dll'
+        #ad_generateImportLibraryForDLL 'libicutest.dll'
+        #ad_generateImportLibraryForDLL 'libicutu.dll'
+        #ad_generateImportLibraryForDLL 'libicuuc.dll'
         
-        cd ..
+        cd $MINGLE_BUILD_DIR
     else
         echo "Already Installed."
     fi  
