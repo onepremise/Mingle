@@ -19,9 +19,11 @@
  
  # Change the stubnames so that poorly working FAT disks and installation programs can work.
  # This is also for backwards compatibility.
- DATA_STUBNAME = dt
- I18N_STUBNAME = in
+-DATA_STUBNAME = dt
+-I18N_STUBNAME = in
 -LIBICU = $(STATIC_PREFIX_WHEN_USED)$(ICUPREFIX)
++DATA_STUBNAME = data
++I18N_STUBNAME = i18n
 +LIBICU = lib$(ICUPREFIX)
 +
 +ifeq ($(wildcard $(LIBDIR)/$(LIBICU)$(DATA_STUBNAME)$(ICULIBSUFFIX)$(IMPORT_LIB_EXT)),)
@@ -136,14 +138,3 @@
          ustringVar[1]!=0x5a ||
          ustringVar[2]!=0x30 ||
 
---- icu/source/config/Makefile.inc.in	2012-11-05 12:15:12 -0500
-+++ icu/source/config/Makefile.inc.in2	2013-09-30 15:58:24 -0400
-@@ -87,7 +87,7 @@
- 
- # Name flexibility for the library naming scheme.  Any modifications should
- # be made in the mh- file for the specific platform.
--DATA_STUBNAME = data
-+DATA_STUBNAME = dt
- COMMON_STUBNAME = uc
- I18N_STUBNAME = i18n
- LAYOUT_STUBNAME = le
