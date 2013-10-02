@@ -1208,7 +1208,7 @@ buildInstallICU() {
         make || mingleError $? "make failed, aborting!"
         make install || mingleError $? "make install failed, aborting!"
         
-        mv -f /mingw/lib/icu*.dll /mingw/bin
+        mv -f /mingw/lib/libicu*.dll /mingw/bin
         
         #local _origPath=`pwd`
         #cd /mingw/lib
