@@ -212,7 +212,8 @@ mingleDownloadPackages () {
     mingleDownload "https://github.com/json-c/json-c/archive/be002fbb96c484f89aee2c843b89bdd00b0a5e46.zip" "json-c-$AD_JSONC_VERSION.zip"
     mingleDownload "http://download.osgeo.org/postgis/source/postgis-$AD_POSTGIS_VERSION.tar.gz"
     
-    mingleDownload "https://protobuf.googlecode.com/files/protobuf-$AD_PROTO_BUF.tar.gz"
+    #mingleDownload "https://protobuf.googlecode.com/files/protobuf-$AD_PROTO_BUF.tar.gz"
+    mingleDownload "http://protobuf.googlecode.com/files/protobuf-$AD_PROTO_BUF.zip"
     #mingleDownload "https://protobuf-c.googlecode.com/files/protobuf-c-$AD_PROTO_BUF_C.tar.gz"
     mingleDownload "https://github.com/onepremise/protobuf-c/archive/master.zip" "protobuf-c-latest.zip"
 }
