@@ -364,6 +364,18 @@ buildInstallGDB() {
 #            ad_patch "gdb-python.patch"
 #        fi
 
+        echo "Isolating dependencies..."
+
+        if [ ! -e dependencies/include/sys ]; then
+            mkdir -p dependencies/include/sys
+            mkdir -p dependencies/lib
+        fi
+        
+        cp -f /mingw/include/mingle/sys/utsname.h dependencies/include/sys
+        cp -f /mingw/lib/libmingle.a dependencies/lib
+		
+	local _savedir=`pwd`
+
         echo
         echo "Remove any old config.cache files..."
         echo
@@ -371,9 +383,9 @@ buildInstallGDB() {
         
         cd ..
 
-        export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__MINGW__"
-        export "LDFLAGS=-L/mingw/lib"
-        export "CPPFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__MINGW__"
+        export "CFLAGS=-I/mingw/include -I$_savedir/dependencies/include -D_WIN64 -DMS_WIN64 -D__MINGW__"
+        export "LDFLAGS=-L/mingw/lib -L$_savedir/dependencies/lib -lmingle"
+        export "CPPFLAGS=-I/mingw/include -I$_savedir/dependencies/include -D_WIN64 -DMS_WIN64 -D__MINGW__"
 
         buildInstallGeneric "$_project" false false "" true true "--with-gmp --with-mpfr --with-mpc --with-python --enable-shared" "" "x" "" "gdb --version"
 
