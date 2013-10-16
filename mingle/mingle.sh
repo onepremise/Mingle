@@ -346,6 +346,8 @@ buildInstallGDB() {
     local _project="gdb-*"
 
     if ad_isDateNewerThanFileModTime "2013-01-01" "/mingw/bin/gdb.exe"; then
+        ad_clearEnv
+        
         mingleDecompress "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
@@ -1389,6 +1391,8 @@ buildInstallPython() {
         echo
         echo "Building $_project..."
         echo
+        
+        ad_setDefaultEnv
 
         mingleDecompress $_project
 
