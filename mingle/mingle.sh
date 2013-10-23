@@ -413,7 +413,7 @@ buildInstallCUnit() {
 
 buildInstallTCL() {
     local _project="tcl$AD_TCL_VERSION_MAJOR*"
-    local _additionFlags="--enable-64bit --enable-shared=no"
+    local _additionFlags="--enable-64bit --enable-shared=yes"
     #local _binCheck="xxx"
     local _binCheck="tclsh"
     local _exeToTest=""
