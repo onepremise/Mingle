@@ -50,10 +50,10 @@ export AD_CUNIT_VERSION=2.1-2
 export AD_GDB_VERSION=7.5
 
 export AD_TCL_VERSION_MAJOR=8.6
-export AD_TCL_VERSION_MINOR=.0
+export AD_TCL_VERSION_MINOR=.1
 export AD_TCL_VERSION=$AD_TCL_VERSION_MAJOR$AD_TCL_VERSION_MINOR
 
-export AD_TK_VERSION=8.6.0
+export AD_TK_VERSION=8.6.1
 
 export AD_APR_VERSION=1.4.8
 export AD_APRUTIL_VERSION=1.5.2
@@ -225,10 +225,10 @@ updateGCC() {
     mv unknwn.h /mingw/x86_64-w64-mingw32/include/unknwn.h || mingleError $? "Failed to update GCC, aborting!"
 
     cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
-    if [ ! -e "/mingw/x86_64-w64-mingw32/lib/libmingle.a" ]; then
+    if [ ! -e "/mingw/lib/libmingle.a" ]; then
         echo "Supplementing GCC with libmingle..."
         cp -rf $MINGLE_BASE/mingle/libmingle .
-        buildInstallGeneric "libmingle" false false "" false false "" "" "xxx" "" ""
+        buildInstallGeneric "libmingle" false false "" false false "" "" "libmingle.a" "" ""
     fi
 }
 
@@ -412,8 +412,7 @@ buildInstallCUnit() {
 }
 
 buildInstallTCL() {
-    local _project="tcl$AD_TCL_VERSION_MAJOR*"
-    local _additionFlags="--enable-64bit --enable-shared=yes"
+    local _project="tcl*"
     #local _binCheck="xxx"
     local _binCheck="tclsh"
     local _exeToTest=""
@@ -428,17 +427,32 @@ buildInstallTCL() {
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleDecompress "$_project"
 
-        local _projectdir=$(ad_getDirFromWC $_project)
+        local _projectdir=$(ad_getDirFromWC "$_project")
+        
+        echo "Project directory = $_projectdir"
+	
+	cd $_projectdir || mingleError $? "cd 1 failed, aborting!"
+	
+	if [ ! -e tcl-mingw.patch ]; then
+	        cp $MINGLE_BASE/patches/tcl/$AD_TCL_VERSION/tcl-mingw.patch .
+	        ad_patch "tcl-mingw.patch"
+        fi
 
-        cd $_projectdir/compat/zlib
+        #cd compat/zlib
 
-        make -f win32/Makefile.gcc    
+        #make -f win32/Makefile.gcc    
 
-        cd ../../win
+        #cd ../../win
 
-        cp -rf ../compat/zlib/*.o .
+        #cp -rf ../compat/zlib/*.o .
+        
+        cd win || mingleError $? "cd 2 failed, aborting!"
+        
+        aclocal || mingleError $? "aclocal failed, aborting!"
+        
+        autoconf || mingleError $? "autoconf failed, aborting!"
 
-        ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
+        ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw --enable-64bit --enable-shared=no
 
         make || mingleError $? "make failed, aborting!"
 
@@ -451,15 +465,15 @@ buildInstallTCL() {
         cd $_savedir
         
         make install || mingleError $? "make failed, aborting!"
+        
+        make clean
+        
+        ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw --enable-64bit --enable-shared=yes
+        
+        make || mingleError $? "make failed, aborting!"
+        make install || mingleError $? "make failed, aborting!"
 
-        cd /mingw/bin
-
-        ln -sf tclsh`echo $AD_TCL_VERSION_MAJOR|sed 's/\.//'`s.exe tclsh.exe
-
-        cd $_savedir
-
-        cd ..
-        cd ..
+        cd $MINGLE_BUILD_DIR
     else
         echo "Already Installed."
     fi
@@ -472,7 +486,7 @@ buildInstallTCL() {
 buildInstallTk() {
     local _project="tk$AD_TCL_VERSION_MAJOR*"
     local _cleanEnv=true
-    local _configureFlags="--enable-64bit --enable-shared=no"
+    local _configureFlags="--enable-64bit --enable-shared=no --with-tcl=/mingw/lib"
     local _binCheck="libtk86.a"
     local _postBuildCommand=""
     local _exeToTest=""
