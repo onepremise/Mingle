@@ -1584,7 +1584,7 @@ buildInstallPyTest() {
 buildInstallScons() {
     local _project="scons-*"
 
-    if [ ! -e /mingw/bin/waf ]; then
+    if [ ! -e /mingw/bin/scons.py ]; then
         mingleDecompress "$_project"
 
         local _projectdir=$(ad_getDirFromWC "$_project")
