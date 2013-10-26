@@ -141,9 +141,9 @@ ad_setDefaultEnv() {
 
     export "PKG_CONFIG_PATH=/mingw/lib/pkgconfig"
     #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
-    export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
+    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "LDFLAGS=-L/mingw/lib"
-    export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
+    export "CPPFLAGS=-I/mingw/include  -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "CRYPTO=POLARSSL"
     export "CC=x86_64-w64-mingw32-gcc"
 

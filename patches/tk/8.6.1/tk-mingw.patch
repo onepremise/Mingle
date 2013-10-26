@@ -1,0 +1,43 @@
+--- tk8.6.1/win/configure.in    2013-09-17 08:25:14 -0400
++++ tk8.6.1/win/configure.in2   2013-10-25 21:06:44 -0400
+@@ -168,7 +168,7 @@
+ eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
+ eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
+
+-eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
++eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}.a"
+ # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
+ # I left out the other vars that also need to get defined here.
+ # we also need to double check about spaces in path names
+
+--- tk8.6.1/win/tcl.m4  2013-09-17 08:25:14 -0400
++++ tk8.6.1/win/tcl.m42 2013-10-25 21:03:57 -0400
+@@ -693,6 +693,7 @@
+            runtime=
+            LIBRARIES="\${STATIC_LIBRARIES}"
+            EXESUFFIX="s\${DBGX}.exe"
++           LIBSUFFIX="\${DBGX}.a"
+        else
+            # dynamic
+             AC_MSG_RESULT([using shared flags])
+@@ -708,6 +709,7 @@
+
+            EXESUFFIX="\${DBGX}.exe"
+            LIBRARIES="\${SHARED_LIBRARIES}"
++           LIBSUFFIX="\${DBGX}.dll.a"
+        fi
+        # Link with gcc since ld does not link to default libs like
+        # -luser32 and -lmsvcrt by default. Make sure CFLAGS is
+@@ -715,11 +717,10 @@
+        SHLIB_LD='${CC} -shared ${CFLAGS}'
+        SHLIB_LD_LIBS='${LIBS}'
+        MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -o \[$]@ ${extra_ldflags} \
+-           -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\[$]@)"
++           -Wl,--out-implib,\$(patsubst %.dll,lib%.dll.a,\[$]@)"
+        # DLLSUFFIX is separate because it is the building block for
+        # users of tclConfig.sh that may build shared or static.
+        DLLSUFFIX="\${DBGX}.dll"
+-       LIBSUFFIX="\${DBGX}.a"
+        LIBFLAGSUFFIX="\${DBGX}"
+        SHLIB_SUFFIX=.dll
+

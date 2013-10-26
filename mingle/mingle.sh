@@ -428,8 +428,6 @@ buildInstallTCL() {
         mingleDecompress "$_project"
 
         local _projectdir=$(ad_getDirFromWC "$_project")
-        
-        echo "Project directory = $_projectdir"
 	
 	cd $_projectdir || mingleError $? "cd 1 failed, aborting!"
 	
@@ -437,14 +435,6 @@ buildInstallTCL() {
 	        cp $MINGLE_BASE/patches/tcl/$AD_TCL_VERSION/tcl-mingw.patch .
 	        ad_patch "tcl-mingw.patch"
         fi
-
-        #cd compat/zlib
-
-        #make -f win32/Makefile.gcc    
-
-        #cd ../../win
-
-        #cp -rf ../compat/zlib/*.o .
         
         cd win || mingleError $? "cd 2 failed, aborting!"
         
@@ -459,8 +449,10 @@ buildInstallTCL() {
         local _savedir=`pwd`
 
         cd /mingw/bin
+        
+        local mm_ver=`echo $AD_TCL_VERSION_MAJOR|sed 's/\.//'`
 
-        ln -sf $_savedir/tclsh`echo $AD_TCL_VERSION_MAJOR|sed 's/\.//'`s.exe tclsh.exe
+        ln -sf $_savedir/tclsh${mm_ver}s.exe tclsh.exe
 
         cd $_savedir
         
@@ -472,6 +464,10 @@ buildInstallTCL() {
         
         make || mingleError $? "make failed, aborting!"
         make install || mingleError $? "make failed, aborting!"
+        
+        #cp -f libtcl${mm_ver}.dll.a /mingw/lib
+        #cp -f tcl${mm_ver}.dll /mingw/bin
+	#cp -f tclsh${mm_ver}.exe /mingw/bin
 
         cd $MINGLE_BUILD_DIR
     else
@@ -486,7 +482,6 @@ buildInstallTCL() {
 buildInstallTk() {
     local _project="tk$AD_TCL_VERSION_MAJOR*"
     local _cleanEnv=true
-    local _configureFlags="--enable-64bit --enable-shared=no --with-tcl=/mingw/lib"
     local _binCheck="libtk86.a"
     local _postBuildCommand=""
     local _exeToTest=""
@@ -504,15 +499,37 @@ buildInstallTk() {
         mingleDecompress "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
+		
+	cd $_projectDir || mingleError $? "cd 1 failed, aborting!"
+		
+	if [ ! -e tk-mingw.patch ]; then
+	    cp $MINGLE_BASE/patches/tk/$AD_TK_VERSION/tk-mingw.patch .
+	    ad_patch "tk-mingw.patch"
+        fi
 
         cd $_projectDir/win
+        
+        aclocal || mingleError $? "aclocal failed, aborting!"
+	        
+        autoconf || mingleError $? "autoconf failed, aborting!"
 
-        ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw $_additionFlags
+        ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw --enable-64bit --enable-shared=yes --with-tcl=/mingw/lib
 
         make || mingleError $? "make failed, aborting!"
-        make install || mingleError $? "make install failed, aborting!"
+        make install || mingleError $? "make failed, aborting!"
 
-        cd ../..
+        make clean
+        
+        ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw --enable-64bit --enable-shared=no --with-tcl=/mingw/lib
+	
+	make || mingleError $? "make failed, aborting!"
+        make install || mingleError $? "make install failed, aborting!"
+        
+        #cp -f libtk86.dll.a /mingw/lib
+        #cp -f tk86.dll /mingw/bin
+        #cp -f wish86.exe /mingw/bin
+        
+        cd $MINGLE_BUILD_DIR
         
         ad_exec_script "$_project" "$_postBuildCommand"
     else
@@ -1438,7 +1455,7 @@ buildInstallPython() {
         cp -rf /mingw/lib/libtcl* dependencies/lib/
         cp -rf /mingw/include/tcl* dependencies/include
 
-        cp -rf /mingw/lib/libtk* dependencies/lib/
+        cp -rf /mingw/lib/libtk86.a dependencies/lib/
         cp -rf /mingw/include/tk* dependencies/include
         cp -rf /mingw/include/X11* dependencies/include
 
@@ -1474,10 +1491,12 @@ buildInstallPython() {
         export "CPPFLAGS=$CPPFLAGS -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGLE__"
         
         export "LDFLAGS=-Ldependencies/lib"
-        export "LIBS=-L/mingw/lib -lmingle"
+        export "LIBS=-lmingle"
                
         ad_configure "$_project" false "" true "--with-libs=-lmingle --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
+        cp -f PC/pyconfig.h .
+        
         ad_make $_project
         
         ln -s /mingw/bin/python$AD_PYTHON_MAJOR /mingw/bin/python
@@ -2277,8 +2296,8 @@ buildInstallProtobufC() {
 
     local _project="protobuf-c-*"
     local _configureFlags=""
-    local _binCheck="xxx"
-    local _exeToTest=""
+    local _binCheck="protoc.exe"
+    local _exeToTest="protoc.exe --version"
     
     echo
     echo "Building $_project..."
