@@ -189,7 +189,7 @@ mingleDownloadPackages () {
     mingleDownload "http://www.python.org/ftp/python/$AD_PYTHON_VERSION/Python-$AD_PYTHON_VERSION.tgz"
     mingleDownload "https://pypi.python.org/packages/source/s/setuptools/setuptools-0.6c11.tar.gz"
     mingleDownload "https://pypi.python.org/packages/source/n/nose/nose-$AD_NOSE_VERSION.tar.gz"
-    mingleDownload "http://sourceforge.net/settings/mirror_choices?projectname=scons&filename=scons/$AD_SCONS_VERSION/scons-$AD_SCONS_VERSION.tar.gz"
+    mingleDownload "http://sourceforge.net/projects/scons/files/scons/$AD_SCONS_VERSION/scons-$AD_SCONS_VERSION.tar.gz"
     mingleDownload "http://waf.googlecode.com/files/waf-$AD_WAF_VERSION.tar.bz2"
     mingleDownload "http://www.cairographics.org/releases/py2cairo-$AD_PYCAIRO_VERSION.tar.bz2"
     mingleDownload "http://ftp.postgresql.org/pub/source/v$AD_POSTGRES_VERSION/postgresql-$AD_POSTGRES_VERSION.tar.gz"
