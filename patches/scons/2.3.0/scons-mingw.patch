@@ -1,3 +1,15 @@
+--- scons-2.3.0/script/scons    2013-03-03 09:48:40 -0500
++++ scons-2.3.0/script/scons2   2013-10-27 21:22:29 -0400
+@@ -102,7 +102,7 @@
+     # sys.prefix is (likely) C:\Python*;
+     # check only C:\Python*.
+     prefs.append(sys.prefix)
+-    prefs.append(os.path.join(sys.prefix, 'Lib', 'site-packages'))
++    prefs.append(os.path.join(sys.prefix, 'lib'))
+ else:
+     # On other (POSIX) platforms, things are more complicated due to
+     # the variety of path names and library locations.  Try to be smart
+
 --- scons-2.3.0/engine/SCons/Node/FS.py	2013-03-03 09:48:40 -0500
 +++ scons-2.3.0/engine/SCons/Node/FS2.py	2013-09-19 01:45:34 -0400
 @@ -1124,6 +1124,7 @@
