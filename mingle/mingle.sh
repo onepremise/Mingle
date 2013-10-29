@@ -1039,7 +1039,7 @@ buildInstallSVN() {
     export "CFLAGS=$CFLAGS -I$MINGLE_BASE\mingw64\include\apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
     export "LDFLAGS=$LDFLAGS -L$MINGLE_BASE\mingw64\x86_64-w64-mingw32\lib -lole32 -lmlang -luuid -lws2_32"
     export "CPPFLAGS=$CPPFLAGS -I$MINGLE_BASE\mingw64\include\apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
-    export "LIBS=-lserf-1 -lpsapi -version"
+    export "LIBS=-lserf-1 -lpsapi -lversion"
 
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
