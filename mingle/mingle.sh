@@ -2007,6 +2007,10 @@ buildInstallEncode() {
     fi
     
     cpanm Encode
+    
+    if [ ! -e /mingw/lib/perl/site/lib/Encode/Encoder.pm ]; then
+        mingleError 9999 "Encode install failed, aborting!"
+    fi
 }
 
 buildInstallDBPerl() {
@@ -2035,7 +2039,9 @@ buildInstallDBPerl() {
     
     mingleDecompress "$_project"
     
-    local _projectdir=$(ad_getDirFromWC $_project)    
+    local _projectdir=$(ad_getDirFromWC $_project)   
+    
+    cd $_project || mingleError $? "cd failed, aborting!"
     
     perl Makefile.PL INC=-I/mingw/include LIBS="-lpthread -ldb-6.0.dll"
     dmake
@@ -2043,6 +2049,12 @@ buildInstallDBPerl() {
     dmake install
     
     cd ..
+    
+    if [ ! -e /mingw/lib/perl/site/lib/BerkeleyDB.pm ] || [ ! -e /mingw/lib/perl/site/lib/DB_File.pm ]; then
+        mingleError 9999 "BerkeleyDB and DBFile install failed, aborting!"
+    fi
+    
+    
 }
 
 buildInstallUserAgent() {
@@ -2054,10 +2066,14 @@ buildInstallUserAgent() {
     
     cpanm --local-lib /mingw/lib/perl/site LWP::UserAgent
     
-    mv -rf /mingw/lib/perl/site/lib/perl5/* /mingw/lib/perl/site/lib
-    rmdir /mingw/lib/perl/site/lib/perl5
-    mv /mingw/lib/perl/site/bin/* /mingw/bin
+    cp -rf /mingw/lib/perl/site/lib/perl5/* /mingw/lib/perl/site/lib
+    rm -rf /mingw/lib/perl/site/lib/perl5
+    mv -f /mingw/lib/perl/site/bin/* /mingw/bin
     rmdir /mingw/lib/perl/site/bin
+    
+    if [ ! -e /mingw/lib/perl/site/lib/LWP/UserAgent.pm ]; then
+        mingleError 9999 "UserAgent install failed, aborting!"
+    fi
 }
 
 buildInstallTextInfo() {
@@ -2389,7 +2405,7 @@ suiteBase() {
     #updateTarCommand
 
     install7Zip
-    buildInstallPThreads
+    #buildInstallPThreads
     buildInstallAutoconf
     buildInstallAutoMake
     buildInstallLibtool
