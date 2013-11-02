@@ -490,8 +490,8 @@ IF EXIST "msys%MINGLE_BUILD_DIR%\mingle_error.log" (
 
 IF %ERROR_CHECK% EQU 1 (
     ECHO %ERRL% %ERR_MSG%
-    EXIT /B 55
-   
+    
+    GOTO EXIT
 )
 
 IF EXIST msys%MINGLE_BUILD_DIR:/=\%\build.log (
@@ -510,3 +510,5 @@ subst %DRIVE% /D>nul
 endlocal
 
 call mingle\update-etc.bat
+
+EXIT /B 55
