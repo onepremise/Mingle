@@ -58,7 +58,7 @@ export AD_TK_VERSION=8.6.1
 export AD_APR_VERSION=1.4.8
 export AD_APRUTIL_VERSION=1.5.2
 export AD_SERF_VERSION=1.3.1
-export AD_SVN_VERSION=1.7.9
+export AD_SVN_VERSION=1.8.3
 export AD_GIT_VERSION=
 
 export AD_LIBSIGC_PATH_VERSION=2.3
@@ -169,7 +169,7 @@ mingleDownloadPackages () {
     mingleDownload "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/BerkeleyDB-$AD_PERL_DB.tar.gz"
     mingleDownload "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/DB_File-$AD_PERL_FILE_DB.tar.gz"
     
-    mingleDownload "http://archive.apache.org/dist/subversion/subversion-$AD_SVN_VERSION.tar.gz"
+    mingleDownload "http://archive.apache.org/dist/subversion/subversion-$AD_SVN_VERSION.zip"
     mingleDownload "https://github.com/onepremise/git/archive/master.zip" "git-master.zip"
     mingleDownload "http://ftp.gnome.org/pub/GNOME/sources/libsigc++/$AD_LIBSIGC_PATH_VERSION/libsigc++-$AD_LIBSIGC_VERSION.tar.xz"
     mingleDownload "http://www.cairographics.org/releases/pixman-$AD_PIXMAN_VERSION.tar.gz"
@@ -1036,10 +1036,10 @@ buildInstallSVN() {
     
     ad_setDefaultEnv
 
-    export "CFLAGS=$CFLAGS -I$MINGLE_BASE\mingw64\include\apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
-    export "LDFLAGS=$LDFLAGS -L$MINGLE_BASE\mingw64\x86_64-w64-mingw32\lib -lole32 -lmlang -luuid -lws2_32"
-    export "CPPFLAGS=$CPPFLAGS -I$MINGLE_BASE\mingw64\include\apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
-    export "LIBS=-lserf-1 -lpsapi -lversion"
+    export "CFLAGS=$CFLAGS -I/mingw64/include/apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
+    export "LDFLAGS=$LDFLAGS -L/mingw64/x86_64-w64-mingw32/lib -lole32 -lmlang -luuid -lws2_32"
+    export "CPPFLAGS=$CPPFLAGS -I/mingw64/include/apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
+    #export "LIBS=-lserf-1 -lpsapi -lversion"
 
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -1060,7 +1060,7 @@ buildInstallSVN() {
 
         cd ..
 
-        buildInstallGeneric "$_project" false false "" false true "" "" "$_binCheck" "" ""
+        buildInstallGeneric "$_project" false false "" false true "$_additionFlags" "" "$_binCheck" "" ""
         
         cd $_projectdir || mingleError $? "cd failed, aborting!"
         make check-swig-pl MAKE=dmake || mingleError $? "make check-swig-pl failed, aborting!"

@@ -1,9 +1,14 @@
 @ECHO off
 
+set ORIGINAL_PATH=%CD%
+
 @setlocal enableextensions enabledelayedexpansion
 @cd /d "%~dp0"
 
 REM http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
+
+set DRIVE=
+set PERSIST=1
 
 NET SESSION >nul 2>&1
 IF %ERRORLEVEL% EQU 0 (
@@ -162,47 +167,6 @@ ECHO.
 powershell -command "Set-ExecutionPolicy Restricted"
 
 REM ===========================================================================
-REM SETUP FSTAB
-REM ===========================================================================
-IF NOT EXIST "msys/etc/fstab" (
-    ECHO "Setup MSYS fstab..."
-    
-    msys\bin\bash -l -c "ECHO '%CD:\=/%/mingw64' /mingw>/etc/fstab"  
-) ELSE (
-    ECHO "Updating MSYS fstab..."
-
-    msys\bin\bash -l -c "newpath=%CD:\=/%/mingw64; sed 's|.*\mingw|'$newpath' \/mingw|' /etc/fstab>/etc/fstab2"
-    msys\bin\bash -l -c "mv /etc/fstab2 /etc/fstab"
-)
-
-REM ===========================================================================
-REM UPDATE PROFILE
-REM ===========================================================================
-findstr /I "MINGLE_BASE" msys\etc\profile
-if ERRORLEVEL 1 (
-   ECHO.
-   ECHO Removing old profile...
-   ECHO.
-   DEL msys\etc\profile
-)
-
-IF NOT EXIST "msys\etc\profile" (
-    ECHO.
-    ECHO "Make Sure Previous PYTHONPATH is cleared and profile is updated..."
-    ECHO.
-    COPY mingle\profile msys\etc 
-    msys\bin\bash -l -c "echo \"export MINGLE_BASE=%CD%\"|sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g'>>/etc/profile"
-    msys\bin\bash -l -c "echo \"export CURL_CA_BUNDLE=$MINGLE_BASE/mingw64/share/curl/ca-bundle.crt\">>/etc/profile"
-    msys\bin\bash -l -c "echo \"export GIT_SSL_CAPATH=$MINGLE_BASE/mingw64/share/curl/ca-bundle.crt\">>/etc/profile"
-) ELSE (
-    ECHO.
-    ECHO "Updating MSYS profile..."
-    ECHO.
-    msys\bin\bash -l -c "newpath=%CD:\=/%; sed 's|export MINGLE_BASE=.*|export MINGLE_BASE='$newpath'|' /etc/profile>/etc/profile2"
-    msys\bin\bash -l -c "mv /etc/profile2 /etc/profile"    
-)
-
-REM ===========================================================================
 REM GET BUILD SCRIPTS IN ORDER
 REM ===========================================================================
 ECHO.
@@ -239,9 +203,10 @@ IF "%1"=="" (
 IF "%1"=="-p" (
   SET "MINGLE_ALT_PATH=%2"
   ECHO.
-  ECHO MINGLE_ALT_PATH=!MINGLE_ALT_PATH! 
-  SHIFT
+  ECHO MINGLE_ALT_PATH=!MINGLE_ALT_PATH!
 ) ELSE (
+  IF "%1"=="-c" GOTO CONSOLE
+  IF "%1"=="-b" GOTO SUBSTDRV
   IF "%1"=="-s" GOTO SUITE
   IF "%1"=="/?" (
     GOTO HELP
@@ -250,7 +215,9 @@ IF "%1"=="-p" (
   )
 )
 
+:NEXTPARAM
 SHIFT
+
 GOTO Loop
 
 :HELP
@@ -266,6 +233,10 @@ ECHO Usage: setup.bat [-s NUM]
 ECHO.
 ECHO   -p PATH Use alternate path for build.
 ECHO   -s NUM Specify a reference number from one of the suites listed below.
+ECHO   -b Use a substitue drive to reduce path length. Msys has a max path length 
+ECHO      of 256, any further and bash configure scripts may crash, causing 
+ECHO      stackdumps which are difficult to determine origin.
+ECHO   -c Open a console with a subst drive for dev purposes.
 ECHO.
 
 msys\bin\bash -l -c "/mingw/bin/mingle -l"
@@ -280,27 +251,47 @@ ECHO.
 
 GOTO HELP
 
+:CONSOLE
+SET LAUNCH=1
+
+:SUBSTDRV
+
+call mingle\available-drive.bat> drive.txt
+
+IF ERRORLEVEL 1 (
+  ECHO.
+  ECHO No drives available!
+  ECHO.
+  GOTO EXIT
+)
+
+set /p DRIVE=<drive.txt
+
+echo.
+echo Mapping current directory to=%DRIVE%
+
+subst %DRIVE% %CD%
+
+IF ERRORLEVEL 1 (
+  ECHO.
+  ECHO Failed to subst drive letter, %DRIVE%, for path. Must be in use."
+  ECHO.
+  GOTO EXIT
+)
+
+%DRIVE%
+
+echo CD=%CD%
+
+DEL drive.txt
+
+GOTO NEXTPARAM
+
 :SUITE
 
 set MINGLE_SUITE=%2
 
-ECHO.
-ECHO.
-ECHO Deploying selected development environment (%MINGLE_SUITE%):
-ECHO.
-
-msys\bin\bash -l -c "/mingw/bin/mingle -m %MINGLE_SUITE%"
-
-IF %MINGLE_SUITE% GTR %ERRORLEVEL% (
-ECHO.
-ECHO Invalid selection! You can only choose from one of the following:
-ECHO.
-msys\bin\bash -l -c "cd /mingw/bin;./mingle -l"
-GOTO EXIT
-)
-
-msys\bin\bash -l -c "/mingw/bin/mingle -k %MINGLE_SUITE%"
-ECHO.
+echo MINGLE_SUITE=%MINGLE_SUITE%
 
 GOTO Continue
 
@@ -309,6 +300,47 @@ REM CONTINUE
 REM ===========================================================================
 :Continue
 
+REM ===========================================================================
+REM UPDATE PROFILE
+REM ===========================================================================
+call mingle\update-etc.bat
+
+
+REM ===========================================================================
+REM LAUNCH CONSOLE
+REM ===========================================================================
+IF DEFINED LAUNCH (
+msys\bin\mintty msys/bin/bash -l
+REM START "MINGLE" /D "%CD%" msys\bin\bash -l
+GOTO EXIT
+)
+
+REM ===========================================================================
+REM USE SUITE IF PROVIDED
+REM ===========================================================================
+IF %MINGLE_SUITE% NEQ 0 (
+  ECHO.
+  ECHO.
+  ECHO "Deploying selected development environment (%MINGLE_SUITE%):"
+  ECHO.
+
+  msys\bin\bash -l -c "/mingw/bin/mingle -m %MINGLE_SUITE%"
+
+  IF %MINGLE_SUITE% GTR ERRORLEVEL (
+    ECHO.
+    ECHO Invalid selection! You can only choose from one of the following:
+    ECHO.
+    msys\bin\bash -l -c "cd /mingw/bin;./mingle -l"
+    GOTO EXIT
+  )
+
+  msys\bin\bash -l -c "/mingw/bin/mingle -k %MINGLE_SUITE%"
+  ECHO.
+)
+
+REM ===========================================================================
+REM CHECK FOR VISUAL STUDIO
+REM ===========================================================================
 ECHO "Checking for Visual Studio 2012 Express for Windows Desktop..."
 ECHO.
 reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\11.0"
@@ -317,13 +349,16 @@ ECHO.
 if ERRORLEVEL 1 (
 ECHO "Please Install Visual Studio 2012 Express for Windows Desktop before proceeding"
 ECHO "VS includes MASM, ml64.exe, which is used to build boost libraries."
-
+ECHO.
+ECHO "If this is a full prebuilt deployment, and you're not building boost,"
+ECHO "you may continue compiling and building projects via gnu gcc and"
+ECHO "the included dependencies in this package."
+ECHO.
 ECHO Visit: http://www.microsoft.com/visualstudio/eng/downloads
 ECHO Direct Link: http://go.microsoft.com/?linkid=9816758
 ECHO.
 
 pause
-EXIT /B 1
 )
 
 if not exist "mingw64\bin\ml64.exe" (
@@ -468,4 +503,10 @@ ECHO "Setup Complete."
 ECHO.
 
 :EXIT
-@endlocal
+cd "%ORIGINAL_PATH%"
+
+
+subst %DRIVE% /D>nul
+endlocal
+
+call mingle\update-etc.bat

@@ -146,6 +146,7 @@ ad_setDefaultEnv() {
     export "CPPFLAGS=-I/mingw/include  -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
     export "CRYPTO=POLARSSL"
     export "CC=x86_64-w64-mingw32-gcc"
+    unset LIBS
 
     cd $MINGLE_BUILD_DIR
 }
@@ -183,6 +184,7 @@ ad_configure() {
     fi
     
     if [ -e "autogen.sh" ]; then
+        echo "Autgen.sh script found, executing script..."
         ./autogen.sh
     elif [ -e "configure.ac" ] || [ -e "configure.in" ]; then
         if [ -e "/mingw/bin/autoconf" ];then
