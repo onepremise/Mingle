@@ -332,6 +332,12 @@ buildInstallPExports() {
 }
 
 buildInstallGenDef() {
+    cd $MINGLE_BUILD_DIR
+    
+    if ls mingw-w64-code-*-trunk &> /dev/null; then
+        mv mingw-w64-code-*-trunk gendef
+    fi
+    
     buildInstallGeneric "gendef*" true false "" true true "" "" "gendef"
 }
 
