@@ -139,7 +139,7 @@ mingleDownloadPackages () {
     mingleDownload "http://ftp.gnu.org/gnu/libc/glibc-$AD_GLIBC.tar.xz"
     mingleDownload "http://ftp.gnu.org/gnu/gdb/gdb-$AD_GDB_VERSION.tar.gz"
     mingleDownload "http://downloads.sourceforge.net/project/mingw/MinGW/Extension/pexports/pexports-$AD_PEXPORTS/pexports-$AD_PEXPORTS-mingw32-src.tar.xz"
-    mingleDownload "http://mingw-w64.svn.sourceforge.net/viewvc/mingw-w64/trunk/mingw-w64-tools/gendef/?view=tar" "gendef.tar.gz"
+    mingleDownload "http://sourceforge.net/code-snapshots/svn/m/mi/mingw-w64/code/mingw-w64-code-6365-trunk.zip" "gendef.zip"
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tcl$AD_TCL_VERSION-src.tar.gz"
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tk$AD_TK_VERSION-src.tar.gz"
     mingleDownload "http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz"

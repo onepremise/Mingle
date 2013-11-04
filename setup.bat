@@ -355,7 +355,8 @@ ECHO "you may continue compiling and building projects via gnu gcc and"
 ECHO "the included dependencies in this package."
 ECHO.
 ECHO Visit: http://www.microsoft.com/visualstudio/eng/downloads
-ECHO Direct Link: http://go.microsoft.com/?linkid=9816758
+ECHO New Link: http://www.microsoft.com/en-us/download/details.aspx?id=34673
+ECHO Download the full package. I've had issues with the web install.
 ECHO.
 
 pause
