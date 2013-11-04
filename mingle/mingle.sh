@@ -1596,7 +1596,7 @@ buildInstallScons() {
              ad_patch "scons-mingw.patch"
         fi                
 
-        python setup.py install --install-lib '/mingw/lib' --install-scripts '/mingw/bin' --no-install-bat
+        python setup.py install --install-lib "/mingw/lib" --install-scripts "/mingw/bin" --no-install-bat
         mv /mingw/lib/scons-2.3.0/scons-2.3.0-py2.7.egg-info `python -c "import sysconfig;print sysconfig.get_path('purelib')"`|| mingleError $? "scons install failed, aborting!"
 
         cd ..
