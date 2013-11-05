@@ -205,13 +205,17 @@ IF "%1"=="-p" (
   ECHO.
   ECHO MINGLE_ALT_PATH=!MINGLE_ALT_PATH!
 ) ELSE (
-  IF "%1"=="-c" GOTO CONSOLE
   IF "%1"=="-b" GOTO SUBSTDRV
+  IF "%1"=="-c" GOTO CONSOLE
   IF "%1"=="-s" GOTO SUITE
   IF "%1"=="/?" (
     GOTO HELP
   ) ELSE (
-    GOTO INVALID
+    IF "%1"=="" ( 
+      GOTO Continue
+    ) ELSE (
+      GOTO INVALID
+    )
   )
 )
 
@@ -254,6 +258,8 @@ GOTO HELP
 :CONSOLE
 SET LAUNCH=1
 
+GOTO NEXTPARAM
+
 :SUBSTDRV
 
 call mingle\available-drive.bat> drive.txt
@@ -291,9 +297,10 @@ GOTO NEXTPARAM
 
 set MINGLE_SUITE=%2
 
-echo MINGLE_SUITE=%MINGLE_SUITE%
+::Shift value
+SHIFT
 
-GOTO Continue
+GOTO NEXTPARAM
 
 REM ===========================================================================
 REM CONTINUE
@@ -472,7 +479,7 @@ if not exist "msys%MINGLE_BUILD_DIR%" (
 )
 
 IF %MINGLE_SUITE% EQU 0 (
-    msys\bin\mintty msys/bin/bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% | tee %MINGLE_BUILD_DIR%/build.log"
+    msys\bin\mintty -e msys/bin/bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% | tee %MINGLE_BUILD_DIR%/build.log"
 ) ELSE (
     msys\bin\bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% --suite=%MINGLE_SUITE% | tee %MINGLE_BUILD_DIR%/build.log"
 )
