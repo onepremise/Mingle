@@ -1,0 +1,17 @@
+--- subversion-1.8.3/build/ac-macros/compiler.m4	2013-06-24 00:00:40 -0400
++++ subversion-1.8.3/build/ac-macros/compiler2.m4	2013-11-13 20:24:21 -0500
+@@ -58,14 +58,6 @@
+   CFLAGS_KEEP="$CFLAGS"
+   CFLAGS=""
+ 
+-  dnl Find flags to force C90 mode
+-                dnl gcc and clang
+-  SVN_CFLAGS_ADD_IFELSE([-std=c90],[],[
+-    SVN_CFLAGS_ADD_IFELSE([-std=c89],[],[
+-      SVN_CFLAGS_ADD_IFELSE([-ansi])
+-    ])
+-  ])
+-
+   CMODEFLAGS="$CFLAGS"
+   CFLAGS="$CFLAGS_KEEP"
+   AC_SUBST(CMODEFLAGS)

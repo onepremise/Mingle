@@ -39,7 +39,7 @@ IF NOT EXIST "msys/etc/fstab" (
 ) ELSE (
     ECHO "Updating MSYS fstab..."
 
-    msys\bin\bash -l -c "newpath=%CD:\=/%/mingw64; sed 's|.*\mingw|'$newpath' \/mingw|' /etc/fstab>/etc/fstab2"
+    msys\bin\bash -l -c "newpath=%CD:\=/%/mingw64; sed -e 's|.*\mingw|'$newpath' /mingw|' -e 's|//|/|' /etc/fstab>/etc/fstab2"
     msys\bin\bash -l -c "mv /etc/fstab2 /etc/fstab"
 )
 

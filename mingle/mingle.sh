@@ -765,10 +765,9 @@ installLibPNG() {
 
         export "CFLAGS=-I/mingw/include"
         export "LDFLAGS=-L/mingw/lib"
-
-        if [ ! -e Makefile ]; then
-            ./configure --host=x86_64-w64-mingw32 --prefix=/mingw
-        fi
+        export "CPPFLAGS=$CFLAGS"
+        
+        ./configure --host=x86_64-w64-mingw32 --prefix=/mingw
 
         make || mingleError $? "make failed, aborting!"
         make install || mingleError $? "make install failed, aborting!"
@@ -1032,7 +1031,7 @@ buildInstallBerkeleyDB() {
 
 buildInstallSVN() {
     local _project="subversion-*"
-    local _additionFlags="--libdir=/mingw/lib/perl/site/lib --with-swig --with-berkeley-db --enable-bdb6 PERL=/mingw/bin/perl --with-apr-util=/mingw --with-apr=/mingw --with-serf=/mingw MAKE=dmake"
+    local _additionFlags="--libdir=/mingw/lib/perl/site/lib --with-swig --with-berkeley-db --enable-bdb6 --with-apr-util=/mingw --with-apr=/mingw --with-serf=/mingw --enable-shared PERL=/mingw/bin/perl MAKE=dmake"
     local _binCheck="svn.exe"
     local _exeToTest="svn --version"
 
@@ -1042,10 +1041,10 @@ buildInstallSVN() {
     
     ad_setDefaultEnv
 
-    export "CFLAGS=$CFLAGS -I/mingw64/include/apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
-    export "LDFLAGS=$LDFLAGS -L/mingw64/x86_64-w64-mingw32/lib -lole32 -lmlang -luuid -lws2_32"
-    export "CPPFLAGS=$CPPFLAGS -I/mingw64/include/apr-1 -DAPR_DECLARE_STATIC -DAPU_DECLARE_STATIC -D__MINGW32__"
-    #export "LIBS=-lserf-1 -lpsapi -lversion"
+    export "CFLAGS=$CFLAGS -I$MINGLE_BASE\mingw64\include\apr-1 -DAPU_DECLARE_STATIC -DAPR_DECLARE_STATIC -D__MINGW32__"
+    export "LDFLAGS=$LDFLAGS -L$MINGLE_BASE\mingw64\x86_64-w64-mingw32\lib -lole32 -lmlang -luuid -lws2_32"
+    export "CPPFLAGS=$CFLAGS"
+    export "LIBS=-lserf-1 -lpsapi -lversion"
 
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
@@ -1061,11 +1060,18 @@ buildInstallSVN() {
             cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/bindings-mingw.patch .
             ad_patch "bindings-mingw.patch"
             cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/auth-mingw.patch .
-            ad_patch "auth-mingw.patch"              
+            ad_patch "auth-mingw.patch" 
+            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/compiler-mingw.patch .
+            ad_patch "compiler-mingw.patch"            
         fi
+        
+        dos2unix build/generator/templates/build-outputs.mk.ezt
 
         cd ..
-
+        
+        # Make sure you build this with drive substitution turned on, "setup.bat -b -c"
+        # Otherwise, gcc will crash from parsing paths, which concatenate out too long.
+        # This causes segfault.
         buildInstallGeneric "$_project" false false "" false true "$_additionFlags" "" "$_binCheck" "" ""
         
         cd $_projectdir || mingleError $? "cd failed, aborting!"
@@ -1419,12 +1425,12 @@ buildInstallGDAL() {
 
 buildInstallPython() {
     local _project="Python-*"
-    local _binCheck="python$AD_PYTHON_MAJOR"
+    local _binCheck="python.exe"
     local _exeToTest="python --version"
     
     echo
     echo "Checking for binary $_binCheck..."
-    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$ _binCheck" ] );then
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         echo
         echo "Building $_project..."
         echo

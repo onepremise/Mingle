@@ -287,8 +287,6 @@ IF ERRORLEVEL 1 (
 
 %DRIVE%
 
-echo CD=%CD%
-
 DEL drive.txt
 
 GOTO NEXTPARAM
