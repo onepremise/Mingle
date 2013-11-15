@@ -106,6 +106,10 @@ ad_generateImportLibraryForDLL() {
     local _importName=`echo $_dll|sed 's/\.dll//'`
     local _searchPath=''
     
+    echo
+    echo "Generate Import Library..."
+    echo    
+    
     if ! echo $_dll|grep '^lib' ; then
         _importName="lib$_importName"
     fi
@@ -154,6 +158,10 @@ ad_setDefaultEnv() {
 ad_patch() {
     local _patchFile=$1
     local _workingDir=`pwd`
+    
+    echo
+    echo "Patching..."
+    echo
 
     if [ "$MINGLE_BUILD_DIR" == "$_workingDir" ]; then
         echo
@@ -172,6 +180,10 @@ ad_configure() {
     local _aclocalFlags=$3
     local _runAutoconf=$4
     local _additionFlags=$5
+    
+    echo
+    echo "Configuring..."
+    echo
     
     local _projectDir=$(ad_getDirFromWC "$_project")
 

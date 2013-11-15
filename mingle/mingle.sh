@@ -332,13 +332,23 @@ buildInstallPExports() {
 }
 
 buildInstallGenDef() {
-    cd $MINGLE_BUILD_DIR
+    local _project="gendef*"
+    local _binCheck="gendef"
     
-    if ls mingw-w64-code-*-trunk &> /dev/null; then
-        mv mingw-w64-code-*-trunk gendef
+    echo "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        ad_clearEnv
+        
+        mingleDecompress "$_project"
+        
+        cd $MINGLE_BUILD_DIR
+    
+        if ls mingw-w64-code-*-trunk &> /dev/null; then
+            mv mingw-w64-code-*-trunk gendef || mingleError $? "mv failed, aborting!"
+        fi
+    
+        buildInstallGeneric "$_project" true false "" true true "" "" "$_binCheck"
     fi
-    
-    buildInstallGeneric "gendef*" true false "" true true "" "" "gendef"
 }
 
 buildInstallGLibC() {
