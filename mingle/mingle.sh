@@ -2418,9 +2418,6 @@ suiteBase() {
     mingleDownloadPackages
 
     updateGCC
-
-    buildInstallPExports
-    buildInstallGenDef
     
     #experimental
     #updateTarCommand
@@ -2431,10 +2428,15 @@ suiteBase() {
     buildInstallAutoMake
     buildInstallLibtool
     buildInstallPkgconfig
+    
     buildInstallGMP
     buildInstallMPFR
     buildInstallMPC
+    
     buildInstallMingw64CRT
+    buildInstallPExports
+    buildInstallGenDef
+    
     buildInstallZlib
     buildInstallBzip2
     buildInstallLibiconv
