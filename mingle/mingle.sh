@@ -139,7 +139,7 @@ mingleDownloadPackages () {
     mingleDownload "http://ftp.gnu.org/gnu/libc/glibc-$AD_GLIBC.tar.xz"
     mingleDownload "http://ftp.gnu.org/gnu/gdb/gdb-$AD_GDB_VERSION.tar.gz"
     mingleDownload "http://downloads.sourceforge.net/project/mingw/MinGW/Extension/pexports/pexports-$AD_PEXPORTS/pexports-$AD_PEXPORTS-mingw32-src.tar.xz"
-    mingleDownload "http://sourceforge.net/code-snapshots/svn/m/mi/mingw-w64/code/mingw-w64-code-6365-trunk.zip" "gendef.zip"
+    
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tcl$AD_TCL_VERSION-src.tar.gz"
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tk$AD_TK_VERSION-src.tar.gz"
     mingleDownload "http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz"
@@ -336,18 +336,16 @@ buildInstallGenDef() {
     local _binCheck="gendef"
     
     echo "Checking for binary $_binCheck..."
-    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
-        ad_clearEnv
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then   
         
-        mingleDecompress "$_project"
+        cd $MINGLE_BUILD_DIR/mingw-w64-* || mingleError $? "cd 1 failed, aborting!"
+        cd mingw-w64-tools || mingleError $? "cd 2 failed, aborting!"
+        
+        cp -rf gendef $MINGLE_BUILD_DIR
         
         cd $MINGLE_BUILD_DIR
     
-        if ls mingw-w64-code-*-trunk &> /dev/null; then
-            mv mingw-w64-code-*-trunk gendef || mingleError $? "mv failed, aborting!"
-        fi
-    
-        buildInstallGeneric "$_project" true false "" true true "" "" "$_binCheck"
+        buildInstallGeneric "$_project" true true "" true true "" "" "$_binCheck"
     fi
 }
 

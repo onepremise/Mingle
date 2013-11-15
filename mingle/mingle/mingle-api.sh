@@ -646,7 +646,12 @@ mingleDecompress() {
         elif [ ${_decompFile: -3} == ".7z" ]; then
             7za x "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -4} == ".zip" ]; then
-            unzip -q -n "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
+            unzip -q -n "$_decompFile"
+            local _result=$?
+	    if ! ( [ "$_result" == 0 ] || [ "$_result" == 3 ] );then
+                echo _result=$_result
+                mingleError $? "Decompression failed for $_decompFile, aborting!"
+            fi
         elif [ ${_decompFile: -5} == ".lzma" ]; then
             lzma -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         fi
