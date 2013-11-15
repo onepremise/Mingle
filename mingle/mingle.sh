@@ -338,7 +338,9 @@ buildInstallGenDef() {
     echo "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then   
         
-        cd $MINGLE_BUILD_DIR/mingw-w64-* || mingleError $? "cd 1 failed, aborting!"
+        local _projectDir=$(ad_getDirFromWC "mingw-w64-*")
+        
+        cd $_projectDir || mingleError $? "cd $_projectDir failed, aborting!"
         cd mingw-w64-tools || mingleError $? "cd 2 failed, aborting!"
         
         cp -rf gendef $MINGLE_BUILD_DIR
