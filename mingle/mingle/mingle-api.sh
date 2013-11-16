@@ -566,6 +566,10 @@ mingleInitialize() {
         if [ ! -e "/usr/local/lib" ]; then
             mkdir /usr/local/lib || mingleError $? "failed to create directory, aborting!"
         fi
+        
+        if [ ! -e "/tmp" ]; then
+            mkdir /tmp || mingleError $? "failed to create tmp, aborting!"
+        fi
 
         MINGLE_INITIALIZE=true
     fi
