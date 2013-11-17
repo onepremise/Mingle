@@ -1053,8 +1053,8 @@ buildInstallSVN() {
     
     local _base=`echo $MINGLE_BASE|sed -e 's/\\//\\\/g'`
 
-    export "CFLAGS=$CFLAGS -I$_base\mingw64\include\apr-1 -DAPU_DECLARE_STATIC -DAPR_DECLARE_STATIC -D__MINGW32__"
-    export "LDFLAGS=$LDFLAGS -L$_base\mingw64\x86_64-w64-mingw32\lib -lole32 -lmlang -luuid -lws2_32"
+    export "CFLAGS=$CFLAGS -I$MINGLE_BASE/mingw64/include/apr-1 -DAPU_DECLARE_STATIC -DAPR_DECLARE_STATIC -D__MINGW32__"
+    export "LDFLAGS=$LDFLAGS -L$MINGLE_BASE/mingw64/x86_64-w64-mingw32/lib -lole32 -lmlang -luuid -lws2_32"
     export "CPPFLAGS=$CFLAGS"
     export "LIBS=-lserf-1 -lpsapi -lversion"
 
