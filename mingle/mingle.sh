@@ -909,7 +909,7 @@ buildInstallLibXML2() {
 buildInstallCurl() {
     local _project="curl-*"
     
-    if [ -e /mingw/lib/libcurl-1.a ]; then
+    if [ -e /mingw/lib/libcurl.a ]; then
         echo "$_project Already Installed."
         return;
     fi
@@ -1051,16 +1051,14 @@ buildInstallSVN() {
     
     ad_setDefaultEnv
     
-    local _base=`echo $MINGLE_BASE|sed -e 's/\\//\\\/g'`
-
-    export "CFLAGS=$CFLAGS -I$MINGLE_BASE/mingw64/include/apr-1 -DAPU_DECLARE_STATIC -DAPR_DECLARE_STATIC -D__MINGW32__"
-    export "LDFLAGS=$LDFLAGS -L$MINGLE_BASE/mingw64/x86_64-w64-mingw32/lib -lole32 -lmlang -luuid -lws2_32"
+    export "CFLAGS=$CFLAGS -I$MINGLE_BASE_MX/mingw64/include/apr-1 -DAPU_DECLARE_STATIC -DAPR_DECLARE_STATIC -D__MINGW32__"
+    export "LDFLAGS=$LDFLAGS -L$MINGLE_BASE_MX/mingw64/x86_64-w64-mingw32/lib -lole32 -lmlang -luuid -lws2_32"
     export "CPPFLAGS=$CFLAGS"
     export "LIBS=-lserf-1 -lpsapi -lversion"
 
     echo "Checking for binary $_binCheck..."
     
-    echo MINGLE_BASE = $_base
+    echo MINGLE_BASE_MX = $MINGLE_BASE_MX
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleDecompress "$_project"
 
@@ -1633,7 +1631,7 @@ buildInstallScons() {
 buildInstallSerf() {
     local _project="serf-*"
 
-    if [ ! -e /mingw/lib/libserf-1.dll ]; then
+    if [ ! -e /mingw/lib/libserf-1.dll.a ]; then
         ad_setDefaultEnv
         
         mingleDecompress "$_project"
@@ -1977,16 +1975,16 @@ buildInstallPerl() {
 
     cd win32 || mingleError $? "cd failed, aborting!"
 
-    local _perl_install=`echo $MINGLE_BASE|sed -e 's/^\/\(.\)/\1:/' -e 's/\//\\\\/g'`
-
+    local _perl_install=`echo $MINGLE_BASE_DOS | sed -e 's/:$/:\\\/g' -e 's/\\\/\\\\\\\/g'`
+    
     echo "Executing dmake MINGLE_BASE*=$_perl_install..."
     echo
 
-    dmake MINGLE_BASE*=$_perl_install
+    dmake MINGLE_BASE*=$_perl_install || mingleError $? "dmake failed, aborting!"
 
     echo "Executing dmake install MINGLE_BASE*=$_perl_install..."
     echo
-    dmake install MINGLE_BASE*=$_perl_install
+    dmake install MINGLE_BASE*=$_perl_install || mingleError $? "dmake install failed, aborting!"
 
     cd ../..
 }
