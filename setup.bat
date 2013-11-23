@@ -9,6 +9,7 @@ REM http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-adm
 
 set DRIVE=
 set PERSIST=1
+set ERRORVALUE=0
 
 NET SESSION >nul 2>&1
 IF %ERRORLEVEL% EQU 0 (
@@ -268,6 +269,7 @@ IF ERRORLEVEL 1 (
   ECHO.
   ECHO No drives available!
   ECHO.
+  SET ERRORVALUE=6
   GOTO EXIT
 )
 
@@ -282,6 +284,7 @@ IF ERRORLEVEL 1 (
   ECHO.
   ECHO Failed to subst drive letter, %DRIVE%, for path. Must be in use."
   ECHO.
+  SET ERRORVALUE=6
   GOTO EXIT
 )
 
@@ -331,13 +334,14 @@ IF %MINGLE_SUITE% NEQ 0 (
   ECHO "Deploying selected development environment (%MINGLE_SUITE%):"
   ECHO.
 
-  msys\bin\bash -l -c "/mingw/bin/mingle -m %MINGLE_SUITE%"
+  msys\bin\bash -l -c "/mingw/bin/mingle -m"
 
-  IF %MINGLE_SUITE% GTR ERRORLEVEL (
+  IF %MINGLE_SUITE% GTR !ERRORLEVEL! (
     ECHO.
-    ECHO Invalid selection! You can only choose from one of the following:
+    ECHO "Invalid selection^! You can only choose from one of the following:"
     ECHO.
     msys\bin\bash -l -c "cd /mingw/bin;./mingle -l"
+    SET ERRORVALUE=7
     GOTO EXIT
   )
 
@@ -499,6 +503,8 @@ IF EXIST "msys%MINGLE_BUILD_DIR%\mingle_error.log" (
 IF %ERROR_CHECK% EQU 1 (
     ECHO %ERRL% %ERR_MSG%
     
+    SET ERRORVALUE=%ERRL%
+    
     GOTO EXIT
 )
 
@@ -513,10 +519,10 @@ ECHO.
 :EXIT
 cd "%ORIGINAL_PATH%"
 
-
-subst %DRIVE% /D>nul
-endlocal
+subst %DRIVE% /D > nul
 
 call mingle\update-etc.bat
 
-EXIT /B 55
+EXIT /B %ERRORVALUE%
+
+endlocal

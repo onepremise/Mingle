@@ -3070,6 +3070,9 @@ mingleProcessSelection() {
         uninstallPostgresql
         break
         ;;
+    "Quit")
+        break
+        ;;
     *)
         echo
         echo "Invalid option. Try another one."
