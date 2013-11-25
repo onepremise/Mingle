@@ -205,6 +205,8 @@ IF "%1"=="-p" (
   SET "MINGLE_ALT_PATH=%2"
   ECHO.
   ECHO MINGLE_ALT_PATH=!MINGLE_ALT_PATH!
+  ::Shift value
+  SHIFT
 ) ELSE (
   IF "%1"=="-b" GOTO SUBSTDRV
   IF "%1"=="-c" GOTO CONSOLE
@@ -253,6 +255,8 @@ GOTO EXIT
 ECHO.
 ECHO Invalid Option: %1
 ECHO.
+
+SET ERRORVALUE=5
 
 GOTO HELP
 
@@ -488,7 +492,7 @@ IF %MINGLE_SUITE% EQU 0 (
     msys\bin\bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% --suite=%MINGLE_SUITE% 2>&1 | tee %MINGLE_BUILD_DIR%/build.log"
 )
 
-set ERRL=%ERRORLEVEL%
+set ERRL=!ERRORLEVEL!
 set ERR_MSG="Error: %ERRL%, Failed to execute mingle!"
 
 IF %ERRL% NEQ 0 set ERROR_CHECK=1
@@ -517,7 +521,8 @@ ECHO "Setup Complete."
 ECHO.
 
 :EXIT
-cd "%ORIGINAL_PATH%"
+
+cd /D "%ORIGINAL_PATH%"
 
 subst %DRIVE% /D > nul
 

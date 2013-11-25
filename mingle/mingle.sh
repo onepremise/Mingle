@@ -1845,13 +1845,13 @@ buildInstallMapnik() {
 
     cd ..
 
-    buildInstallGeneric "mapnik-*" true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
+    buildInstallGeneric "$_project" true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
 }
 
 buildInstallMapnikDev() {
-    local _project="mapnik-*"
+    local _project="mapnik"
 
     if [ -e /mingw/lib/mapnik.dll ] && [ -e /mingw/lib/libmapnik.dll.a ]; then
         echo "$_project Already Installed." 
