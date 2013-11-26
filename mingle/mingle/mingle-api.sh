@@ -22,9 +22,23 @@ ad_isDateNewerThanFileModTime() {
     return 1
 }
 
+ad_getLocalDirFromWC() {
+    local _project="$1"
+    local _result=`find . -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
+
+    echo "$_result"
+}
+
 ad_getDirFromWC() {
     local _project="$1"
     local _result=`find $MINGLE_BUILD_DIR -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
+
+    echo "$_result"
+}
+
+ad_getLocalArchiveFromWC() {
+    local _project="$1"
+    local _result=`find . -maxdepth 1 -name "$_project" -prune -type f -print | head -1`
 
     echo "$_result"
 }
@@ -626,16 +640,26 @@ mingleDownload() {
 
 mingleDecompress() {
     local _project="$1"
-    local _projectDir=$(ad_getDirFromWC "$_project")
-
+    local _localDir="$2"
+    local _projectDir=""
+    local _decompFile=""
+    
+    if [ -n "$_localDir" ]; then
+        _projectDir=$(ad_getLocalDirFromWC "$_project")
+    else
+        _projectDir=$(ad_getDirFromWC "$_project")
+    fi
+    
     if [ -z "$_projectDir" ]; then
-        local _decompFile=$(ad_getArchiveFromWC "$_project")
+        _decompFile=$(ad_getArchiveFromWC "$_project")
 
         if [ ! -e "$_decompFile" ]; then
             mingleError $? "Failed to find archive for: $_project, aborting!"
         fi
 
-        cd $MINGLE_BUILD_DIR
+        if [ -z "$_localDir" ]; then
+            cd $MINGLE_BUILD_DIR
+        fi
             
         echo "Decompressing $_decompFile"...
             
@@ -660,9 +684,9 @@ mingleDecompress() {
             lzma -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         fi
         
-        _decompFile=$(ad_getArchiveFromWC "$_project")
+        _decompFile=$(ad_getLocalArchiveFromWC "$_project")
         
-        if [ ${_decompFile: -4} == ".tar" ]; then
+        if [ "${_decompFile: -4}" == ".tar" ]; then
             tar xvf "$_decompFile" || mingleError $? "Failed to unarchive $_decompFile, aborting!"
         fi
     fi

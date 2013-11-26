@@ -716,24 +716,23 @@ installLibJPEG () {
     echo "Installing libjpeg-turbo..."
     echo
 
-    STOREPATH=`pwd`
-
-    if [ ! -e libjpeg-turbo ]; then
-        mkdir libjpeg-turbo
-    fi
-
-    cd libjpeg-turbo
-
-    DOSPATH=`cmd /c 'echo %CD%'`
-
-
-    cd $MINGLE_CACHE
-
-    EXECPATH=`pwd -W`
-
-    cd $STOREPATH
-
     if [ ! -e /mingw/lib/libturbojpeg.a ]; then
+        STOREPATH=`pwd`
+
+        if [ ! -e libjpeg-turbo ]; then
+            mkdir libjpeg-turbo
+        fi
+
+        cd libjpeg-turbo
+
+        DOSPATH=`cmd /c 'echo %CD%'`
+
+
+        cd $MINGLE_CACHE
+
+        EXECPATH=`pwd -W`
+
+        cd $STOREPATH    
         if [ ! -e "libjpeg-turbo.tar" ]; then
             cmd /c "$EXECPATH/libjpeg-turbo-1.2.1-gcc64.exe /S /D=$DOSPATH"
 
@@ -1376,9 +1375,9 @@ buildInstallProjDatumgrid() {
 
         cd proj-datumgrid || mingleError $? "cd failed, aborting!"
 
-        mingleDecompress "proj-datumgrid*"
+        mingleDecompress "proj-datumgrid*" 1
 
-        cp -f * /mingw/share/proj
+        cp -rf * /mingw/share/proj
      
         export PROJ_LIB=/mingw/share/proj
 
@@ -1847,7 +1846,7 @@ buildInstallMapnik() {
 
     buildInstallGeneric "$_project" true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
 
-    ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
+    ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll || mingleError $? "Mapnik install failed, aborting!"
 }
 
 buildInstallMapnikDev() {
@@ -1862,7 +1861,7 @@ buildInstallMapnikDev() {
 
     buildInstallGeneric "$_project" true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
 
-    ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll
+    ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll || mingleError $? "Mapnik install failed, aborting!"
 }
 
 buildInstallMapnikStylesheets() {
