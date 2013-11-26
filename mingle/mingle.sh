@@ -262,10 +262,16 @@ install7Zip() {
     echo
     
     if ! 7za &> /dev/null; then
-        mingleDecompress "7za$AD_SEVENZIP.zip"
-        unzip -uo 7za$AD_SEVENZIP.zip
+        cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
+        mkdir 7zip
+        
+        cd 7zip
+        
+        mingleDecompress "7za$AD_SEVENZIP.zip" 1
     
-        cp 7z* /bin
+        cp 7z* /bin || mingleError $? "failed to copy 7zip, aborting!"
+        
+        cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
     else
         echo "Already Installed."        
     fi

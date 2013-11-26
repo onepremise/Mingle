@@ -643,6 +643,7 @@ mingleDecompress() {
     local _localDir="$2"
     local _projectDir=""
     local _decompFile=""
+    local _tarcheck=false
     
     if [ -n "$_localDir" ]; then
         _projectDir=$(ad_getLocalDirFromWC "$_project")
@@ -667,10 +668,13 @@ mingleDecompress() {
             tar xzvf "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -3} == ".gz" ]; then
             gzip -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
+            _tarcheck=true
         elif [ ${_decompFile: -3} == ".xz" ]; then
             xz -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
+            _tarcheck=true
         elif [ ${_decompFile: -4} == ".bz2" ]; then
             bzip2 -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
+            _tarcheck=true
         elif [ ${_decompFile: -3} == ".7z" ]; then
             7za x "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
         elif [ ${_decompFile: -4} == ".zip" ]; then
@@ -682,12 +686,17 @@ mingleDecompress() {
             fi
         elif [ ${_decompFile: -5} == ".lzma" ]; then
             lzma -d "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
+            _tarcheck=true
+        elif [ "${_decompFile: -4}" == ".tar" ]; then
+            tar xvf "$_decompFile" || mingleError $? "Failed to unarchive $_decompFile, aborting!"
         fi
         
-        _decompFile=$(ad_getLocalArchiveFromWC "$_project")
+        if $_tarcheck; then
+            _decompFile=$(ad_getLocalArchiveFromWC "$_project")
         
-        if [ "${_decompFile: -4}" == ".tar" ]; then
-            tar xvf "$_decompFile" || mingleError $? "Failed to unarchive $_decompFile, aborting!"
+            if [ "${_decompFile: -4}" == ".tar" ]; then
+                tar xvf "$_decompFile" || mingleError $? "Failed to unarchive extracted $_decompFile, aborting!"
+            fi
         fi
     fi
 }
