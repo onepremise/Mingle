@@ -1,5 +1,10 @@
 MINGLE_INITIALIZE=false
 
+# Initialize our own variables:
+verbose=0
+suite=""
+altPath=""
+
 ad_isDateNewerThanFileModTime() {
     local _checkdate=$1
     local _filename=$2
@@ -512,7 +517,7 @@ mingleError() {
     echo "Current Project Dir: `pwd`"
     echo
     echo "`date +%m-%d-%y\ %T`, $_errorNum $_errorMsg"
-    echo "`date +%m-%d-%y\ %T`, \"$_errorNum\" \"$_errorMsg\"">$MINGLE_BUILD_DIR/mingle_error.log
+    echo "`date +%m-%d-%y\ %T`, \"$_errorNum\", \"$_errorMsg\"">$MINGLE_BUILD_DIR/mingle_error.log
     echo
 
     exit $_errorNum
@@ -584,6 +589,14 @@ mingleInitialize() {
         if [ ! -e "/tmp" ]; then
             mkdir /tmp || mingleError $? "failed to create tmp, aborting!"
         fi
+        
+        if [ ! -e "$MINGLE_BUILD_DIR/temp" ]; then
+            mkdir $MINGLE_BUILD_DIR/temp || mingleError $? "failed to create tmp, aborting!"
+        fi
+        
+        export "TMPDIR=$MINGLE_BUILD_DIR/temp"
+        export "TEMP=$TMPDIR"
+        export "TMP=$TMPDIR"
 
         MINGLE_INITIALIZE=true
     fi

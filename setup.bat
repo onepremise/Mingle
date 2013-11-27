@@ -183,7 +183,7 @@ IF NOT EXIST "mingw64\lib\mingle" (
 )
 
 XCOPY /Y /Q /D mingle\mingle.sh mingw64\bin
-XCOPY /Y /Q /D /S mingle\mingle\mingle-api.sh mingw64\lib\mingle
+XCOPY /Y /Q /D /S mingle\mingle\mingle-* mingw64\lib\mingle
 XCOPY /Y /Q /D mingle\mingle.cfg mingw64\etc
 
 IF EXIST "mingw64\bin\mingle.sh" (
@@ -492,22 +492,42 @@ IF %MINGLE_SUITE% EQU 0 (
     msys\bin\bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% --suite=%MINGLE_SUITE% 2>&1 | tee %MINGLE_BUILD_DIR%/build.log"
 )
 
+REM ===========================================================================
+REM ERROR HANDLER
+REM ===========================================================================
 set ERRL=!ERRORLEVEL!
 set ERR_MSG="Error: %ERRL%, Failed to execute mingle!"
 
 IF %ERRL% NEQ 0 set ERROR_CHECK=1
-IF EXIST "msys%MINGLE_BUILD_DIR%\mingle_error.log" (
-    set ERROR_CHECK=1
-    FOR /F "eol=; tokens=1,2* delims=," %%i in (msys%MINGLE_BUILD_DIR%\mingle_error.log) do (
-        set ERRL=%%i
-        set ERR_MSG=%%j
+
+IF DEFINED MINGLE_ALT_PATH (
+    IF EXIST "%MINGLE_ALT_PATH%\mingle_error.log" (
+        set ERROR_CHECK=1
+    )
+) ELSE (
+    SET MINGLE_ALT_PATH="msys\%MINGLE_BUILD_DIR%"
+    IF EXIST "msys%MINGLE_BUILD_DIR%\mingle_error.log" (
+        set ERROR_CHECK=1
     )
 )
 
 IF %ERROR_CHECK% EQU 1 (
-    ECHO %ERRL% %ERR_MSG%
+    CD /D %MINGLE_ALT_PATH:/=\%"
     
-    SET ERRORVALUE=%ERRL%
+    FOR /F "eol=; tokens=1,2,3* delims=," %%i in (mingle_error.log) do (
+        set ERRD=%%i
+        set ERRL=%%j
+        set ERR_MSG=%%k
+    )
+    
+    CD /D "%ORIGINAL_PATH%"
+    
+    SET ERRORVALUE=!ERRL:"=!
+    
+    ECHO.
+    ECHO DATE = !ERRD!
+    ECHO ERROR = !ERRORVALUE!
+    ECHO MESSAGE = !ERR_MSG!
     
     GOTO EXIT
 )
@@ -520,6 +540,9 @@ ECHO.
 ECHO "Setup Complete."
 ECHO.
 
+REM ===========================================================================
+REM EXIT AND RETURN STATUS
+REM ===========================================================================
 :EXIT
 
 cd /D "%ORIGINAL_PATH%"
