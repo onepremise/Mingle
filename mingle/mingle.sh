@@ -1132,6 +1132,7 @@ buildInstallGit() {
 
         cd ..
         
+		git config --system push.default matching
         git config --system http.sslcainfo $CURL_CA_BUNDLE
     else
         echo "Already Installed."          
@@ -1169,7 +1170,7 @@ buildInstallFontConfig() {
     local _project="fontconfig-*"
     local _additionFlags="--enable-libxml2 --disable-docs"
     local _binCheck="fc-list"
-    local _exeToTest="fc-list"
+    local _exeToTest="fc-query --version"
 
     export "FREETYPE_LIBS=`freetype-config --libs`"
 

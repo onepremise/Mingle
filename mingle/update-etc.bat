@@ -56,13 +56,27 @@ REM SETUP FSTAB
 REM ===========================================================================
 IF NOT EXIST "msys/etc/fstab" (
     ECHO "Setup MSYS fstab..."
+	ECHO.
     
     msys\bin\bash -l -c "echo '%CD:\=/%/mingw64' /mingw>/etc/fstab"  
 ) ELSE (
     ECHO "Updating MSYS fstab..."
+	ECHO.
 
     msys\bin\bash -l -c "newpath=%CD:\=/%/mingw64; sed -e 's|.*\mingw|'$newpath' /mingw|' -e 's|//|/|' /etc/fstab>/etc/fstab2"
     msys\bin\bash -l -c "mv /etc/fstab2 /etc/fstab"
 )
+
+REM ===========================================================================
+REM UPDATE GIT PATHS
+REM ===========================================================================
+IF EXIST "mingw64/bin/git.exe" (
+    ECHO "Updating git config..."
+	ECHO.
+	msys\bin\bash -l -c "git config --global http.sslcainfo $GIT_SSL_CAPATH"
+    msys\bin\bash -l -c "git config -f $MINGLE_BASE/mingw64/etc/gitconfig http.sslcainfo $GIT_SSL_CAPATH"
+)
+
+ECHO.
 
 endlocal
