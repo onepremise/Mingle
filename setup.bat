@@ -211,6 +211,7 @@ IF "%1"=="-p" (
   IF "%1"=="-b" GOTO SUBSTDRV
   IF "%1"=="-c" GOTO CONSOLE
   IF "%1"=="-s" GOTO SUITE
+  IF "%1"=="-u" GOTO UPDATE
   IF "%1"=="/?" (
     GOTO HELP
   ) ELSE (
@@ -239,11 +240,12 @@ ECHO.
 ECHO Usage: setup.bat [-s NUM]
 ECHO.
 ECHO   -p PATH Use alternate path for build.
-ECHO   -s NUM Specify a reference number from one of the suites listed below.
 ECHO   -b Use a substitue drive to reduce path length. Msys has a max path length 
 ECHO      of 256, any further and bash configure scripts may crash, causing 
 ECHO      stackdumps which are difficult to determine origin.
 ECHO   -c Open a console with a subst drive for dev purposes.
+ECHO   -u Update configuration.
+ECHO   -s NUM Specify a reference number from one of the suites listed below.
 ECHO.
 
 msys\bin\bash -l -c "/mingw/bin/mingle -l"
@@ -308,6 +310,12 @@ set MINGLE_SUITE=%2
 SHIFT
 
 GOTO NEXTPARAM
+
+:UPDATE
+
+ECHO Updating configuration
+
+GOTO EXIT
 
 REM ===========================================================================
 REM CONTINUE
