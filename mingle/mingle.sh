@@ -2056,7 +2056,7 @@ buildInstallDBPerl() {
     
     local _projectdir=$(ad_getDirFromWC $_project)
     
-    cd $_project || mingleError $? "cd failed, aborting!"
+    cd $_projectdir || mingleError $? "cd failed, aborting!"
     
     perl Makefile.PL INC=-I/mingw/include LIBS="-lpthread -ldb-6.0.dll"
     dmake
@@ -2071,7 +2071,7 @@ buildInstallDBPerl() {
     
     local _projectdir=$(ad_getDirFromWC $_project)   
     
-    cd $_project || mingleError $? "cd failed, aborting!"
+    cd $_projectdir || mingleError $? "cd failed, aborting!"
     
     perl Makefile.PL INC=-I/mingw/include LIBS="-lpthread -ldb-6.0.dll"
     dmake
