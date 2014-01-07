@@ -1299,6 +1299,15 @@ buildInstallICU() {
         
         #cd ..
         
+        ad_create_libtool_la 'icui18n'
+        ad_create_libtool_la 'icuuc'
+        ad_create_libtool_la 'icudata'
+        ad_create_libtool_la 'icuio'
+        ad_create_libtool_la 'icule'
+        ad_create_libtool_la 'iculx'
+        ad_create_libtool_la 'icutu'
+        ad_create_libtool_la 'icutest'
+        
         #ad_generateImportLibraryForDLL 'libicui18n.dll'
         #ad_generateImportLibraryForDLL 'libicudata.dll'
         #ad_generateImportLibraryForDLL 'libicudt.dll'
@@ -2342,8 +2351,8 @@ buildInstallProtobufC() {
 
     local _project="protobuf-c-*"
     local _configureFlags=""
-    local _binCheck="protoc.exe"
-    local _exeToTest="protoc.exe --version"
+    local _binCheck="protoc-c.exe"
+    local _exeToTest="protoc-c.exe --version"
     
     echo
     echo "Building $_project..."
@@ -2363,7 +2372,8 @@ buildInstallProtobufC() {
         
         cd $_projectDir || mingleError $? "cd failed, aborting!"
         
-        ./autogen.sh
+        ./autogen.sh --prefix=/mingw
+        
         #CFLAGS are not needed for generating protobuf-c libtool wrapper
         sed 's/^LTCFLAGS=.*/LTCFLAGS="-D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"/g' libtool>libtool2
         mv -f libtool2 libtool
@@ -2382,10 +2392,11 @@ buildInstallProtobufC() {
     
 buildInstallOsm2pgsql() {
     local _project="osm2pgsql*"
-    local _configureFlags="--with-zlib=/mingw --with-bzip2=/mingw --with-geos=/mingw/bin/geos-config --with-libxml2=/mingw/bin/xml2-config --with-proj=/mingw --with-postgresql=/mingw/bin/pg_config.exe --with-protobuf-c=yes --with-protobuf-c-inc=/mingw/include --with-protobuf-c-lib='-L/mingw/lib -lprotobuf-c -lmingle'"
+    local _configureFlags="--with-zlib=/mingw --with-bzip2=/mingw --with-geos=/mingw/bin/geos-config --with-libxml2=/mingw/bin/xml2-config --with-proj=/mingw --with-postgresql=/mingw/bin/pg_config.exe --with-protobuf-c=/mingw"
     
     export "CFLAGS=-I/mingw/include -DWIN32 -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"
-    export "LDFLAGS=-L/mingw/lib -lmingle"
+    #export "LDFLAGS=-L/mingw/lib -lmingle"
+    export "LIBS=-L/mingw/lib -lmingle"
     export "CPPFLAGS=-I/mingw/include -DWIN32 -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"    
     export "CC=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
     export "CXX=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
