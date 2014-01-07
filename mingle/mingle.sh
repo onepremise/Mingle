@@ -2072,13 +2072,13 @@ buildInstallDBPerl() {
     dmake test
     dmake install
     
-    cd ..
+    cd $MINGLE_BUILD_DIR
     
     _project="DB_File-*"
     
     mingleDecompress "$_project"
     
-    local _projectdir=$(ad_getDirFromWC $_project)   
+    _projectdir=$(ad_getDirFromWC $_project)   
     
     cd $_projectdir || mingleError $? "cd failed, aborting!"
     
