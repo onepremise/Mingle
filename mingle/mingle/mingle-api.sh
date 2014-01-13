@@ -702,8 +702,19 @@ mingleDownload() {
     echo "Downloading $_url"...
 
     if [ -e "$_outputFile" ]; then
-        _alreadyDownloaded=true
-    else
+        local _filesize=$(stat -c%s "$_outputFile")
+
+        if [ "$_filesize" -eq "0" ]; then
+            echo
+            echo "Removing 0 byte file: $_outputFile..."
+            rm $_outputFile
+        else
+            _alreadyDownloaded=true
+        fi
+    fi
+
+    
+    if ! $_alreadyDownloaded; then
         local _tarcheck="`echo $_outputFile|sed 's/\(.*\)\..*/\1/'`"
         if [ ${_tarcheck: -4} == ".tar" ] && [ -e "$_tarcheck" ]; then
             _alreadyDownloaded=true
@@ -717,6 +728,7 @@ mingleDownload() {
             wget $_url -O $_outputFile || mingleError $? "Download failed for $_file, aborting!"
         fi
     else
+        echo
         echo "$_outputFile has already been downloaded."
     fi
 

@@ -119,8 +119,8 @@ export AD_TEXTINFO=5.1
 export AD_PROTO_BUF=2.5.0
 export AD_PROTO_BUF_C=0.15
 
-#export POSTGIS_PATH=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
-export POSTGIS_PATH=/g/var/lib/postgres/$AD_POSTGRES_VERSION/main
+export POSTGIS_PATH=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
+#export POSTGIS_PATH=/g/var/lib/postgres/$AD_POSTGRES_VERSION/main
 
 mingleDownloadPackages () {
     echo "Checking Downloads..."
@@ -161,8 +161,10 @@ mingleDownloadPackages () {
     mingleDownload "ftp://ftp.remotesensing.org/pub/libtiff/tiff-$AD_TIFF_VERSION.tar.gz"
     mingleDownload "http://curl.haxx.se/download/curl-$AD_LIBCURL_VERSION.tar.bz2"
 
-    mingleDownload "http://apache.tradebit.com/pub//apr/apr-$AD_APR_VERSION.tar.gz"
-    mingleDownload "http://apache.tradebit.com/pub//apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
+    #mingleDownload "http://apache.tradebit.com/pub//apr/apr-$AD_APR_VERSION.tar.gz"
+    mingleDownload "http://archive.apache.org/dist/apr/apr-$AD_APR_VERSION.tar.gz"
+    #mingleDownload "http://apache.tradebit.com/pub//apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
+    mingleDownload "http://archive.apache.org/dist/apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
     mingleDownload "https://serf.googlecode.com/files/serf-$AD_SERF_VERSION.tar.bz2"
 
     mingleDownload "http://download.oracle.com/berkeley-db/db-$AD_BERKELEY_DB.tar.gz"
@@ -208,7 +210,8 @@ mingleDownloadPackages () {
     #mingleDownload "https://github.com/mapnik/node-mapnik/archive/master.zip" "node-mapnik.zip"
     #mingleDownload "http://nodejs.org/dist/v0.10.0/node-v0.10.0.tar.gz"
     #mingleDownload "https://github.com/mitsuhiko/werkzeug/archive/master.zip" "werkzeug.zip"
-    mingleDownload "https://bitbucket.org/springmeyer/tilelite/get/c1f84defd807.zip" "tilelite.zip"
+    #mingleDownload "https://bitbucket.org/springmeyer/tilelite/get/c1f84defd807.zip" "tilelite.zip"
+    mingleDownload "https://github.com/springmeyer/tilelite/archive/master.zip" "tilelite.zip"
     mingleDownload "https://github.com/json-c/json-c/archive/be002fbb96c484f89aee2c843b89bdd00b0a5e46.zip" "json-c-$AD_JSONC_VERSION.zip"
     mingleDownload "http://download.osgeo.org/postgis/source/postgis-$AD_POSTGIS_VERSION.tar.gz"
     
@@ -2186,6 +2189,7 @@ initializePostGISDB () {
     echo "Creating PostGIS Database..."
 
     export PGPASSWORD=temp123
+    export PGPORT=5436
 
     initdb -U postgres -D $POSTGIS_PATH -E 'UTF8' --lc-collate='English_United States.1252' --lc-ctype='English_United States.1252'
 
@@ -2205,6 +2209,7 @@ initializePostGISDB () {
     fi
     
     updatePostgresSqlConf 'autovacuum' 'on'
+    updatePostgresSqlConf 'port' $PGPORT
     updatePostgresSqlConf 'checkpoint_segments' 64
     updatePostgresSqlConf 'checkpoint_timeout' '15min'
     updatePostgresSqlConf 'checkpoint_completion_target' '0\.9'
@@ -2232,19 +2237,19 @@ initializePostGISDB () {
 
     echo "Setting up OSM database, user, and granting permissions..."
 
-    psql postgres postgres <<< "CREATE USER osm WITH PASSWORD 'osm';"
-    psql postgres postgres <<< "CREATE DATABASE osm WITH OWNER = osm ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'English_United States.1252' LC_CTYPE = 'English_United States.1252' CONNECTION LIMIT = -1;"
-    psql postgres postgres <<< "GRANT ALL PRIVILEGES ON DATABASE osm to osm;"
-    psql postgres postgres <<< "ALTER USER osm WITH SUPERUSER;"
+    psql -U postgres -p $PGPORT postgres <<< "CREATE USER osm WITH PASSWORD 'osm';"
+    psql -U postgres -p $PGPORT postgres <<< "CREATE DATABASE osm WITH OWNER = osm ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'English_United States.1252' LC_CTYPE = 'English_United States.1252' CONNECTION LIMIT = -1;"
+    psql -U postgres -p $PGPORT postgres <<< "GRANT ALL PRIVILEGES ON DATABASE osm to osm;"
+    psql -U postgres -p $PGPORT postgres <<< "ALTER USER osm WITH SUPERUSER;"
 
     export PGPASSWORD=osm
 
     echo
     echo "Deploying PostGIS..."
 
-    psql -d osm -U osm -c 'create extension hstore'
-    psql -U osm -d osm -f /mingw/share/postgresql/contrib/postgis-2.0/postgis.sql
-    psql -U osm -d osm -f /mingw/share/postgresql/contrib/postgis-2.0/spatial_ref_sys.sql
+    psql -U osm -d osm -p $PGPORT -c 'create extension hstore'
+    psql -U osm -d osm -p $PGPORT -f /mingw/share/postgresql/contrib/postgis-2.0/postgis.sql
+    psql -U osm -d osm -p $PGPORT -f /mingw/share/postgresql/contrib/postgis-2.0/spatial_ref_sys.sql
 
     echo
     echo "Initialization Complete."
@@ -2257,9 +2262,12 @@ installPostgresqlService() {
     local _startup=$1
     cd $POSTGIS_PATH
     local _winpath=`pwd -W`
+
+    echo
+    echo "Installing Postgresql Service..."
     
-    pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
-    pg_ctl register -w -N "PostGIS Database" -D $_winpath
+    pg_ctl stop -w -D "$_winpath"
+    pg_ctl register -w -N "PostGIS Database" -D "$_winpath"
     
     if $_startup; then
         net start "PostGIS Database"
@@ -2269,6 +2277,9 @@ installPostgresqlService() {
 uninstallPostgresql() {
   cd $POSTGIS_PATH
   local _winpath=`pwd -W`
+
+  echo
+  echo "Uninstalling Postgresql Service..."
   
   net stop "PostGIS Database"
   
@@ -2281,6 +2292,7 @@ uninstallPostgresql() {
 
 importOSMUSData() {
   local _downloadUrl="http://download.geofabrik.de/north-america-latest.osm.pbf"
+  echo
   echo "Tune Database for Import..."
   
   net stop "PostGIS Database"
@@ -2296,11 +2308,11 @@ importOSMUSData() {
       mkdir database-data
   fi
 
-  mingleDownload "https://vanguard.houghtonassociates.com/browse/OSM-OSM2PSQL-60/artifact/JOB1/cygwin-package/cygwin-package.zip"
+  #mingleDownload "https://vanguard.houghtonassociates.com/browse/OSM-OSM2PSQL-60/artifact/JOB1/cygwin-package/cygwin-package.zip"
 
-  mingleDecompress "cygwin-package.zip"
+  #mingleDecompress "cygwin-package.zip"
 
-  mv -u cygwin-package/* database-data
+  #mv -u cygwin-package/* database-data
 
   cd database-data
 
@@ -2323,8 +2335,8 @@ importOSMUSData() {
   echo "Importing north-america-latest.osm.pbf to the database. This may take several hours..."
   echo
   
-  ./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1400 --hstore -r pbf north-america-latest.osm.pbf
-  #./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1600 --hstore -r pbf us-northeast.osm.pbf
+  osm2pgsql -v -c -d osm -U osm -H localhost -P 5436 -s -C 1400 --hstore -r pbf north-america-latest.osm.pbf
+  #./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5436 -S default.style -s -C 1600 --hstore -r pbf us-northeast.osm.pbf
   
   net stop "PostGIS Database"
   updatePostgresSqlConf 'autovacuum' 'on'
@@ -2335,6 +2347,7 @@ importOSMUSData() {
 }
 
 fullPostGISSetupWithImport() {
+    buildInstallOsm2pgsql
     initializePostGISDB
     installPostgresqlService false
     importOSMUSData
