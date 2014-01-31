@@ -766,21 +766,32 @@ buildInstallBinutils() {
 }
 
 buildInstallPkgconfig() {
-    ad_setDefaultEnv
+    local _project="pkg-config-*"
+
+    if [ ! -e /mingw/bin/pkg-config ]; then
+        echo
+        echo "Installing $_project..."
+        echo
+
+        ad_setDefaultEnv
+
+        export "CFLAGS=-std=c99 $CFLAGS"
+
+        mingleDecompress "$_project"
+
+        local _projectdir=$(ad_getDirFromWC $_project)
     
-    #-std=gnu99
-    export "CFLAGS=-std=c99 $CFLAGS"
-    #export "CFLAGS=$CFLAGS -ansi"
-    #export "CFLAGS=$CFLAGS -D_POSIX_TIMEOUTS -D_GLIBCXX__PTHREADS -D_GLIBCXX_HAS_GTHREADS -D_POSIX_C_SOURCE=200112L"
+        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
     
-    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+        aclocal --force
+        libtoolize
     
-    rm libtool
-    ./config.lt
+        cd $MINGLE_BUILD_DIR
     
-    cd $MINGLE_BUILD_DIR
-    
-    buildInstallGeneric "pkg-config-*" true true "" true true "--with-internal-glib" "" "pkg-config" "" "pkg-config --version"
+        buildInstallGeneric "$_project" true true "" true true "--with-internal-glib" "" "pkg-config" "" "pkg-config --version"
+    else
+        echo "$_project already installed."
+    fi
 }
 
 installLibJPEG () {
