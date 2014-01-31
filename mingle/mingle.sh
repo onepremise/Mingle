@@ -775,6 +775,7 @@ buildInstallPkgconfig() {
     
     cd "$_projectDir" || mingleError $? "cd failed, aborting!"
     
+    rm libtool
     libtoolize
     
     cd $MINGLE_BUILD_DIR
