@@ -11,10 +11,10 @@
 #  12-11-12             Initial Coding                  JAH
 #
 #=============================================================
-if [ -e mingle/mingle-api.sh ]; then
-    source mingle/mingle-api.sh
-elif [ -e /mingw/lib/mingle/mingle-api.sh ]; then
-    source /mingw/lib/mingle/mingle-api.sh
+if [ -e mingle/api/mingle-api.sh ]; then
+    source mingle/api/mingle-api.sh
+elif [ -e /mingw/lib/mingle/api/mingle-api.sh ]; then
+    source /mingw/lib/mingle/api/mingle-api.sh
 else
     echo
     echo ERROR: Unable to find mingle-api, required to build and install packages!
@@ -39,12 +39,16 @@ export AD_PKGCONFIG=0.27.1
 export AD_BINUTILS_VERSION=2.23.1
 export AD_ICU_VERSION=50_1
 export AD_ZLIB_VERSION=1.2.7
-export AD_EXPAT_VERSION=2.1.0
+
 export AD_LIBICONV=1.14
 export AD_POLAR_VERSION=1.2.3
 export AD_OPENSSL_VERSION=1.0.1c
-export AD_LIBXML2_VERSION=2.9.0
+
 export AD_LIBCURL_VERSION=7.28.1
+export AD_RAGEL_VERSION=6.8
+
+export AD_EXPAT_VERSION=2.1.0
+export AD_LIBXML2_VERSION=2.9.0
 
 export AD_CUNIT_VERSION=2.1-2
 export AD_GDB_VERSION=7.5
@@ -72,12 +76,19 @@ export AD_BOOST_VERSION=1_"$AD_BOOST_MINOR_VERSION"_0
 
 export AD_FONT_CONFIG=2.10.0
 export AD_FREETYPE_VERSION=2.4.10
+export AD_GRAPHITE2_VERSION=1.2.4
+export AD_HARFBUZZ_VERSION=0.9.25
 
 export AD_LIBPNG_MAJOR=1.6
 export AD_LIBPNG_MINOR=.2
 export AD_LIBPNG_VERSION=$AD_LIBPNG_MAJOR$AD_LIBPNG_MINOR
 export AD_LIBJPEG_VERSION=1.2.1
 export AD_TIFF_VERSION=4.0.3
+
+
+export AD_DOCBK_VERSION=1.76.1
+export AD_GTKDOC_VERSION=1.19
+export AD_GTK_VERSION=3.8.8
 
 export AD_PROJ_VERSION=4.8.0
 export AD_PROJ_GRIDS_VERSION=1.6RC1
@@ -119,8 +130,8 @@ export AD_TEXTINFO=5.1
 export AD_PROTO_BUF=2.5.0
 export AD_PROTO_BUF_C=0.15
 
-export POSTGIS_PATH=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
-#export POSTGIS_PATH=/g/var/lib/postgres/$AD_POSTGRES_VERSION/main
+#export POSTGIS_PATH=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
+export POSTGIS_PATH=/g/var/lib/postgres/$AD_POSTGRES_VERSION/main
 
 mingleDownloadPackages () {
     echo "Checking Downloads..."
@@ -139,6 +150,8 @@ mingleDownloadPackages () {
     mingleDownload "http://ftp.gnu.org/gnu/libc/glibc-$AD_GLIBC.tar.xz"
     mingleDownload "http://ftp.gnu.org/gnu/gdb/gdb-$AD_GDB_VERSION.tar.gz"
     mingleDownload "http://downloads.sourceforge.net/project/mingw/MinGW/Extension/pexports/pexports-$AD_PEXPORTS/pexports-$AD_PEXPORTS-mingw32-src.tar.xz"
+    mingleDownload "http://www.complang.org/ragel/ragel-$AD_RAGEL_VERSION.tar.gz"
+    mingleDownload "http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz"
     
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tcl$AD_TCL_VERSION-src.tar.gz"
     mingleDownload "http://prdownloads.sourceforge.net/tcl/tk$AD_TK_VERSION-src.tar.gz"
@@ -154,17 +167,23 @@ mingleDownloadPackages () {
     mingleDownload "http://sourceforge.net/projects/boost/files/boost-jam/3.1.18/boost-jam-$AD_BOOST_JAM_VERSION.tgz/download" "boost-jam-$AD_BOOST_JAM_VERSION.tgz"
     mingleDownload "http://sourceforge.net/projects/boost/files/boost/"$AD_BOOST_PATH_VERSION"/boost_"$AD_BOOST_VERSION".7z/download" "boost_"$AD_BOOST_VERSION".7z"
     mingleDownload "http://sourceforge.net/projects/libjpeg-turbo/files/$AD_LIBJPEG_VERSION/libjpeg-turbo-$AD_LIBJPEG_VERSION-gcc64.exe/download" "libjpeg-turbo-$AD_LIBJPEG_VERSION-gcc64.exe"
+    
     mingleDownload "http://www.freedesktop.org/software/fontconfig/release/fontconfig-$AD_FONT_CONFIG.tar.gz"
     mingleDownload "http://ftp.igh.cnrs.fr/pub/nongnu/freetype/freetype-$AD_FREETYPE_VERSION.tar.gz"
+    mingleDownload "http://sourceforge.net/projects/silgraphite/files/graphite2/graphite2-$AD_GRAPHITE2_VERSION.tgz"
+    mingleDownload "https://github.com/behdad/harfbuzz/archive/8fc1f7fe74a25bf8549f5edd79c7da6b720eb064.zip" "harfbuzz-$AD_HARFBUZZ_VERSION.zip"
+    
     mingleDownload "ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng`echo $AD_LIBPNG_MAJOR|sed 's/\.//'`/libpng-$AD_LIBPNG_VERSION.tar.gz"
     mingleDownload "http://www.zlib.net/zlib-$AD_ZLIB_VERSION.tar.gz"
     mingleDownload "ftp://ftp.remotesensing.org/pub/libtiff/tiff-$AD_TIFF_VERSION.tar.gz"
+    
+    mingleDownload "http://archive.apache.org/dist/xerces/xml-commons/xml-commons-resolver-1.2.tar.gz"
+    mingleDownload "http://sourceforge.net/projects/docbook/files/docbook-xsl/$AD_DOCBK_VERSION/docbook-xsl-$AD_DOCBK_VERSION.tar.bz2"
+    mingleDownload "https://download.gnome.org/sources/gtk-doc/$AD_GTKDOC_VERSION/gtk-doc-$AD_GTKDOC_VERSION.tar.xz"
+    
     mingleDownload "http://curl.haxx.se/download/curl-$AD_LIBCURL_VERSION.tar.bz2"
-
-    #mingleDownload "http://apache.tradebit.com/pub//apr/apr-$AD_APR_VERSION.tar.gz"
-    mingleDownload "http://archive.apache.org/dist/apr/apr-$AD_APR_VERSION.tar.gz"
-    #mingleDownload "http://apache.tradebit.com/pub//apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
-    mingleDownload "http://archive.apache.org/dist/apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
+    mingleDownload "http://apache.tradebit.com/pub//apr/apr-$AD_APR_VERSION.tar.gz"
+    mingleDownload "http://apache.tradebit.com/pub//apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
     mingleDownload "https://serf.googlecode.com/files/serf-$AD_SERF_VERSION.tar.bz2"
 
     mingleDownload "http://download.oracle.com/berkeley-db/db-$AD_BERKELEY_DB.tar.gz"
@@ -180,8 +199,12 @@ mingleDownloadPackages () {
     mingleDownload "http://download.icu-project.org/files/icu4c/50.1/icu4c-$AD_ICU_VERSION-src.tgz"
     mingleDownload "https://polarssl.org/download/polarssl-$AD_POLAR_VERSION-gpl.tgz"
     mingleDownload "http://www.openssl.org/source/openssl-$AD_OPENSSL_VERSION.tar.gz"
+    
     mingleDownload "ftp://xmlsoft.org/libxml2/libxml2-$AD_LIBXML2_VERSION.tar.gz"
+    mingleDownload "http://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.1.tar.gz"
+    mingleDownload "https://git.gnome.org/browse/libxslt/snapshot/libxslt-master.tar.gz"
     mingleDownload "http://sourceforge.net/projects/expat/files/expat/$AD_EXPAT_VERSION/expat-$AD_EXPAT_VERSION.tar.gz/download" "expat-$AD_EXPAT_VERSION.tar.gz"
+    
     mingleDownload "http://download.osgeo.org/geos/geos-$AD_GEOS_VERSION.tar.bz2"
     mingleDownload "http://download.osgeo.org/gdal/gdal-$AD_GDAL_VERSION.tar.gz"
     mingleDownload "http://www.sqlite.org/sqlite-autoconf-$AD_SQLITE_VERSION.tar.gz"
@@ -210,8 +233,7 @@ mingleDownloadPackages () {
     #mingleDownload "https://github.com/mapnik/node-mapnik/archive/master.zip" "node-mapnik.zip"
     #mingleDownload "http://nodejs.org/dist/v0.10.0/node-v0.10.0.tar.gz"
     #mingleDownload "https://github.com/mitsuhiko/werkzeug/archive/master.zip" "werkzeug.zip"
-    #mingleDownload "https://bitbucket.org/springmeyer/tilelite/get/c1f84defd807.zip" "tilelite.zip"
-    mingleDownload "https://github.com/springmeyer/tilelite/archive/master.zip" "tilelite.zip"
+    mingleDownload "https://bitbucket.org/springmeyer/tilelite/get/c1f84defd807.zip" "tilelite.zip"
     mingleDownload "https://github.com/json-c/json-c/archive/be002fbb96c484f89aee2c843b89bdd00b0a5e46.zip" "json-c-$AD_JSONC_VERSION.zip"
     mingleDownload "http://download.osgeo.org/postgis/source/postgis-$AD_POSTGIS_VERSION.tar.gz"
     
@@ -223,16 +245,25 @@ mingleDownloadPackages () {
 }
 
 updateGCC() {
-    echo "Updating GCC..."
 
-    sed 's/\(template<class Q>\)/\/\/\1/g' /mingw/x86_64-w64-mingw32/include/unknwn.h > unknwn.h
-    mv unknwn.h /mingw/x86_64-w64-mingw32/include/unknwn.h || mingleError $? "Failed to update GCC, aborting!"
+    if [ ! -e /mingw/x86_64-w64-mingw32/include/gcc-mingw.patch ]; then
+        echo "Updating GCC..."
 
-    cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
-    if [ ! -e "/mingw/lib/libmingle.a" ]; then
-        echo "Supplementing GCC with libmingle..."
-        cp -rf $MINGLE_BASE/mingle/libmingle .
-        buildInstallGeneric "libmingle" false false "" false false "" "" "libmingle.a" "" ""
+        cp $MINGLE_BASE/patches/gcc/gcc-mingw.patch /mingw/x86_64-w64-mingw32/include
+
+        cd /mingw/x86_64-w64-mingw32/include
+        ad_patch "gcc-mingw.patch"
+        cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
+
+        sed 's/\(template<class Q>\)/\/\/\1/g' /mingw/x86_64-w64-mingw32/include/unknwn.h > unknwn.h
+        mv unknwn.h /mingw/x86_64-w64-mingw32/include/unknwn.h || mingleError $? "Failed to update GCC, aborting!"
+
+        cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
+        if [ ! -e "/mingw/lib/libmingle.a" ]; then
+            echo "Supplementing GCC with libmingle..."
+            cp -rf $MINGLE_BASE/mingle/libmingle .
+            buildInstallGeneric "libmingle" false false "" false false "" "" "libmingle.a" "" ""
+        fi
     fi
 }
 
@@ -365,13 +396,25 @@ buildInstallGLibC() {
     buildInstallGeneric "glibc-*" true false "" true true "" "" "xxx" "" ""
 }
 
+buildInstallRagel() {
+    local _project="ragel-*"
+    
+    buildInstallGeneric "$_project" true true "" true true "" "" "ragel.exe" "" "ragel --version"
+}
+
+buildInstallCMake() {
+    local _project="cmake-*"
+
+    buildInstallGeneric "$_project" true false "" false true "" "" "cmake.exe" "" "cmake --version"
+}
+
 # Things to watch:
 # http://sourceware.org/bugzilla/show_bug.cgi?id=12127
 # http://forums.codeblocks.org/index.php/topic,11301.0.html
 buildInstallGDB() {
     local _project="gdb-*"
 
-    if ad_isDateNewerThanFileModTime "2013-01-01" "/mingw/bin/gdb.exe"; then
+    if ad_isDateNewerThanFileModTime "2014-01-01" "/mingw/bin/gdb.exe"; then
         ad_clearEnv
         
         mingleDecompress "$_project"
@@ -575,6 +618,8 @@ buildInstallZlib() {
     echo
     
     if [ ! -e /mingw/bin/zlib1.dll ]; then
+        cd $MINGLE_BUILD_DIR
+
         mingleDecompress "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
@@ -588,12 +633,13 @@ buildInstallZlib() {
         cp libz.a /mingw/lib
         cp libz.dll.a /mingw/lib
 
-        if ! example.exe; then
-            echo "Build Failed!"
-            exit 0;
+        if [ ! -e example.exe ]; then
+            mingleError $? "Build Failed!"
+        else
+            ./example.exe||mingleError $? "Test Failed!"
         fi
 
-        cd ..
+        cd $MINGLE_BUILD_DIR
     else
         echo "Already Installed."        
     fi
@@ -609,6 +655,8 @@ buildInstallBzip2() {
     echo
     
     if [ ! -e /mingw/bin/bzip2 ]; then
+        cd $MINGLE_BUILD_DIR
+
         mingleDecompress "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
@@ -622,7 +670,7 @@ buildInstallBzip2() {
         cp -f libbz2.a /mingw/lib
         cp -f bzlib.h /mingw/include
 
-        cd ..
+        cd $MINGLE_BUILD_DIR
     else
         echo "Already Installed."        
     fi
@@ -718,7 +766,20 @@ buildInstallBinutils() {
 }
 
 buildInstallPkgconfig() {
-    buildInstallGeneric "pkg-config-*" true false "" true true "--with-internal-glib" "" "pkg-config" "" "pkg-config --version"
+    ad_setDefaultEnv
+    
+    #-std=gnu99
+    export "CFLAGS=-std=c99 $CFLAGS"
+    #export "CFLAGS=$CFLAGS -ansi"
+    #export "CFLAGS=$CFLAGS -D_POSIX_TIMEOUTS -D_GLIBCXX__PTHREADS -D_GLIBCXX_HAS_GTHREADS -D_POSIX_C_SOURCE=200112L"
+    
+    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+    
+    libtoolize
+    
+    cd $MINGLE_BUILD_DIR
+    
+    buildInstallGeneric "pkg-config-*" true true "" true true "--with-internal-glib" "" "pkg-config" "" "pkg-config --version"
 }
 
 installLibJPEG () {
@@ -814,7 +875,7 @@ buildInstallPixman() {
 buildInstallCairo() {
     local _project="cairo-$AD_CAIRO_VERSION*"
 
-    buildInstallGeneric "$_project" true false "" true true "" "" "libcairo.a"
+    buildInstallGeneric "$_project" true false "" true true "--enable-gtk-doc" "" "libcairo.a"
 
     if ! ( [ -e "/mingw/lib/libcairo.dll" ] && [ -e "/mingw/bin/libcairo.dll" ] );then
         echo "Manually generating libcairo DLL..."
@@ -913,6 +974,38 @@ buildInstallLOpenSSL() {
 
 buildInstallLibXML2() {
     buildInstallGeneric "libxml2-*" true false "" true true "--enable-shared --enable-static --with-icu" "" "xmllint" "" "xmllint --version"
+}
+
+buildInstallXerces() {
+    local _project="xerces-c*"
+
+    buildInstallGeneric "$_project" true true "-I m4" true true "" "" "pparse" "" ""
+}
+
+buildInstallLibXSLT() {
+    local _project="libxslt-*"
+
+    if [ -e /mingw/bin/xsltproc ]; then
+        echo "$_project Already Installed."
+        return;
+    fi
+
+    ad_setDefaultEnv
+
+    mingleDecompress "$_project"
+
+    local _projectDir=$(ad_getDirFromWC "$_project")
+
+    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+
+    if [ ! -e xslt-mingw.patch ]; then
+        cp $MINGLE_BASE/patches/xslt/$AD_DOCBK_VERSION/xslt-mingw.patch .
+        ad_patch "xslt-mingw.patch"
+    fi
+
+    cd $MINGLE_BUILD_DIR
+    
+    buildInstallGeneric "$_project" false false "" false true "" "" "xsltproc" "" "xsltproc --version"
 }
 
 buildInstallCurl() {
@@ -1046,6 +1139,184 @@ buildInstallBerkeleyDB() {
     fi
 
     ad_run_test "$_exeToTest"
+}
+
+buildInstallDocBook() {
+    local _project="docbook-*"
+    local _shareDir=$MINGLE_BASE_MX/mingw64/share
+    local _msysDir=`echo $(tr '[:upper:]' '[:lower:]' <<< ${MINGLE_BASE_MX:0:1})${MINGLE_BASE_MX:1}/msys`
+    local _etcDir=$_msysDir/etc
+
+    if ( [ -e "/etc/xml/catalog" ] && [ -e "/etc/xml/docbook" ] );then
+        echo
+        echo "$_project Already Installed."
+        echo
+        return;
+    fi
+
+    ad_mkdir /etc/xml
+    ad_mkdir /etc/xml/resolver
+    ad_mkdir $_shareDir/xml
+    ad_mkdir $_shareDir/xml/docbook
+    ad_mkdir $_shareDir/xml/docbook/schema
+    ad_mkdir $_shareDir/xml/docbook/schema/dtd
+    ad_mkdir $_shareDir/xml/docbook/stylesheet
+    ad_mkdir $_shareDir/xml/docbook/stylesheet/docbook-xsl
+
+    mingleDecompress "xml-commons-resolver-*"
+
+    if [ ! -e "$_shareDir/xml/xml-commons-resolver-1.2" ]; then
+        mv xml-commons-resolver-1.2 $_shareDir/xml
+    fi
+
+    export CLASSPATH=$_shareDir/xml/xml-commons-resolver-1.2/resolver.jar
+
+    mingleDecompress "docbook-xsl-*"
+
+    cd docbook-xsl-* || mingleError $? "Failed cd to docbook-xsl-*, aborting!"
+
+    if [ ! -e $_shareDir/xml/docbook/stylesheet/docbook-xsl/catalog.xml ]; then
+        cp -rf . $_shareDir/xml/docbook/stylesheet/docbook-xsl
+    fi
+
+    cd $_shareDir/xml/docbook/stylesheet/docbook-xsl || mingleError $? "Failed cd to docbook-xsl, aborting!"
+
+    local _homesave=$HOME
+
+    export HOME=$MINGLE_BUILD_DIR
+
+    ./install.sh --batch
+
+    mv $MINGLE_BUILD_DIR/.resolver/CatalogManager.properties /etc/xml/resolver/CatalogManager.properties
+
+    export HOME=$_homesave
+
+    source $_shareDir/xml/docbook/stylesheet/docbook-xsl/.profile.incl
+
+    cd "$_shareDir/xml/docbook/stylesheet/docbook-xsl"
+
+    echo source `pwd`/.profile.incl>>/etc/profile
+
+    cd $MINGLE_BUILD_DIR
+
+    mingleDownload "http://docbook.org/xml/4.3/docbook-xml-4.3.zip"
+    mingleDecompress "docbook-xml-4.3.zip" "" "docbook-xml-4.3"
+    mv docbook-xml-4.3 $_shareDir/xml/docbook/schema/dtd/4.3
+
+    mingleDownload "http://docbook.org/xml/4.4/docbook-xml-4.4.zip"
+    mingleDecompress "docbook-xml-4.4.zip" "" "docbook-xml-4.4"
+    mv docbook-xml-4.4 $_shareDir/xml/docbook/schema/dtd/4.4
+
+    mingleDownload "http://docbook.org/xml/4.5/docbook-xml-4.5.zip"
+    mingleDecompress "docbook-xml-4.5.zip" "" "docbook-xml-4.5"
+    mv docbook-xml-4.5 $_shareDir/xml/docbook/schema/dtd/4.5
+
+    if [ ! -e /etc/xml/docbook ]; then
+        xmlcatalog --noout --create /etc/xml/docbook || mingleError $? "failed to create docbook, aborting!"
+    else
+        rm /etc/xml/docbook
+        xmlcatalog --noout --create /etc/xml/docbook || mingleError $? "failed to create docbook, aborting!"
+    fi
+
+    xmlcatalog --noout --add "public" \
+    "-/$_msysDir/OASIS/DTD DocBook XML V4.3/EN" \
+    "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" /etc/xml/docbook
+
+    xmlcatalog --noout --add "public" \
+    "-/$_msysDir/OASIS/DTD DocBook XML CALS Table Model V4.3/EN" \
+    "file:///$_shareDir/xml/docbook/xml/4.3/calstblx.dtd" /etc/xml/docbook
+
+    xmlcatalog --noout --add "public" \
+    "-/$_msysDir/OASIS/DTD XML Exchange Table Model 19990315/EN" \
+    "file:///$_shareDir/xml/docbook/xml/4.3/soextblx.dtd" /etc/xml/docbook
+
+    xmlcatalog --noout --add "public" \
+    "-/$_msysDir/OASIS/ELEMENTS DocBook XML Information Pool V4.3/EN" \
+    "file:///$_shareDir/xml/docbook/xml/4.3/dbpoolx.mod" /etc/xml/docbook
+
+    xmlcatalog --noout --add "public" \
+    "-/$_msysDir/OASIS/ELEMENTS DocBook XML Document Hierarchy V4.3/EN" \
+    "file:///$_shareDir/xml/docbook/xml/4.3/dbhierx.mod" /etc/xml/docbook
+
+    xmlcatalog --noout --add "public" \
+    "-/$_msysDir/OASIS/ELEMENTS DocBook XML HTML Tables V4.3/EN" \
+    "file:///$_shareDir/xml/docbook/xml/4.3/htmltblx.mod" /etc/xml/docbook
+
+    xmlcatalog --noout --add "public" \
+    "-/$_msysDir/OASIS/ENTITIES DocBook XML Notations V4.3/EN" \
+    "file:///$_shareDir/xml/docbook/xml/4.3/dbnotnx.mod" /etc/xml/docbook
+
+    xmlcatalog --noout --add "public" \
+    "-/$_msysDir/OASIS/ENTITIES DocBook XML Character Entities V4.3/EN" \
+    "file:///$_shareDir/xml/docbook/xml/4.3/dbcentx.mod" /etc/xml/docbook
+
+    xmlcatalog --noout --add "public" \
+    "-/$_msysDir/OASIS/ENTITIES DocBook XML Additional General Entities V4.3/EN" \
+    "file:///$_shareDir/xml/docbook/xml/4.3/dbgenent.mod" /etc/xml/docbook
+
+    xmlcatalog --noout --add "rewriteSystem" \
+    "http://www.oasis-open.org/docbook/xml/4.3" \
+    "file:///$_shareDir/xml/docbook/xml/4.3" /etc/xml/docbook
+
+    xmlcatalog --noout --add "rewriteURI" \
+    "http://www.oasis-open.org/docbook/xml/4.3" \
+    "file:///$_shareDir/xml/docbook/xml/4.3" /etc/xml/docbook
+
+    if [ ! -e /etc/xml/catalog ]; then
+        xmlcatalog --noout --create /etc/xml/catalog || mingleError $? "failed to create catalog, aborting!"
+    else
+        rm /etc/xml/catalog
+        xmlcatalog --noout --create /etc/xml/catalog || mingleError $? "failed to create catalog, aborting!"
+    fi
+
+    xmlcatalog --noout --add "delegatePublic" \
+    "-/$_msysDir/OASIS/ENTITIES DocBook XML" \
+    "file:///$_etcDir/xml/docbook" /etc/xml/catalog
+
+    xmlcatalog --noout --add "delegatePublic" \
+    "-/$_msysDir/OASIS/DTD DocBook XML" \
+    "file:///$_etcDir/xml/docbook" /etc/xml/catalog
+
+    xmlcatalog --noout --add "delegateSystem" \
+    "http://www.oasis-open.org/docbook/" \
+    "file:///$_etcDir/xml/docbook" /etc/xml/catalog
+
+    xmlcatalog --noout --add "delegateURI" \
+    "http://www.oasis-open.org/docbook/" \
+    "file:///$_etcDir/xml/docbook" /etc/xml/catalog
+
+    xmlcatalog --noout --add "rewriteSystem" \
+    "http://docbook.sourceforge.net/release/xsl/1.76.1" \
+    "$_shareDir/xml/docbook/stylesheet/docbook-xsl" \
+    /etc/xml/catalog
+
+    xmlcatalog --noout --add "rewriteURI" \
+           "http://docbook.sourceforge.net/release/xsl/1.76.1" \
+           "$_shareDir/xml/docbook/stylesheet/docbook-xsl" \
+    /etc/xml/catalog
+
+    xmlcatalog --noout --add "rewriteSystem" \
+           "http://docbook.sourceforge.net/release/xsl/current" \
+           "$_shareDir/xml/docbook/stylesheet/docbook-xsl" \
+    /etc/xml/catalog
+
+    xmlcatalog --noout --add "rewriteURI" \
+           "http://docbook.sourceforge.net/release/xsl/current" \
+           "$_shareDir/xml/docbook/stylesheet/docbook-xsl" \
+    /etc/xml/catalog
+}
+
+buildInstallGTKDoc() {
+    local _project="gtk-doc-*"
+    local _additionFlags=""
+    local _binCheck="gtkdoc-check"
+    local _exeToTest="gtkdoc-check --version"
+
+    buildInstallGeneric "$_project" true true "-I m4" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
+}
+
+buildInstallGTK() {
+    local _project="gtk-*"
 }
 
 buildInstallSVN() {
@@ -1233,7 +1504,7 @@ buildInstallFreeType() {
 
         mingleDecompress "freetype-*"
 
-        cd freetype-*
+        cd freetype-* || mingleError $? "cd failed, aborting!"
 
         make setup unix
         ./configure --host=x86_64-w64-mingw32 --prefix=/mingw
@@ -1248,6 +1519,37 @@ buildInstallFreeType() {
     fi
     
     echo
+}
+
+buildInstallGraphite2() {
+    local _project="graphite2-*"
+    $_projectlocal _binCheck="libgraphite2.dll"
+
+    echo
+    echo "Checking $_project..."
+    echo
+    
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] ); then
+        echo
+        echo "Building $_project..."
+        echo
+
+        mingleDecompress "$_project"
+
+        cd $_project || mingleError $? "cd failed, aborting!"
+
+        cmake.exe -G "MSYS Makefiles" --debug-output -DGRAPHITE2_NTRACING=ON -DCMAKE_INSTALL_PREFIX=$MINGLE_BASE_MX/mingw64
+
+        buildInstallGeneric "$_project" true false "" false false "" "" "$_binCheck" "" ""
+    else
+        echo "Already Installed."  
+    fi
+}
+
+buildInstallHarfBuzz() {
+    local _project="harfbuzz-*"
+    
+    buildInstallGeneric "$_project" true false "" false true "--with-graphite2=yes" "" "libharfbuzz.dll.a" "" ""
 }
 
 buildInstallSQLite() {
@@ -1525,7 +1827,7 @@ buildInstallPython() {
         echo "_socket socketmodule.c">>Modules/Setup.local
         echo "_ssl _ssl.c -DUSE_SSL -lssl -lcrypto -lws2_32">>Modules/Setup.local
 
-        cd ..
+        cd $MINGLE_BUILD_DIR
   
         export "CFLAGS=-IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
         export "CFLAGS=$CFLAGS -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGLE__"
@@ -1537,6 +1839,10 @@ buildInstallPython() {
         export "LIBS=-lmingle"
                
         ad_configure "$_project" false "" true "--with-libs=-lmingle --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
+
+        cd $MINGLE_BUILD_DIR        
+
+        cd $_projectDir || mingleError $? "cd failed, aborting!"
 
         cp -f PC/pyconfig.h .
         
@@ -1749,7 +2055,7 @@ buildInstallBoostJam() {
 
 buildInstallBoost() {
     local _project="boost_*"
-    local _binCheck="boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll"
+    local _binCheck="boost_system-48-mt-1_$AD_BOOST_MINOR_VERSION.dll"
 
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
 
@@ -1864,7 +2170,7 @@ buildInstallMapnik() {
 
     cd ..
 
-    buildInstallGeneric "$_project" true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
+    buildInstallGeneric "$_project" true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll || mingleError $? "Mapnik install failed, aborting!"
 }
@@ -2189,7 +2495,6 @@ initializePostGISDB () {
     echo "Creating PostGIS Database..."
 
     export PGPASSWORD=temp123
-    export PGPORT=5436
 
     initdb -U postgres -D $POSTGIS_PATH -E 'UTF8' --lc-collate='English_United States.1252' --lc-ctype='English_United States.1252'
 
@@ -2209,7 +2514,6 @@ initializePostGISDB () {
     fi
     
     updatePostgresSqlConf 'autovacuum' 'on'
-    updatePostgresSqlConf 'port' $PGPORT
     updatePostgresSqlConf 'checkpoint_segments' 64
     updatePostgresSqlConf 'checkpoint_timeout' '15min'
     updatePostgresSqlConf 'checkpoint_completion_target' '0\.9'
@@ -2237,19 +2541,19 @@ initializePostGISDB () {
 
     echo "Setting up OSM database, user, and granting permissions..."
 
-    psql -U postgres -p $PGPORT postgres <<< "CREATE USER osm WITH PASSWORD 'osm';"
-    psql -U postgres -p $PGPORT postgres <<< "CREATE DATABASE osm WITH OWNER = osm ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'English_United States.1252' LC_CTYPE = 'English_United States.1252' CONNECTION LIMIT = -1;"
-    psql -U postgres -p $PGPORT postgres <<< "GRANT ALL PRIVILEGES ON DATABASE osm to osm;"
-    psql -U postgres -p $PGPORT postgres <<< "ALTER USER osm WITH SUPERUSER;"
+    psql postgres postgres <<< "CREATE USER osm WITH PASSWORD 'osm';"
+    psql postgres postgres <<< "CREATE DATABASE osm WITH OWNER = osm ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'English_United States.1252' LC_CTYPE = 'English_United States.1252' CONNECTION LIMIT = -1;"
+    psql postgres postgres <<< "GRANT ALL PRIVILEGES ON DATABASE osm to osm;"
+    psql postgres postgres <<< "ALTER USER osm WITH SUPERUSER;"
 
     export PGPASSWORD=osm
 
     echo
     echo "Deploying PostGIS..."
 
-    psql -U osm -d osm -p $PGPORT -c 'create extension hstore'
-    psql -U osm -d osm -p $PGPORT -f /mingw/share/postgresql/contrib/postgis-2.0/postgis.sql
-    psql -U osm -d osm -p $PGPORT -f /mingw/share/postgresql/contrib/postgis-2.0/spatial_ref_sys.sql
+    psql -d osm -U osm -c 'create extension hstore'
+    psql -U osm -d osm -f /mingw/share/postgresql/contrib/postgis-2.0/postgis.sql
+    psql -U osm -d osm -f /mingw/share/postgresql/contrib/postgis-2.0/spatial_ref_sys.sql
 
     echo
     echo "Initialization Complete."
@@ -2262,12 +2566,9 @@ installPostgresqlService() {
     local _startup=$1
     cd $POSTGIS_PATH
     local _winpath=`pwd -W`
-
-    echo
-    echo "Installing Postgresql Service..."
     
-    pg_ctl stop -w -D "$_winpath"
-    pg_ctl register -w -N "PostGIS Database" -D "$_winpath"
+    pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
+    pg_ctl register -w -N "PostGIS Database" -D $_winpath
     
     if $_startup; then
         net start "PostGIS Database"
@@ -2277,9 +2578,6 @@ installPostgresqlService() {
 uninstallPostgresql() {
   cd $POSTGIS_PATH
   local _winpath=`pwd -W`
-
-  echo
-  echo "Uninstalling Postgresql Service..."
   
   net stop "PostGIS Database"
   
@@ -2292,7 +2590,6 @@ uninstallPostgresql() {
 
 importOSMUSData() {
   local _downloadUrl="http://download.geofabrik.de/north-america-latest.osm.pbf"
-  echo
   echo "Tune Database for Import..."
   
   net stop "PostGIS Database"
@@ -2308,11 +2605,11 @@ importOSMUSData() {
       mkdir database-data
   fi
 
-  #mingleDownload "https://vanguard.houghtonassociates.com/browse/OSM-OSM2PSQL-60/artifact/JOB1/cygwin-package/cygwin-package.zip"
+  mingleDownload "https://vanguard.houghtonassociates.com/browse/OSM-OSM2PSQL-60/artifact/JOB1/cygwin-package/cygwin-package.zip"
 
-  #mingleDecompress "cygwin-package.zip"
+  mingleDecompress "cygwin-package.zip"
 
-  #mv -u cygwin-package/* database-data
+  mv -u cygwin-package/* database-data
 
   cd database-data
 
@@ -2335,8 +2632,8 @@ importOSMUSData() {
   echo "Importing north-america-latest.osm.pbf to the database. This may take several hours..."
   echo
   
-  osm2pgsql -v -c -d osm -U osm -H localhost -P 5436 -s -C 1400 --hstore -r pbf north-america-latest.osm.pbf
-  #./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5436 -S default.style -s -C 1600 --hstore -r pbf us-northeast.osm.pbf
+  ./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1400 --hstore -r pbf north-america-latest.osm.pbf
+  #./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1600 --hstore -r pbf us-northeast.osm.pbf
   
   net stop "PostGIS Database"
   updatePostgresSqlConf 'autovacuum' 'on'
@@ -2347,7 +2644,6 @@ importOSMUSData() {
 }
 
 fullPostGISSetupWithImport() {
-    buildInstallOsm2pgsql
     initializePostGISDB
     installPostgresqlService false
     importOSMUSData
@@ -2434,6 +2730,7 @@ MINGLE_SUITE_IMAGE_TOOLS=false
 MINGLE_SUITE_MATH=false
 MINGLE_SUITE_SCM=false
 MINGLE_SUITE_GRAPHICS=false
+MINGLE_SUITE_UI=false
 MINGLE_SUITE_GEO_SPATIAL=false
 MINGLE_MAPNIK=false
 MINGLE_MAPNIK_TOOLS=false
@@ -2484,6 +2781,9 @@ suiteBase() {
     #buildInstallM4
     #Not ready for mingw64
     #buildInstallGLibC
+    
+    buildInstallRagel
+    buildInstallCMake
 }
 
 suiteXML() {
@@ -2500,6 +2800,10 @@ suiteXML() {
     buildInstallExpat
     buildInstallICU
     buildInstallLibXML2
+    buildInstallXerces
+    buildInstallLibXSLT
+    buildInstallDocBook
+    buildInstallGTKDoc
 }
 
 suiteFonts() {
@@ -2515,6 +2819,8 @@ suiteFonts() {
 
     buildInstallFreeType
     buildInstallFontConfig
+    buildInstallGraphite2
+    buildInstallHarfBuzz
 }
 
 suiteEncryption() {
@@ -2771,6 +3077,21 @@ suiteImageTools() {
     installLibTiff
 }
 
+suiteUILibraries() {
+    if $MINGLE_SUITE_UI ; then
+        return;
+    else
+        MINGLE_SUITE_UI=true
+    fi
+
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteImageTools
+        suiteXML
+    fi
+
+    buildInstallGTK
+}
+
 suiteMathLibraries() {
     if $MINGLE_SUITE_MATH ; then
         return;
@@ -2949,10 +3270,10 @@ suiteAll() {
     suiteAllExceptMapnik
 }
 
-if [ -e mingle/mingle-menu.sh ]; then
-    source mingle/mingle-menu.sh
-elif [ -e /mingw/lib/mingle/mingle-menu.sh ]; then
-    source /mingw/lib/mingle/mingle-menu.sh
+if [ -e mingle/api/mingle-menu.sh ]; then
+    source mingle/api/mingle-menu.sh
+elif [ -e /mingw/lib/mingle/api/mingle-menu.sh ]; then
+    source /mingw/lib/mingle/api/mingle-menu.sh
 else
     echo
     echo ERROR: Unable to find mingle-menu, required to build and install packages!

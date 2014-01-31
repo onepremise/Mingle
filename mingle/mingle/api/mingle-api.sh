@@ -5,6 +5,14 @@ verbose=0
 suite=""
 altPath=""
 
+ad_mkdir() {
+    local _dir=$1
+
+    if [ ! -e $_dir ]; then
+        mkdir $_dir
+    fi
+}
+
 ad_isDateNewerThanFileModTime() {
     local _checkdate=$1
     local _filename=$2
@@ -235,6 +243,9 @@ ad_setDefaultEnv() {
     echo "Resetting environment flags to default..."
     echo
 
+    #_POSIX_C_SOURCE=199309L or 200112L
+    # -D_POSIX_C_SOURCE=200112L -D_GNU_SOURCE=200112L
+    # -D_POSIX_TIMEOUTS -D_GLIBCXX__PTHREADS -D_GLIBCXX_HAS_GTHREADS
     export "PKG_CONFIG_PATH=/mingw/lib/pkgconfig"
     #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
     export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
@@ -271,6 +282,7 @@ ad_configure() {
     local _runACLocal=$2
     local _aclocalFlags=$3
     local _runAutoconf=$4
+    local _options="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32"
     local _additionFlags=$5
     
     echo
@@ -282,8 +294,12 @@ ad_configure() {
     cd $_projectDir || mingleError $? "ad_configure cd failed, aborting!"
     
     if [ -e "autogen.sh" ]; then
+        echo
         echo "Autgen.sh script found, executing script..."
-        ./autogen.sh
+        echo "  _options=$_options"
+        echo "  _additionFlags=$_additionFlags"
+
+        ./autogen.sh $_options $_additionFlags
     elif [ -e "configure.ac" ] || [ -e "configure.in" ]; then
         if [ -e "/mingw/bin/autoconf" ];then
             echo
@@ -317,7 +333,7 @@ ad_configure() {
     if [ -e "configure" ]; then
         local _counter=1
         local _retries=3
-        local _options="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32"
+        local _configFailed=false
 
         echo
         echo "Using CFLAGS: $CFLAGS"
@@ -337,14 +353,21 @@ ad_configure() {
                 mingleError 9999 "Max configure retries reached. Build Failed!"
             fi
 
-            local _test=`cat out.txt|grep "unrecognized option"|sed -e "s/^.*\(--.*\)'/\1/"`
+            local _test=`cat out.txt|grep "unrecognized option"|sed -e "s/^.*\(--.*\)/\1/"`
 
             if [ -z "$_test" ]; then
-                _test=`cat out.txt|grep "error: no such option:"|sed -e "s/^.*\(--.*\)/\1/"`
+                _test=`cat out.txt|grep -i "error: no such option:"|sed -e "s/^.*\(--.*\)/\1/"`
                 if [ -z "$_test" ]; then
-                    cat out.txt
-                    mingleError 9999 "Configuration Failed for $_project!"
+                    _test=`cat out.txt|grep -i "Unknown option:"|sed -e "s/^.*\(--.*\)/\1/"`
+                    if [ -z "$_test" ]; then
+                        _configFailed=true
+                    fi
                 fi
+            fi
+
+            if $_configFailed; then
+                cat out.txt
+                mingleError 9999 "Configuration Failed for $_project!"
             fi
 
             _newflags=`echo "$_newflags "|sed -e "s/$_test[^ ]* //"`
@@ -375,7 +398,7 @@ ad_configure() {
         mv -f libtool2 libtool
     fi
         
-    cd ..
+    cd $MINGLE_BUILD_DIR
 }
 
 ad_make_clean() {
@@ -401,6 +424,11 @@ ad_make() {
     
     local _projectDir=$(ad_getDirFromWC "$_project")
     cd $_projectDir || mingleError $? "cd failed, aborting"
+
+    echo
+    echo "GCC Version Information:"
+    echo
+    gcc --version
 
     echo
     echo "Executing make $_makeParameters..."
@@ -740,6 +768,7 @@ mingleDownload() {
 mingleDecompress() {
     local _project="$1"
     local _localDir="$2"
+    local _targetDir="$3"
     local _projectDir=""
     local _decompFile=""
     local _tarcheck=false
@@ -758,10 +787,15 @@ mingleDecompress() {
         fi
 
         if [ -z "$_localDir" ]; then
-            cd $MINGLE_BUILD_DIR
+            cd $MINGLE_BUILD_DIR || mingleError $? "Failed cd to $MINGLE_BUILD_DIR, aborting!"
+        fi
+
+        if [ -n "$_targetDir" ]; then
+            ad_mkdir $_targetDir
+            cd $_targetDir
         fi
             
-        echo "Decompressing $_decompFile"...
+        echo "Decompressing $_decompFile to `pwd`"...
             
         if [ ${_decompFile: -4} == ".tgz" ]; then
             tar xzvf "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
@@ -791,11 +825,19 @@ mingleDecompress() {
         fi
         
         if $_tarcheck; then
-            _decompFile=$(ad_getLocalArchiveFromWC "$_project")
+            if [ -n "$_localDir" ]; then
+                _decompFile=$(ad_getLocalArchiveFromWC "$_project")
+            else
+                _decompFile=$(ad_getArchiveFromWC "$_project")
+            fi
         
             if [ "${_decompFile: -4}" == ".tar" ]; then
                 tar xvf "$_decompFile" || mingleError $? "Failed to unarchive extracted $_decompFile, aborting!"
             fi
+        fi
+
+        if [ -n "$_targetDir" ]; then
+            cd $MINGLE_BUILD_DIR || mingleError $? "Failed to cd $MINGLE_BUILD_DIR, aborting!"
         fi
     fi
 }

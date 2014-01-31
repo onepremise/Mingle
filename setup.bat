@@ -85,9 +85,23 @@ if not exist "%MINGLE_CACHE%\%MSYSTOOLS%" (
     EXIT /B 1
 )
 
-REM Best so far.
-set GCCCOMPILER=x86_64-w64-mingw32-gcc-4.7.2-release-win64_rubenvb.7z
-set GCCURL="'http://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/rubenvb/gcc-4.7-release/%GCCCOMPILER%/download'"
+REM ===========================================================================
+REM Solid Candidates
+REM ===========================================================================
+set GCCCOMPILER=x64-4.8.1-release-posix-seh-rev5.7z
+set GCCURL="'http://sourceforge.net/projects/mingwbuilds/files/host-windows/releases/4.8.1/64-bit/threads-posix/seh/x64-4.8.1-release-posix-seh-rev5.7z/download'"
+
+REM set GCCCOMPILER=x86_64-w64-mingw32-gcc-4.7.2-release-win64_rubenvb.7z
+REM set GCCURL="'http://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/rubenvb/gcc-4.7-release/%GCCCOMPILER%/download'"
+
+REM ===========================================================================
+REM Tested but failed:
+REM ===========================================================================
+REM set GCCCOMPILER=x86_64-4.8.2-release-posix-seh-rt_v3-rev2.7z
+REM set GCCURL="'http://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/mingw-builds/4.8.2/threads-posix/seh/x86_64-4.8.2-release-posix-seh-rt_v3-rev2.7z/download'"
+
+REM set GCCCOMPILER=x86_64-w64-mingw32-gcc-4.8-stdthread-win32_rubenvb.7z
+REM set GCCURL="'http://downloads.sourceforge.net/project/mingw-w64/Toolchains targetting Win64/Personal Builds/mingw-builds/4.8.2/threads-posix/seh/x86_64-4.8.2-release-posix-seh-rt_v3-rev2.7z'"
 
 REM set GCCCOMPILERUPDATE=x86_64-w64-mingw32-mingw-w64-update-trunk-20130115_rubenvb.7z
 REM set GCCUPDATEURL="'http://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/rubenvb/update/%GCCCOMPILERUPDATE%/download'"
@@ -98,14 +112,17 @@ REM set GCCURL="'http://www.drangon.org/mingw/mirror.php?num=2&fname=mingw-w64-b
 REM set GCCCOMPILER=x64-4.7.2-release-posix-sjlj-rev9.7z
 REM set GCCURL="'http://sourceforge.net/projects/mingwbuilds/files/host-windows/releases/4.7.2/64-bit/threads-posix/sjlj/%GCCCOMPILER%/download'"
 
+REM ===========================================================================
+REM Download compiler
+REM ===========================================================================
 if not exist "%MINGLE_CACHE%\%GCCCOMPILER%" (
     ECHO "Downloading %GCCCOMPILER%..."
-    powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCURL% -fileName '%MINGLE_CACHE%\\%GCCCOMPILER%'"
+    powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCURL% -fileName '%MINGLE_CACHE%/%GCCCOMPILER%'"
 )
 
 REM if not exist "packages\%GCCCOMPILERUPDATE%" (
 REM     ECHO "Downloading %GCCCOMPILERUPDATE%..."
-REM     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCUPDATEURL% -fileName '%MINGLE_CACHE%\\%GCCCOMPILERUPDATE%'"
+REM     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCUPDATEURL% -fileName '%MINGLE_CACHE%/%GCCCOMPILERUPDATE%'"
 REM )
 
 if not exist "%MINGLE_CACHE%\%GCCCOMPILER%" (
@@ -114,11 +131,8 @@ if not exist "%MINGLE_CACHE%\%GCCCOMPILER%" (
     EXIT /B 1
 )
 
-REM Command tool updates from MSYS2
-
-
 REM ===========================================================================
-REM EXTRACTING TOOLS
+REM EXTRACTING TOOLS - Command tool updates
 REM ===========================================================================
 
 if not exist "msys" (
@@ -131,23 +145,35 @@ if not exist "mingw64" (
     ECHO "Extracting GCC..."
     ECHO.
     mingle\7za x %MINGLE_CACHE%\%GCCCOMPILER%
-REM     mingle\7za x -y %MINGLE_CACHE%\%GCCCOMPILERUPDATE% -ir!*mingw64\x86_64-w64-mingw32*
-)
+    REM     mingle\7za x -y %MINGLE_CACHE%\%GCCCOMPILERUPDATE% -ir!*mingw64\x86_64-w64-mingw32*
 
-IF EXIST "mingw" (
-    MOVE mingw mingw64
-)
+    IF EXIST "mingw" (
+        MOVE mingw mingw64
+    )
 
-IF NOT EXIST "mingw64\bin\gcc.exe" (
-    ECHO "Failed to install GCC!"
-    ECHO.
-    EXIT /B 1
-)
+    IF NOT EXIST "mingw64\bin\gcc.exe" (
+        ECHO "Failed to install GCC!"
+        ECHO.
+        EXIT /B 1
+    )
 
-IF EXIST "mingw64\bin\lib" (
-    ECHO Not sure why these python libraries exist in bin. We will remove and reinstall later after we build Python. Otherwise, this will interfere with the msvc lib command.
-    DEL /s /Q mingw64\bin\lib
-    RMDIR /S /Q mingw64\bin\lib
+    IF EXIST "mingw64\bin\lib" (
+        ECHO Remove python lib in bin, not appropriate location for python libs in msys env.
+        DEL /s /Q mingw64\bin\lib
+        RMDIR /S /Q mingw64\bin\lib
+    )
+
+    IF EXIST "mingw64\include\bfd.h" (
+        ECHO BFD includes not required.
+        DEL /s /Q mingw64\include\bfd*.h
+    )
+
+    IF EXIST "mingw64\opt\bin\python.exe" (
+        ECHO Don't use their python build. The console doesn't work correctly.
+        DEL /s /Q /F mingw64\opt
+        RMDIR /S /Q mingw64\opt
+        MKDIR mingw64\opt
+    )
 )
 
 IF EXIST "msys.lnk" (
@@ -183,7 +209,7 @@ IF NOT EXIST "mingw64\lib\mingle" (
 )
 
 XCOPY /Y /Q /D mingle\mingle.sh mingw64\bin
-XCOPY /Y /Q /D /S mingle\mingle\mingle-* mingw64\lib\mingle
+XCOPY /Y /Q /D /S mingle\mingle\* mingw64\lib\mingle
 XCOPY /Y /Q /D mingle\mingle.cfg mingw64\etc
 
 IF EXIST "mingw64\bin\mingle.sh" (
@@ -327,66 +353,33 @@ REM UPDATE PROFILE
 REM ===========================================================================
 call mingle\update-etc.bat
 
-
-REM ===========================================================================
-REM LAUNCH CONSOLE
-REM ===========================================================================
-IF DEFINED LAUNCH (
-msys\bin\mintty msys/bin/bash -l
-REM START "MINGLE" /D "%CD%" msys\bin\bash -l
-GOTO EXIT
-)
-
-REM ===========================================================================
-REM USE SUITE IF PROVIDED
-REM ===========================================================================
-IF %MINGLE_SUITE% NEQ 0 (
-  ECHO.
-  ECHO.
-  ECHO "Deploying selected development environment (%MINGLE_SUITE%):"
-  ECHO.
-
-  msys\bin\bash -l -c "/mingw/bin/mingle -m"
-
-  IF %MINGLE_SUITE% GTR !ERRORLEVEL! (
-    ECHO.
-    ECHO "Invalid selection^! You can only choose from one of the following:"
-    ECHO.
-    msys\bin\bash -l -c "cd /mingw/bin;./mingle -l"
-    SET ERRORVALUE=7
-    GOTO EXIT
-  )
-
-  msys\bin\bash -l -c "/mingw/bin/mingle -k %MINGLE_SUITE%"
-  ECHO.
-)
-
 REM ===========================================================================
 REM CHECK FOR VISUAL STUDIO
 REM ===========================================================================
-ECHO "Checking for Visual Studio 2012 Express for Windows Desktop..."
-ECHO.
-reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\11.0"
-ECHO.
-
-if ERRORLEVEL 1 (
-ECHO "Please Install Visual Studio 2012 Express for Windows Desktop before proceeding"
-ECHO "VS includes MASM, ml64.exe, which is used to build boost libraries."
-ECHO.
-ECHO "If this is a full prebuilt deployment, and you're not building boost,"
-ECHO "you may continue compiling and building projects via gnu gcc and"
-ECHO "the included dependencies in this package."
-ECHO.
-ECHO Visit: http://www.microsoft.com/visualstudio/eng/downloads
-ECHO New Link: http://www.microsoft.com/en-us/download/details.aspx?id=34673
-ECHO Download the full package. I've had issues with the web install.
-ECHO.
-
-pause
-)
-
 if not exist "mingw64\bin\ml64.exe" (
     set MLINSTALLED=false
+
+    ECHO "Checking for Visual Studio 2012 Express for Windows Desktop..."
+    ECHO.
+    reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\11.0"
+    ECHO.
+
+    if ERRORLEVEL 1 (
+        ECHO "Please Install Visual Studio 2012 Express for Windows Desktop before proceeding"
+        ECHO "VS includes MASM, ml64.exe, which is used to build boost libraries."
+        ECHO.
+        ECHO "If this is a full prebuilt deployment, and you're not building boost,"
+        ECHO "you may continue compiling and building projects via gnu gcc and"
+        ECHO "the included dependencies in this package."
+        ECHO.
+        ECHO Visit: http://www.microsoft.com/visualstudio/eng/downloads
+        ECHO New Link: http://www.microsoft.com/en-us/download/details.aspx?id=34673
+        ECHO Download the full package. I've had issues with the web install.
+        ECHO.
+
+        pause
+    )
+
     ECHO "Retrieve MASM..."
   
     IF exist "%VS110COMNTOOLS%..\..\VC\bin\x86_amd64" (
@@ -427,50 +420,38 @@ if not exist "mingw64\bin\ml64.exe" (
     )
 )
 
-ECHO.
-ECHO "Create windows 64bit library directory..."
-ECHO.
-
-IF NOT EXIST mingw64\win64bitlibs (
-    mkdir mingw64\win64bitlibs
+REM ===========================================================================
+REM LAUNCH CONSOLE
+REM ===========================================================================
+IF DEFINED LAUNCH (
+msys\bin\mintty msys/bin/bash -l
+REM START "MINGLE" /D "%CD%" msys\bin\bash -l
+GOTO EXIT
 )
 
-ECHO.
-ECHO "Copy 64 bit system libraries..."
-ECHO.
+REM ===========================================================================
+REM USE SUITE IF PROVIDED
+REM ===========================================================================
+IF %MINGLE_SUITE% NEQ 0 (
+  ECHO.
+  ECHO.
+  ECHO "Deploying selected development environment (%MINGLE_SUITE%):"
+  ECHO.
 
-COPY %WINDIR%\System32\gdi32.dll mingw64\win64bitlibs /y
-COPY %WINDIR%\System32\msimg32.dll mingw64\win64bitlibs /y
-COPY %WINDIR%\System32\ws2_32.dll mingw64\win64bitlibs /y
-COPY %WINDIR%\System32\crypt32.dll mingw64\win64bitlibs /y
-COPY %WINDIR%\System32\Wldap32.dll mingw64\win64bitlibs /y
+  msys\bin\bash -l -c "/mingw/bin/mingle -m"
 
-move mingw64\win64bitlibs\gdi32.dll mingw64\win64bitlibs\libgdi32.dll
-move mingw64\win64bitlibs\msimg32.dll mingw64\win64bitlibs\libmsimg32.dll
-move mingw64\win64bitlibs\ws2_32.dll mingw64\win64bitlibs\libws2_32.dll
-move mingw64\win64bitlibs\crypt32.dll mingw64\win64bitlibs\libcrypt32.dll
-move mingw64\win64bitlibs\Wldap32.dll mingw64\win64bitlibs\libwldap32.dll
+  IF %MINGLE_SUITE% GTR !ERRORLEVEL! (
+    ECHO.
+    ECHO "Invalid selection^! You can only choose from one of the following:"
+    ECHO.
+    msys\bin\bash -l -c "cd /mingw/bin;./mingle -l"
+    SET ERRORVALUE=7
+    GOTO EXIT
+  )
 
-
-ECHO.
-ECHO "Copy 32 bit system libraries..."
-ECHO.
-
-IF NOT EXIST mingw64\win32bitlibs (
-    mkdir mingw64\win32bitlibs
+  msys\bin\bash -l -c "/mingw/bin/mingle -k %MINGLE_SUITE%"
+  ECHO.
 )
-
-COPY %WINDIR%\SysWOW64\gdi32.dll mingw64\win32bitlibs /y
-COPY %WINDIR%\SysWOW64\msimg32.dll mingw64\win32bitlibs /y
-COPY %WINDIR%\SysWOW64\ws2_32.dll mingw64\win32bitlibs /y
-COPY %WINDIR%\SysWOW64\crypt32.dll mingw64\win32bitlibs /y
-COPY %WINDIR%\SysWOW64\Wldap32.dll mingw64\win32bitlibs /y
-
-move mingw64\win32bitlibs\gdi32.dll mingw64\win32bitlibs\libgdi32.dll
-move mingw64\win32bitlibs\msimg32.dll mingw64\win32bitlibs\libmsimg32.dll
-move mingw64\win32bitlibs\ws2_32.dll mingw64\win32bitlibs\libws2_32.dll
-move mingw64\win32bitlibs\crypt32.dll mingw64\win32bitlibs\libcrypt32.dll
-move mingw64\win32bitlibs\Wldap32.dll mingw64\win32bitlibs\libwldap32.dll
 
 REM ===========================================================================
 REM STARTBUILD
@@ -555,9 +536,9 @@ REM ===========================================================================
 
 cd /D "%ORIGINAL_PATH%"
 
-subst %DRIVE% /D > nul
-
 call mingle\update-etc.bat
+
+subst %DRIVE% /D > nul
 
 EXIT /B %ERRORVALUE%
 

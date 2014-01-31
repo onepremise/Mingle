@@ -1,0 +1,13 @@
+--- include/crtdefs.h	2013-08-30 01:14:42 -0400
++++ include/crtdefs2.h	2014-01-24 15:32:08 -0500
+@@ -9,8 +9,8 @@
+ 
+ #include <_mingw.h>
+ 
+-#ifdef __ERRCODE_DEFINED_MS
+-/* #define __ERRCODE_DEFINED_MS */
++#ifndef __ERRCODE_DEFINED_MS
++#define __ERRCODE_DEFINED_MS
+ typedef int errcode;
+ #endif
+ 

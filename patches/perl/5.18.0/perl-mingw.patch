@@ -349,6 +349,77 @@ $ diff -u perl-5.18.0/win32/makefile.mk perl-5.18.0/win32/makefile3.mk
  #ifndef _environ
  #define _environ	environ
  #endif
+--- perl-5.18.0/win32/win32.c	2013-04-30 22:52:56 -0400
++++ perl-5.18.0/win32/win322.c	2014-01-30 10:36:47 -0500
+@@ -4629,3 +4629,49 @@
+ }
+ #  endif /* USE_ITHREADS */
+ #endif /* HAVE_INTERP_INTERN */
++
++#ifdef __MINGW32__
++// Threadsafe mingw path conversion call
++// Returns true if path found and converted.
++int mingw_posix2win_path(char *mingwpath, char *destination, int size)
++{
++    FILE *fp;
++    int status;
++    char cmd[MAXPATHLEN+32]={0};
++    char results[MAXPATHLEN+1]={0};
++    char mingw_lib64_path[MAXPATHLEN+1]={0};
++
++    // not quite sure yet why swprintf with size fails. will have
++    // to use default swprintf for now.
++    sprintf(cmd, "bash -c \"cd %s &>nul && pwd -W || echo\"", mingwpath);
++
++    /* Open the command for reading. */
++    fp = popen(cmd, "r");
++
++    if (fp == NULL) {
++      return 0;
++    } else {
++        /* Read the output a line at a time - output it. */
++        while (fgets(results, sizeof(results)-1, fp) != NULL) {
++            if (strstr(results, "No such file")==NULL) {
++                results[strlen(results)-1]='\0';
++                strncat(destination, results, size);
++            } else {
++                return 0;
++            }
++        }
++
++        /* close */
++        pclose(fp);
++    }
++
++    char *buffer=destination;
++    while (*buffer) {
++        if (*buffer == '/')
++            *(char*)buffer = '\\';
++        ++buffer;
++    }
++
++    return 1;
++}
++#endif
+--- perl-5.18.0/perl.c	2013-05-09 09:47:40 -0400
++++ perl-5.18.0/perl2.c	2014-01-27 16:45:04 -0500
+@@ -4712,6 +4712,8 @@
+ #endif
+ 
+ 	    if (add_versioned_sub_dirs) {
++        subdir = S_incpush_if_exists(aTHX_ av, subdir, libdir);
++
+ 		/* .../version/archname if -d .../version/archname */
+ 		sv_catpvs(subdir, "/" PERL_FS_VERSION "/" ARCHNAME);
+ 		subdir = S_incpush_if_exists(aTHX_ av, subdir, libdir);
+@@ -4719,6 +4721,7 @@
+ 		/* .../version if -d .../version */
+ 		sv_catpvs(subdir, "/" PERL_FS_VERSION);
+ 		subdir = S_incpush_if_exists(aTHX_ av, subdir, libdir);
++
+ 	    }
+ 
+ #ifdef PERL_INC_VERSION_LIST 
 --- perl-5.18.0/cpan/ExtUtils-MakeMaker/lib/ExtUtils/MM_Win32.pm	2013-04-30 22:52:56 -0400
 +++ perl-5.18.0/cpan/ExtUtils-MakeMaker/lib/ExtUtils/MM_Win322.pm	2013-09-12 17:44:49 -0400
 @@ -150,7 +150,7 @@

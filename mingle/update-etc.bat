@@ -77,6 +77,22 @@ IF EXIST "mingw64/bin/git.exe" (
     msys\bin\bash -l -c "git config -f $MINGLE_BASE/mingw64/etc/gitconfig http.sslcainfo $GIT_SSL_CAPATH"
 )
 
+REM ===========================================================================
+REM UPDATE PERL PATHS
+REM ===========================================================================
+IF EXIST "mingw64/bin/perl.exe" (
+    ECHO "Updating perl config.pm and config_heav.pl..."
+	ECHO.
+
+    msys\bin\bash -l -c "newpath=%CD:\=\\\\\\\%\\\\\\\mingw64; sed -e 's|\([=; >\x27]*\).:[^:]*\\\*mingw64|\1'$newpath'|g' /mingw/lib/perl/Config.pm > /mingw/lib/perl/Config2.pm"
+
+    msys\bin\bash -l -c "mv /mingw/lib/perl/Config2.pm /mingw/lib/perl/Config.pm"
+
+    msys\bin\bash -l -c "newpath=%CD:\=\\\\\\\%\\\\\\\mingw64; sed -e 's|\([=; >\x27]*\).:[^:]*\\\*mingw64|\1'$newpath'|g' /mingw/lib/perl/Config_heavy.pl > /mingw/lib/perl/Config_heavy2.pl"
+
+    msys\bin\bash -l -c "mv /mingw/lib/perl/Config_heavy2.pl /mingw/lib/perl/Config_heavy.pl"
+)
+
 ECHO.
 
 endlocal
