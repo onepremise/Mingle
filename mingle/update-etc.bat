@@ -86,10 +86,12 @@ IF EXIST "mingw64/bin/perl.exe" (
 
     msys\bin\bash -l -c "newpath=%CD:\=\\\\\\\%\\\\\\\mingw64; sed -e 's|\([=; >\x27]*\).:[^:]*\\\*mingw64|\1'$newpath'|g' /mingw/lib/perl/Config.pm > /mingw/lib/perl/Config2.pm"
 
+    attrib -r mingw64/lib/perl/Config.pm
     msys\bin\bash -l -c "mv /mingw/lib/perl/Config2.pm /mingw/lib/perl/Config.pm"
 
     msys\bin\bash -l -c "newpath=%CD:\=\\\\\\\%\\\\\\\mingw64; sed -e 's|\([=; >\x27]*\).:[^:]*\\\*mingw64|\1'$newpath'|g' /mingw/lib/perl/Config_heavy.pl > /mingw/lib/perl/Config_heavy2.pl"
 
+    attrib -r mingw64/lib/perl/Config_heavy.pl
     msys\bin\bash -l -c "mv /mingw/lib/perl/Config_heavy2.pl /mingw/lib/perl/Config_heavy.pl"
 )
 

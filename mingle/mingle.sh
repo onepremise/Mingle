@@ -48,7 +48,7 @@ export AD_LIBCURL_VERSION=7.28.1
 export AD_RAGEL_VERSION=6.8
 
 export AD_EXPAT_VERSION=2.1.0
-export AD_LIBXML2_VERSION=2.9.0
+export AD_LIBXML2_VERSION=2.9.1
 
 export AD_CUNIT_VERSION=2.1-2
 export AD_GDB_VERSION=7.5
@@ -199,8 +199,8 @@ mingleDownloadPackages () {
     mingleDownload "http://download.icu-project.org/files/icu4c/50.1/icu4c-$AD_ICU_VERSION-src.tgz"
     mingleDownload "https://polarssl.org/download/polarssl-$AD_POLAR_VERSION-gpl.tgz"
     mingleDownload "http://www.openssl.org/source/openssl-$AD_OPENSSL_VERSION.tar.gz"
-    
-    mingleDownload "ftp://xmlsoft.org/libxml2/libxml2-$AD_LIBXML2_VERSION.tar.gz"
+    mingleDownload "https://git.gnome.org/browse/libxml2/snapshot/libxml2-$AD_LIBXML2_VERSION.tar.gz"
+    #mingleDownload "ftp://xmlsoft.org/libxml2/libxml2-$AD_LIBXML2_VERSION.tar.gz"
     mingleDownload "http://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.1.tar.gz"
     mingleDownload "https://git.gnome.org/browse/libxslt/snapshot/libxslt-master.tar.gz"
     mingleDownload "http://sourceforge.net/projects/expat/files/expat/$AD_EXPAT_VERSION/expat-$AD_EXPAT_VERSION.tar.gz/download" "expat-$AD_EXPAT_VERSION.tar.gz"
@@ -781,7 +781,7 @@ buildInstallPkgconfig() {
 
         local _projectdir=$(ad_getDirFromWC $_project)
     
-        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+        cd "$_projectDir" || mingleError $? "cd failed, aborting!"
     
         aclocal --force
         libtoolize
@@ -1164,6 +1164,10 @@ buildInstallDocBook() {
         echo "$_project Already Installed."
         echo
         return;
+    else
+        echo
+        echo "Installing $_project..."
+        echo
     fi
 
     ad_mkdir /etc/xml
@@ -1230,49 +1234,29 @@ buildInstallDocBook() {
         xmlcatalog --noout --create /etc/xml/docbook || mingleError $? "failed to create docbook, aborting!"
     fi
 
-    xmlcatalog --noout --add "public" \
-    "-/$_msysDir/OASIS/DTD DocBook XML V4.3/EN" \
-    "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" /etc/xml/docbook
+    cd /
 
-    xmlcatalog --noout --add "public" \
-    "-/$_msysDir/OASIS/DTD DocBook XML CALS Table Model V4.3/EN" \
-    "file:///$_shareDir/xml/docbook/xml/4.3/calstblx.dtd" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//DTD DocBook XML V4.3//EN\" \"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd\" ./etc/xml/docbook"
 
-    xmlcatalog --noout --add "public" \
-    "-/$_msysDir/OASIS/DTD XML Exchange Table Model 19990315/EN" \
-    "file:///$_shareDir/xml/docbook/xml/4.3/soextblx.dtd" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//DTD DocBook XML CALS Table Model V4.3//EN\" \"file:///$_shareDir/xml/docbook/xml/4.3/calstblx.dtd\" ./etc/xml/docbook"
 
-    xmlcatalog --noout --add "public" \
-    "-/$_msysDir/OASIS/ELEMENTS DocBook XML Information Pool V4.3/EN" \
-    "file:///$_shareDir/xml/docbook/xml/4.3/dbpoolx.mod" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//DTD XML Exchange Table Model 19990315//EN\" \"file:///$_shareDir/xml/docbook/xml/4.3/soextblx.dtd\" ./etc/xml/docbook"
 
-    xmlcatalog --noout --add "public" \
-    "-/$_msysDir/OASIS/ELEMENTS DocBook XML Document Hierarchy V4.3/EN" \
-    "file:///$_shareDir/xml/docbook/xml/4.3/dbhierx.mod" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//ELEMENTS DocBook XML Information Pool V4.3//EN\" \"file:///$_shareDir/xml/docbook/xml/4.3/dbpoolx.mod\" ./etc/xml/docbook"
 
-    xmlcatalog --noout --add "public" \
-    "-/$_msysDir/OASIS/ELEMENTS DocBook XML HTML Tables V4.3/EN" \
-    "file:///$_shareDir/xml/docbook/xml/4.3/htmltblx.mod" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//ELEMENTS DocBook XML Document Hierarchy V4.3//EN\" \"file:///$_shareDir/xml/docbook/xml/4.3/dbhierx.mod\" ./etc/xml/docbook"
 
-    xmlcatalog --noout --add "public" \
-    "-/$_msysDir/OASIS/ENTITIES DocBook XML Notations V4.3/EN" \
-    "file:///$_shareDir/xml/docbook/xml/4.3/dbnotnx.mod" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//ELEMENTS DocBook XML HTML Tables V4.3//EN\" \"file:///$_shareDir/xml/docbook/xml/4.3/htmltblx.mod\" ./etc/xml/docbook"
 
-    xmlcatalog --noout --add "public" \
-    "-/$_msysDir/OASIS/ENTITIES DocBook XML Character Entities V4.3/EN" \
-    "file:///$_shareDir/xml/docbook/xml/4.3/dbcentx.mod" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//ENTITIES DocBook XML Notations V4.3//EN\" \"file:///$_shareDir/xml/docbook/xml/4.3/dbnotnx.mod\" ./etc/xml/docbook"
 
-    xmlcatalog --noout --add "public" \
-    "-/$_msysDir/OASIS/ENTITIES DocBook XML Additional General Entities V4.3/EN" \
-    "file:///$_shareDir/xml/docbook/xml/4.3/dbgenent.mod" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//ENTITIES DocBook XML Character Entities V4.3//EN\" \"file:///$_shareDir/xml/docbook/xml/4.3/dbcentx.mod\" ./etc/xml/docbook"
 
-    xmlcatalog --noout --add "rewriteSystem" \
-    "http://www.oasis-open.org/docbook/xml/4.3" \
-    "file:///$_shareDir/xml/docbook/xml/4.3" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//ENTITIES DocBook XML Additional General Entities V4.3//EN\" \"file:///$_shareDir/xml/docbook/xml/4.3/dbgenent.mod\" ./etc/xml/docbook"
 
-    xmlcatalog --noout --add "rewriteURI" \
-    "http://www.oasis-open.org/docbook/xml/4.3" \
-    "file:///$_shareDir/xml/docbook/xml/4.3" /etc/xml/docbook
+    cmd /c "xmlcatalog --noout --add \"rewriteSystem\" \"http://www.oasis-open.org/docbook/xml/4.3\" \"file:///$_shareDir/xml/docbook/xml/4.3\" ./etc/xml/docbook"
+
+    cmd /c "xmlcatalog --noout --add \"rewriteURI\" \"http://www.oasis-open.org/docbook/xml/4.3\" \"file:///$_shareDir/xml/docbook/xml/4.3\" ./etc/xml/docbook"
 
     if [ ! -e /etc/xml/catalog ]; then
         xmlcatalog --noout --create /etc/xml/catalog || mingleError $? "failed to create catalog, aborting!"
@@ -1281,41 +1265,23 @@ buildInstallDocBook() {
         xmlcatalog --noout --create /etc/xml/catalog || mingleError $? "failed to create catalog, aborting!"
     fi
 
-    xmlcatalog --noout --add "delegatePublic" \
-    "-/$_msysDir/OASIS/ENTITIES DocBook XML" \
-    "file:///$_etcDir/xml/docbook" /etc/xml/catalog
+    cmd /c "xmlcatalog --noout --add \"delegatePublic\" \"-//OASIS//ENTITIES DocBook XML\" \"file:///$_etcDir/xml/docbook\" ./etc/xml/catalog"
 
-    xmlcatalog --noout --add "delegatePublic" \
-    "-/$_msysDir/OASIS/DTD DocBook XML" \
-    "file:///$_etcDir/xml/docbook" /etc/xml/catalog
+    cmd /c "xmlcatalog --noout --add \"delegatePublic\" \"-//OASIS//DTD DocBook XML\" \"file:///$_etcDir/xml/docbook\" ./etc/xml/catalog"
 
-    xmlcatalog --noout --add "delegateSystem" \
-    "http://www.oasis-open.org/docbook/" \
-    "file:///$_etcDir/xml/docbook" /etc/xml/catalog
+    cmd /c "xmlcatalog --noout --add \"delegateSystem\" \"http://www.oasis-open.org/docbook/" \"file:///$_etcDir/xml/docbook\" ./etc/xml/catalog"
 
-    xmlcatalog --noout --add "delegateURI" \
-    "http://www.oasis-open.org/docbook/" \
-    "file:///$_etcDir/xml/docbook" /etc/xml/catalog
+    cmd /c "xmlcatalog --noout --add \"delegateURI\" \"http://www.oasis-open.org/docbook/" \"file:///$_etcDir/xml/docbook\" ./etc/xml/catalog"
 
-    xmlcatalog --noout --add "rewriteSystem" \
-    "http://docbook.sourceforge.net/release/xsl/1.76.1" \
-    "$_shareDir/xml/docbook/stylesheet/docbook-xsl" \
-    /etc/xml/catalog
+    cmd /c "xmlcatalog --noout --add \"rewriteSystem\" \"http://docbook.sourceforge.net/release/xsl/1.76.1\" \"file:///$_shareDir/xml/docbook/stylesheet/docbook-xsl\" ./etc/xml/catalog"
 
-    xmlcatalog --noout --add "rewriteURI" \
-           "http://docbook.sourceforge.net/release/xsl/1.76.1" \
-           "$_shareDir/xml/docbook/stylesheet/docbook-xsl" \
-    /etc/xml/catalog
+    cmd /c "xmlcatalog --noout --add \"rewriteURI\" \"http://docbook.sourceforge.net/release/xsl/1.76.1\" \"file:///$_shareDir/xml/docbook/stylesheet/docbook-xsl\" ./etc/xml/catalog"
 
-    xmlcatalog --noout --add "rewriteSystem" \
-           "http://docbook.sourceforge.net/release/xsl/current" \
-           "$_shareDir/xml/docbook/stylesheet/docbook-xsl" \
-    /etc/xml/catalog
+    cmd /c "xmlcatalog --noout --add \"rewriteSystem\" \"http://docbook.sourceforge.net/release/xsl/current\" \"file:///$_shareDir/xml/docbook/stylesheet/docbook-xsl\" ./etc/xml/catalog"
 
-    xmlcatalog --noout --add "rewriteURI" \
-           "http://docbook.sourceforge.net/release/xsl/current" \
-           "$_shareDir/xml/docbook/stylesheet/docbook-xsl" \
-    /etc/xml/catalog
+    cmd /c "xmlcatalog --noout --add \"rewriteURI\" \"http://docbook.sourceforge.net/release/xsl/current\" \"file:///$_shareDir/xml/docbook/stylesheet/docbook-xsl\" ./etc/xml/catalog"
+
+    cd $MINGLE_BUILD_DIR
 }
 
 buildInstallGTKDoc() {
@@ -1324,7 +1290,26 @@ buildInstallGTKDoc() {
     local _binCheck="gtkdoc-check"
     local _exeToTest="gtkdoc-check --version"
 
-    buildInstallGeneric "$_project" true true "-I m4" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
+    if [ ! -e "/mingw/bin/$_binCheck" ];then
+        echo
+        echo "Building $_project..."
+        echo
+
+        local _projectdir=$(ad_getDirFromWC $_project)
+
+        cd $_projectdir || mingleError $? "cd failed, aborting!"
+
+        if [ ! -e gtk-mingw.patch ]; then
+            cp $MINGLE_BASE/patches/gtk/$AD_GTKDOC_VERSION/gtk-mingw.patch .
+            ad_patch "gtk-mingw.patch"
+        fi
+
+        buildInstallGeneric "$_project" true true "-I m4" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
+
+        cd $MINGLE_BUILD_DIR
+    else
+        echo "$_project Already Installed."
+    fi
 }
 
 buildInstallGTK() {
@@ -1382,7 +1367,7 @@ buildInstallSVN() {
         make check-swig-pl MAKE=dmake || mingleError $? "make check-swig-pl failed, aborting!"
         make install-swig-pl MAKE=dmake || mingleError $? "make install-swig-pl failed, aborting!"
         
-        cd ..
+        cd $MINGLE_BUILD_DIR
     else
         echo "Already Installed."
     fi

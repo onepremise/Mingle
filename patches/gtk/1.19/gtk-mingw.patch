@@ -1,0 +1,11 @@
+--- gtk-doc-1.19/acinclude.m4	2011-06-17 04:39:38 -0400
++++ gtk-doc-1.19/acinclude.m42	2014-02-05 01:37:16 -0500
+@@ -42,7 +42,7 @@
+   AC_REQUIRE([JH_PATH_XML_CATALOG],[JH_PATH_XML_CATALOG(,[:])])dnl
+   AC_MSG_CHECKING([for ifelse([$2],,[$1],[$2]) in XML catalog])
+   if $jh_found_xmlcatalog && \
+-     AC_RUN_LOG([$XMLCATALOG --noout "$XML_CATALOG_FILE" "$1" >&2]); then
++     AC_RUN_LOG([cd /; cmd /c "`basename ${XMLCATALOG}` --noout \"./${XML_CATALOG_FILE}\" \"$1\" >&2"]); then
+     AC_MSG_RESULT([found])
+     ifelse([$3],,,[$3
+ ])dnl
