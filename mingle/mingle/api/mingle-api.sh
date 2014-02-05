@@ -16,6 +16,10 @@ ad_mkdir() {
 ad_cd() {
     local _dir=$1
     
+    echo
+    echo "Changing directory to $_dir..."
+    echo
+    
     if [ -z "$_dir" ]; then
        mingleError -1 "Please provide a valid directory."
     fi
@@ -641,15 +645,22 @@ mingleStackTrace() {
   local frame=0
   
   echo
-  echo "Stacktrace:"
+  echo "====================================================================="
+  echo " Stacktrace:"
+  echo "====================================================================="
   echo
- 
+  
   while caller $frame; do
     ((frame++));
   done
  
+  echo
+  echo "====================================================================="
+  echo " ERROR:"
+  echo "====================================================================="
+  echo
   echo "$*"
-  exit 1
+  echo
 }
 
 mingleReportToolVersions() {

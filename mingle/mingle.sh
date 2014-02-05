@@ -1242,7 +1242,11 @@ buildInstallDocBook() {
         xmlcatalog --noout --create /etc/xml/docbook || mingleError $? "failed to create docbook, aborting!"
     fi
 
-    cd /
+    ad_cd "/"
+    
+    echo
+    echo "Creating /etc/xml/docbook..."
+    echo    
 
     cmd /c "xmlcatalog --noout --add \"public\" \"-//OASIS//DTD DocBook XML V4.3//EN\" \"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd\" ./etc/xml/docbook"
 
@@ -1266,6 +1270,10 @@ buildInstallDocBook() {
 
     cmd /c "xmlcatalog --noout --add \"rewriteURI\" \"http://www.oasis-open.org/docbook/xml/4.3\" \"file:///$_shareDir/xml/docbook/xml/4.3\" ./etc/xml/docbook"
 
+    echo
+    echo "Creating /etc/xml/catalog..."
+    echo
+    
     if [ ! -e /etc/xml/catalog ]; then
         xmlcatalog --noout --create /etc/xml/catalog || mingleError $? "failed to create catalog, aborting!"
     else
@@ -1277,9 +1285,9 @@ buildInstallDocBook() {
 
     cmd /c "xmlcatalog --noout --add \"delegatePublic\" \"-//OASIS//DTD DocBook XML\" \"file:///$_etcDir/xml/docbook\" ./etc/xml/catalog"
 
-    cmd /c "xmlcatalog --noout --add \"delegateSystem\" \"http://www.oasis-open.org/docbook/" \"file:///$_etcDir/xml/docbook\" ./etc/xml/catalog"
+    cmd /c "xmlcatalog --noout --add \"delegateSystem\" \"http://www.oasis-open.org/docbook\" \"file:///$_etcDir/xml/docbook\" ./etc/xml/catalog"
 
-    cmd /c "xmlcatalog --noout --add \"delegateURI\" \"http://www.oasis-open.org/docbook/" \"file:///$_etcDir/xml/docbook\" ./etc/xml/catalog"
+    cmd /c "xmlcatalog --noout --add \"delegateURI\" \"http://www.oasis-open.org/docbook\" \"file:///$_etcDir/xml/docbook\" ./etc/xml/catalog"
 
     cmd /c "xmlcatalog --noout --add \"rewriteSystem\" \"http://docbook.sourceforge.net/release/xsl/1.76.1\" \"file:///$_shareDir/xml/docbook/stylesheet/docbook-xsl\" ./etc/xml/catalog"
 
@@ -1302,6 +1310,8 @@ buildInstallGTKDoc() {
         echo
         echo "Building $_project..."
         echo
+        
+        mingleDecompress "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
 
