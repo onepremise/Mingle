@@ -13,6 +13,16 @@ ad_mkdir() {
     fi
 }
 
+ad_cd() {
+    local _dir=$1
+    
+    if [ -z "$_dir" ]; then
+       mingleError -1 "Please provide a valid directory."
+    fi
+    
+    cd $_dir || mingleError $? "cd failed, aborting!"
+}
+
 ad_isDateNewerThanFileModTime() {
     local _checkdate=$1
     local _filename=$2
@@ -618,11 +628,28 @@ mingleError() {
     echo
     echo "Current Project Dir: `pwd`"
     echo
-    echo "`date +%m-%d-%y\ %T`, $_errorNum $_errorMsg"
+    
+    mingleStackTrace "`date +%m-%d-%y\ %T`, $_errorNum $_errorMsg"
+    
     echo "`date +%m-%d-%y\ %T`, \"$_errorNum\", \"$_errorMsg\"">$MINGLE_BUILD_DIR/mingle_error.log
     echo
 
     exit $_errorNum
+}
+
+mingleStackTrace() {
+  local frame=0
+  
+  echo
+  echo "Stacktrace:"
+  echo
+ 
+  while caller $frame; do
+    ((frame++));
+  done
+ 
+  echo "$*"
+  exit 1
 }
 
 mingleReportToolVersions() {

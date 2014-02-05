@@ -251,14 +251,17 @@ updateGCC() {
 
         cp $MINGLE_BASE/patches/gcc/gcc-mingw.patch /mingw/x86_64-w64-mingw32/include
 
-        cd /mingw/x86_64-w64-mingw32/include
+        ad_cd /mingw/x86_64-w64-mingw32/include
+        
         ad_patch "gcc-mingw.patch"
-        cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
+        
+        ad_cd "$MINGLE_BUILD_DIR"
 
         sed 's/\(template<class Q>\)/\/\/\1/g' /mingw/x86_64-w64-mingw32/include/unknwn.h > unknwn.h
         mv unknwn.h /mingw/x86_64-w64-mingw32/include/unknwn.h || mingleError $? "Failed to update GCC, aborting!"
 
-        cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
+        ad_cd "$MINGLE_BUILD_DIR"
+        
         if [ ! -e "/mingw/lib/libmingle.a" ]; then
             echo "Supplementing GCC with libmingle..."
             cp -rf $MINGLE_BASE/mingle/libmingle .
@@ -297,16 +300,16 @@ install7Zip() {
     echo
     
     if ! 7za &> /dev/null; then
-        cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
+        ad_cd "$MINGLE_BUILD_DIR"
         mkdir 7zip
         
-        cd 7zip
+        ad_cd 7zip
         
         mingleDecompress "7za$AD_SEVENZIP.zip" 1
     
         cp 7z* /bin || mingleError $? "failed to copy 7zip, aborting!"
         
-        cd $MINGLE_BUILD_DIR || mingleError $? "failed to cd $MINGLE_BUILD_DIR, aborting!"
+        ad_cd "$MINGLE_BUILD_DIR"
     else
         echo "Already Installed."        
     fi
@@ -386,7 +389,7 @@ buildInstallGenDef() {
         
         cp -rf gendef $MINGLE_BUILD_DIR
         
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
     
         buildInstallGeneric "$_project" true true "" true true "" "" "$_binCheck"
     fi
@@ -452,7 +455,7 @@ buildInstallGDB() {
         echo
         find . -name 'config.cache' -exec rm {} \;
         
-        cd ..
+        ad_cd ".."
 
         export "CFLAGS=-I/mingw/include -I$_savedir/dependencies/include -D_WIN64 -DMS_WIN64 -D__MINGW__"
         export "LDFLAGS=-L/mingw/lib -L$_savedir/dependencies/lib -lmingle"
@@ -468,7 +471,7 @@ buildInstallGDB() {
         #cp -f _gdb.pyd /mingw/share/gdb/python/gdb
         #cp -rf /mingw/share/gdb/python/gdb /mingw/lib/python2.7/site-packages/gdb
 
-        cd ../..
+        ad_cd "$MINGLE_BUILD_DIR"
     else
         echo "GDB is up to date."
     fi
@@ -538,7 +541,7 @@ buildInstallTCL() {
         #cp -f tcl${mm_ver}.dll /mingw/bin
 	#cp -f tclsh${mm_ver}.exe /mingw/bin
 
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
     else
         echo "Already Installed."
     fi
@@ -598,7 +601,7 @@ buildInstallTk() {
         #cp -f tk86.dll /mingw/bin
         #cp -f wish86.exe /mingw/bin
         
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
         
         ad_exec_script "$_project" "$_postBuildCommand"
     else
@@ -618,7 +621,7 @@ buildInstallZlib() {
     echo
     
     if [ ! -e /mingw/bin/zlib1.dll ]; then
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
 
         mingleDecompress "$_project"
 
@@ -639,7 +642,7 @@ buildInstallZlib() {
             ./example.exe||mingleError $? "Test Failed!"
         fi
 
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
     else
         echo "Already Installed."        
     fi
@@ -655,13 +658,13 @@ buildInstallBzip2() {
     echo
     
     if [ ! -e /mingw/bin/bzip2 ]; then
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
 
         mingleDecompress "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
     
-        cd $_projectdir || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
 
         make || mingleError $? "make failed, aborting!"
 
@@ -670,7 +673,7 @@ buildInstallBzip2() {
         cp -f libbz2.a /mingw/lib
         cp -f bzlib.h /mingw/include
 
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
     else
         echo "Already Installed."        
     fi
@@ -732,7 +735,7 @@ buildInstallLibiconv() {
     sed -e "s/dlname=''/dlname='..\/bin\/libcharset-1.dll'/" -e "s/library_names=''/library_names='libcharset.dll.a'/" /mingw/lib/libcharset.la>libcharset.la
     mv libcharset.la /mingw/lib/libcharset.la
     
-    cd ..
+    ad_cd ".."
     
     echo
 }
@@ -753,7 +756,7 @@ buildInstallPThreads() {
         cp -f include/*.h /mingw/include
         cp -f lib/x64/* /mingw/lib
 
-        cd ..
+        ad_cd ".."
     else
         echo "Already Installed."        
     fi
@@ -781,12 +784,12 @@ buildInstallPkgconfig() {
 
         local _projectdir=$(ad_getDirFromWC $_project)
     
-        cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
     
         aclocal --force
         libtoolize
     
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
     
         buildInstallGeneric "$_project" true true "" true true "--with-internal-glib" "" "pkg-config" "" "pkg-config --version"
     else
@@ -806,7 +809,7 @@ installLibJPEG () {
             mkdir libjpeg-turbo
         fi
 
-        cd libjpeg-turbo
+        ad_cd libjpeg-turbo
 
         DOSPATH=`cmd /c 'echo %CD%'`
 
@@ -815,7 +818,8 @@ installLibJPEG () {
 
         EXECPATH=`pwd -W`
 
-        cd $STOREPATH    
+        ad_cd $STOREPATH
+        
         if [ ! -e "libjpeg-turbo.tar" ]; then
             cmd /c "$EXECPATH/libjpeg-turbo-1.2.1-gcc64.exe /S /D=$DOSPATH"
 
@@ -829,7 +833,7 @@ installLibJPEG () {
 
             cmd /c "uninstall_1.2.1.exe /S"
 
-            cd ..
+            ad_cd ".."
 
             sleep 2
 
@@ -864,7 +868,7 @@ installLibPNG() {
         make || mingleError $? "make failed, aborting!"
         make install || mingleError $? "make install failed, aborting!"
 
-        cd ..
+        ad_cd ".."
     else
         echo "Already Installed."
     fi
@@ -894,7 +898,7 @@ buildInstallCairo() {
 
         local _projectdir=$(ad_getDirFromWC $_project)
 
-        cd $_projectdir || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
 
         x86_64-w64-mingw32-gcc.exe -o libcairo.dll -s -shared -Wl,--out-implib=libcairo.dll.a  -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--whole-archive src/.libs/libcairo.a -Wl,--no-whole-archive -L/mingw/lib -lpixman-1 -lz -lgdi32 -lpng -lfontconfig -lfreetype -lmsimg32 || mingleError $? "Failed to generate dll, aborting!"
 
@@ -909,7 +913,7 @@ buildInstallCairo() {
         ad_fix_shared_lib "$_shortProjectName"
         ad_fix_shared_lib "libcairo-script-interpreter"
 
-        cd ..
+        ad_cd ".."
     fi
 }
 
@@ -941,7 +945,7 @@ buildInstallPolarSSL() {
         cd $_projectdir
         sed -e 's/DESTDIR=\/usr\/local/DESTDIR=\/mingw/g' Makefile>Makefile2
         mv Makefile2 Makefile
-        cd ..
+        ad_cd ".."
         
         ad_make "$_project"
     else
@@ -970,9 +974,12 @@ buildInstallLOpenSSL() {
         mingleDecompress "$_project"
         
         local _dir=$(ad_getDirFromWC "$_project")
-        cd $_dir
+        
+        ad_cd $_dir
+        
         ./Configure mingw64 shared no-asm no-idea no-mdc2 no-rc5 --prefix=/mingw
-        cd ..
+        
+        ad_cd ".."
         
         ad_make "$_project"
     else
@@ -1008,14 +1015,14 @@ buildInstallLibXSLT() {
 
     local _projectDir=$(ad_getDirFromWC "$_project")
 
-    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectDir"
 
     if [ ! -e xslt-mingw.patch ]; then
         cp $MINGLE_BASE/patches/xslt/$AD_DOCBK_VERSION/xslt-mingw.patch .
         ad_patch "xslt-mingw.patch"
     fi
 
-    cd $MINGLE_BUILD_DIR
+    ad_cd "$MINGLE_BUILD_DIR"
     
     buildInstallGeneric "$_project" false false "" false true "" "" "xsltproc" "" "xsltproc --version"
 }
@@ -1032,13 +1039,13 @@ buildInstallCurl() {
     
     local _projectDir=$(ad_getDirFromWC "$_project")
     
-    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectDir"
     
     #buildInstallGeneric "curl-*" true false "" true true "--with-polarssl" "libcurl.a" "" "curl --version"
     
     ./buildconf
     
-    cd ..
+    ad_cd ".."
     
     if [ ! -e /mingw/share/curl ]; then
         mkdir -p /mingw/share/curl
@@ -1063,14 +1070,15 @@ buildInstallAPR() {
 
     local _projectDir=$(ad_getDirFromWC "$_project")
 
-    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectDir"
 
     if [ ! -e apr-mingw.patch ]; then
         cp $MINGLE_BASE/patches/apr/$AD_APR_VERSION/apr-mingw.patch .
         ad_patch "apr-mingw.patch"
     fi
 
-    cd ..
+    ad_cd ".."
+    
     buildInstallGeneric "apr-*" false false "" true true "--enable-shared" "" "libapr-1.a" "" "apr-1-config --version"
 
     mkdir -p /mingw/include/apr-1/arch/win32
@@ -1096,14 +1104,14 @@ buildInstallAPRUtil() {
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
-        cd $_projectdir || mingleError $? "cd failed, aborting!"    
+        ad_cd "$_projectdir"    
 
         if [ ! -e apr-util-mingw.patch ]; then
             cp $MINGLE_BASE/patches/apr-util/$AD_APRUTIL_VERSION/apr-util-mingw.patch .
             ad_patch "apr-util-mingw.patch"
         fi
         
-        cd ..
+        ad_cd ".."
         
         buildInstallGeneric "$_project" false true "-I build" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
     fi
@@ -1130,7 +1138,7 @@ buildInstallBerkeleyDB() {
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
-        cd $_projectdir || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
         
         if [ ! -e db-mingw.patch ]; then
             cp $MINGLE_BASE/patches/db/$AD_BERKELEY_DB/db-mingw.patch .
@@ -1141,7 +1149,7 @@ buildInstallBerkeleyDB() {
 
         ./s_config
 
-        cd ../build_unix
+        ad_cd ".."/build_unix
         
         ../dist/configure $_additionFlags || mingleError $? "configure failed, aborting!"
 
@@ -1189,13 +1197,13 @@ buildInstallDocBook() {
 
     mingleDecompress "docbook-xsl-*"
 
-    cd docbook-xsl-* || mingleError $? "Failed cd to docbook-xsl-*, aborting!"
+    ad_cd docbook-xsl-*
 
     if [ ! -e $_shareDir/xml/docbook/stylesheet/docbook-xsl/catalog.xml ]; then
         cp -rf . $_shareDir/xml/docbook/stylesheet/docbook-xsl
     fi
 
-    cd $_shareDir/xml/docbook/stylesheet/docbook-xsl || mingleError $? "Failed cd to docbook-xsl, aborting!"
+    ad_cd $_shareDir/xml/docbook/stylesheet/docbook-xsl
 
     local _homesave=$HOME
 
@@ -1209,11 +1217,11 @@ buildInstallDocBook() {
 
     source $_shareDir/xml/docbook/stylesheet/docbook-xsl/.profile.incl
 
-    cd "$_shareDir/xml/docbook/stylesheet/docbook-xsl"
+    ad_cd "$_shareDir/xml/docbook/stylesheet/docbook-xsl"
 
     echo source `pwd`/.profile.incl>>/etc/profile
 
-    cd $MINGLE_BUILD_DIR
+    ad_cd "$MINGLE_BUILD_DIR"
 
     mingleDownload "http://docbook.org/xml/4.3/docbook-xml-4.3.zip"
     mingleDecompress "docbook-xml-4.3.zip" "" "docbook-xml-4.3"
@@ -1281,7 +1289,7 @@ buildInstallDocBook() {
 
     cmd /c "xmlcatalog --noout --add \"rewriteURI\" \"http://docbook.sourceforge.net/release/xsl/current\" \"file:///$_shareDir/xml/docbook/stylesheet/docbook-xsl\" ./etc/xml/catalog"
 
-    cd $MINGLE_BUILD_DIR
+    ad_cd "$MINGLE_BUILD_DIR"
 }
 
 buildInstallGTKDoc() {
@@ -1297,7 +1305,7 @@ buildInstallGTKDoc() {
 
         local _projectdir=$(ad_getDirFromWC $_project)
 
-        cd $_projectdir || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
 
         if [ ! -e gtk-mingw.patch ]; then
             cp $MINGLE_BASE/patches/gtk/$AD_GTKDOC_VERSION/gtk-mingw.patch .
@@ -1306,7 +1314,7 @@ buildInstallGTKDoc() {
 
         buildInstallGeneric "$_project" true true "-I m4" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
 
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
     else
         echo "$_project Already Installed."
     fi
@@ -1341,7 +1349,7 @@ buildInstallSVN() {
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
-        cd $_projectdir || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
 
         if [ ! -e svn-mingw.patch ]; then
             cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/svn-mingw.patch .
@@ -1356,18 +1364,18 @@ buildInstallSVN() {
         
         dos2unix build/generator/templates/build-outputs.mk.ezt
 
-        cd ..
+        ad_cd ".."
         
         # Make sure you build this with drive substitution turned on, "setup.bat -b -c"
         # Otherwise, gcc will crash from parsing paths, which concatenate out too long.
         # This causes segfault.
         buildInstallGeneric "$_project" false false "" false true "$_additionFlags" "" "$_binCheck" "" ""
         
-        cd $_projectdir || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
         make check-swig-pl MAKE=dmake || mingleError $? "make check-swig-pl failed, aborting!"
         make install-swig-pl MAKE=dmake || mingleError $? "make install-swig-pl failed, aborting!"
         
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
     else
         echo "Already Installed."
     fi
@@ -1395,13 +1403,13 @@ buildInstallGit() {
 
         mingleDecompress "$_project"
 
-        cd $_project
+        ad_cd $_project
 
         make CFLAGS='-O2 -Icompat/win32 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 prefix=/mingw CC=gcc INSTALL=/bin/install sysconfdir=/mingw/etc|| mingleError $? "make failed, aborting!"
 
         make install CFLAGS='-O2 -Icompat/win32 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 prefix=/mingw CC=gcc INSTALL=/bin/install sysconfdir=/mingw/etc|| mingleError $? "make install failed, aborting!"
 
-        cd ..
+        ad_cd ".."
         
 		git config --system push.default matching
         git config --system http.sslcainfo $CURL_CA_BUNDLE
@@ -1424,7 +1432,7 @@ buildInstallCABundle() {
     
     local _projectDir=$(ad_getDirFromWC "$_project")
     
-    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectDir"
     
     ./buildconf
     
@@ -1434,7 +1442,7 @@ buildInstallCABundle() {
     
     cp lib/ca-bundle.crt /mingw/share/curl || mingleError $? "failed to generate ca-bundle.crt, aborting!"
     
-    cd ..
+    ad_cd ".."
 }
 
 buildInstallFontConfig() {
@@ -1459,7 +1467,7 @@ buildInstallFontConfig() {
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
-        cd $_projectdir || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
         
         if [ ! -e fontconfig-mingw.patch ]; then
             cp $MINGLE_BASE/patches/fontconfig/$AD_FONT_CONFIG/fontconfig-mingw.patch .
@@ -1469,7 +1477,7 @@ buildInstallFontConfig() {
         mkdir -p /mingw/share/fontconfig/conf.avail        
         cp -rf conf.d/*.conf /mingw/share/fontconfig/conf.avail
         
-        cd ..
+        ad_cd ".."
     
         #export "CFLAGS=$CFLAGS -DFC_DBG_CONFIG"
         ad_configure "$_project" false "" true "$_additionFlags"
@@ -1501,7 +1509,7 @@ buildInstallFreeType() {
 
         mingleDecompress "freetype-*"
 
-        cd freetype-* || mingleError $? "cd failed, aborting!"
+        ad_cd freetype-*
 
         make setup unix
         ./configure --host=x86_64-w64-mingw32 --prefix=/mingw
@@ -1510,7 +1518,7 @@ buildInstallFreeType() {
         make || mingleError $? "make failed, aborting!"
         make install -i || mingleError $? "make install  failed, aborting!"
 
-        cd ..
+        ad_cd ".."
     else
         echo "Already Installed."          
     fi
@@ -1533,7 +1541,7 @@ buildInstallGraphite2() {
 
         mingleDecompress "$_project"
 
-        cd $_project || mingleError $? "cd failed, aborting!"
+        ad_cd $_project
 
         cmake.exe -G "MSYS Makefiles" --debug-output -DGRAPHITE2_NTRACING=ON -DCMAKE_INSTALL_PREFIX=$MINGLE_BASE_MX/mingw64
 
@@ -1580,7 +1588,7 @@ buildInstallICU() {
             ad_patch "icu-mingw.patch"
         fi	
 		
-        cd source || mingleError $? "cd failed, aborting!"
+        ad_cd source
 
         ./runConfigureICU MinGW  --prefix=/mingw
 
@@ -1599,7 +1607,7 @@ buildInstallICU() {
         #cp /mingw/lib/libicuin.dll /mingw/lib/libicui18n.dll || mingleError $? "cp failed, aborting!"
         #cp /mingw/lib/libicudt.dll /mingw/lib/libicudata.dll || mingleError $? "cp failed, aborting!"
         
-        #cd ..
+        #ad_cd ".."
         
         ad_create_libtool_la 'icui18n'
         ad_create_libtool_la 'icuuc'
@@ -1621,7 +1629,7 @@ buildInstallICU() {
         #ad_generateImportLibraryForDLL 'libicutu.dll'
         #ad_generateImportLibraryForDLL 'libicuuc.dll'
         
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
     else
         echo "Already Installed."
     fi  
@@ -1646,14 +1654,14 @@ buildInstallPostgres() {
 
     local _projectDir=$(ad_getDirFromWC "$_project")
 
-    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectDir"
 
     if [ ! -e postgresql-mingw.patch ]; then
         cp $MINGLE_BASE/patches/postgresql/$AD_POSTGRES_VERSION/postgresql-mingw.patch .
         ad_patch "postgresql-mingw.patch"
     fi
 
-    cd ..
+    ad_cd ".."
 
     export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64"
     export "LDFLAGS=-L/mingw/lib"
@@ -1665,13 +1673,13 @@ buildInstallPostgres() {
         cp -rf /mingw/lib/libpq.dll /mingw/bin
     fi
 
-    cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectDir"
     cd contrib/hstore || mingleError $? "cd failed, aborting!"
 
     make CFLAGS+=-I/mingw/include/postgresql/server CPPFLAGS+=-I/mingw/include/postgresql/server
     make install CFLAGS+=-I/mingw/include/postgresql/server CPPFLAGS+=-I/mingw/include/postgresql/server clean
 
-    cd $MINGLE_BUILD_DIR
+    ad_cd "$MINGLE_BUILD_DIR"
 }
 
 buildInstallExpat() {
@@ -1692,7 +1700,7 @@ buildInstallProjDatumgrid() {
             mkdir proj-datumgrid
         fi
 
-        cd proj-datumgrid || mingleError $? "cd failed, aborting!"
+        ad_cd proj-datumgrid
 
         mingleDecompress "proj-datumgrid*" 1
 
@@ -1702,7 +1710,7 @@ buildInstallProjDatumgrid() {
 
         echo "export PROJ_LIB=/mingw/share/proj">>/etc/profile
 
-        cd ..
+        ad_cd ".."
     else
         echo "Already Installed."        
     fi
@@ -1775,7 +1783,7 @@ buildInstallPython() {
             mv cpython* python-latest
         fi
         
-        cd $_projectDir || mingleError $? "cd failed, aborting!"
+        ad_cd $_projectDir
         
         if [ ! -e python-mingw.patch ]; then
             #http://bugs.python.org/issue3754
@@ -1824,7 +1832,7 @@ buildInstallPython() {
         echo "_socket socketmodule.c">>Modules/Setup.local
         echo "_ssl _ssl.c -DUSE_SSL -lssl -lcrypto -lws2_32">>Modules/Setup.local
 
-        cd $MINGLE_BUILD_DIR
+        ad_cd "$MINGLE_BUILD_DIR"
   
         export "CFLAGS=-IPC -D__MINGW32__ -Idependencies/include -I/mingw/ssl"
         export "CFLAGS=$CFLAGS -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGLE__"
@@ -1837,9 +1845,9 @@ buildInstallPython() {
                
         ad_configure "$_project" false "" true "--with-libs=-lmingle --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
-        cd $MINGLE_BUILD_DIR        
+        ad_cd "$MINGLE_BUILD_DIR"        
 
-        cd $_projectDir || mingleError $? "cd failed, aborting!"
+        ad_cd $_projectDir
 
         cp -f PC/pyconfig.h .
         
@@ -1867,11 +1875,12 @@ buildInstallSetupTools() {
 
         local _projectDir=$(ad_getDirFromWC "$_project")
 
-        cd $_project || mingleError $? "cd failed, aborting!"
+        ad_cd $_project
 
         setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
 
-        cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+        ad_cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+        
         echo "[easy_install]">setup.cfg
         echo >> setup.cfg
         echo "install_dir = `python -c "import sysconfig;print sysconfig.get_path('purelib')"`">> setup.cfg
@@ -1898,7 +1907,7 @@ buildInstallNose() {
         echo "Already Installed."
     fi
 
-    cd $_savedir
+    ad_cd $_savedir
 }
 
 buildInstallWerkzeug() {
@@ -1908,10 +1917,11 @@ buildInstallWerkzeug() {
 
     local _savedir=`pwd`
 
-    cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+    ad_cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+    
     easy_install --install-dir=. Werkzeug
 
-    cd $_savedir
+    ad_cd $_savedir
 }
 
 buildInstallPyTest() {
@@ -1921,10 +1931,11 @@ buildInstallPyTest() {
 
     local _savedir=`pwd`
 
-    cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+    ad_cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+    
     easy_install --install-dir=. pytest
 
-    cd $_savedir
+    ad_cd $_savedir
 }
 
 buildInstallScons() {
@@ -1935,7 +1946,7 @@ buildInstallScons() {
 
         local _projectdir=$(ad_getDirFromWC "$_project")
 
-        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
         
         if [ ! -e scons-mingw.patch ]; then
              cp $MINGLE_BASE/patches/scons/$AD_SCONS_VERSION/scons-mingw.patch . || mingleError $? "patch failed, aborting!"
@@ -1944,7 +1955,7 @@ buildInstallScons() {
 
         python setup.py install --install-lib "/mingw/lib/python2.7/site-packages" --install-scripts "/mingw/bin" --no-install-bat --standard-lib
         
-        cd ..
+        ad_cd ".."
     else
         echo "$_project Already Installed."
     fi    
@@ -1960,7 +1971,7 @@ buildInstallSerf() {
 
         local _projectdir=$(ad_getDirFromWC "$_project")
 
-        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
         
         if [ ! -e serf-mingw.patch ]; then
              cp $MINGLE_BASE/patches/serf/$AD_SERF_VERSION/serf-mingw.patch . || mingleError $? "patch failed, aborting!"
@@ -1972,7 +1983,7 @@ buildInstallSerf() {
         
         mv /mingw/lib/libserf-1.dll /mingw/bin || mingleError $? "Serf Install failed, aborting!"
 
-        cd ..
+        ad_cd ".."
     else
         echo "$_project Already Installed."
     fi 
@@ -2025,22 +2036,22 @@ buildInstallWAF() {
 
         local _projectdir=$(ad_getDirFromWC "$_project")
 
-        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
 
         if [ ! -e waf-mingw.patch ]; then
              cp $MINGLE_BASE/patches/waf/$AD_WAF_VERSION/waf-mingw.patch . || mingleError $? "patch failed, aborting!"
              ad_patch "waf-mingw.patch"
         fi
 
-        cd ..
+        ad_cd ".."
 
         buildInstallGeneric "waf-*" true false "" true true "" "" "waf" "" ""
 
-        cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectdir"
 
         cp waf /mingw/bin || mingleError $? "failed to install waf, aborting!"
 
-        cd ..
+        ad_cd ".."
     else
         echo "$_project Already Installed."
     fi
@@ -2068,7 +2079,7 @@ buildInstallBoost() {
             ad_patch "boost-mingw.patch"
         fi
 
-        cd ..
+        ad_cd ".."
 
         export CPLUS_INCLUDE_PATH=/mingw/include/python2.7
         buildInstallGeneric "boost_*" true false "" true true "" "" "boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll" "" ""
@@ -2102,7 +2113,7 @@ buildInstallPyCairo() {
 
         local _projectDir=$(ad_getDirFromWC "$_project")
         
-        cd "$_projectDir" || mingleError $? "cd failed, aborting!"
+        ad_cd "$_projectDir"
         
         #Expand waflib
         ./waf --version
@@ -2116,7 +2127,7 @@ buildInstallPyCairo() {
             rm Node.pyc
         fi
 
-        cd ../..
+        ad_cd ".."/..
 
         ./waf --version 2>&1|| mingleError $? "failed to patch pycairo, aborting!"
 
@@ -2135,7 +2146,7 @@ buildInstallPyCairo() {
             rm -rf /mingw/bin/python2.7
         fi
         
-        cd ..
+        ad_cd ".."
     else
         echo "Already Installed."
     fi
@@ -2157,7 +2168,7 @@ buildInstallMapnik() {
 
     local _projectdir=$(ad_getDirFromWC $_project)
 
-    cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectdir"
         
     if [ ! -e mapnik-mingw.patch ]; then
          #my update
@@ -2165,7 +2176,7 @@ buildInstallMapnik() {
          ad_patch "mapnik-mingw.patch"
     fi
 
-    cd ..
+    ad_cd ".."
 
     buildInstallGeneric "$_project" true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
 
@@ -2194,7 +2205,7 @@ buildInstallMapnikStylesheets() {
 
     local _projectdir=$(ad_getDirFromWC $_project)
 
-    cd "$_projectdir" || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectdir"
 
     if [ ! -e "world_boundaries-spherical.tgz" ];then
         wget http://tile.openstreetmap.org/world_boundaries-spherical.tgz
@@ -2227,7 +2238,7 @@ buildInstallMapnikStylesheets() {
     # liteserv.py mapnik-xml/ha-osm.xml --processes=4 --caching
     # liteserv.py mapnik-xml/ha-osm.xml --caching
 
-    cd ..
+    ad_cd ".."
 }
 
 buildInstalldMake() {
@@ -2282,7 +2293,7 @@ buildInstallPerl() {
 
     local _projectdir=$(ad_getDirFromWC $_project)
 
-    cd $_project || mingleError $? "cd failed, aborting!"
+    ad_cd $_projectdir
 
     #Notes from http://sourceforge.net/projects/perlmingw/files/Compiler%20for%2064%20bit%20Windows/
     if [ ! -e perl-mingw.patch ]; then
@@ -2295,7 +2306,7 @@ buildInstallPerl() {
         rm config.sh
     fi
 
-    cd win32 || mingleError $? "cd failed, aborting!"
+    ad_cd win32
 
     local _perl_install=`echo $MINGLE_BASE_DOS | sed -e 's/:$/:\\\/g' -e 's/\\\/\\\\\\\/g'`
     
@@ -2308,7 +2319,7 @@ buildInstallPerl() {
     echo
     dmake install MINGLE_BASE*=$_perl_install || mingleError $? "dmake install failed, aborting!"
 
-    cd ../..
+    ad_cd ".."/..
 }
 
 buildInstallPCRE() {
@@ -2324,7 +2335,7 @@ buildInstallPCRE() {
 
     local _projectdir=$(ad_getDirFromWC $_project)
 
-    cd $_project || mingleError $? "cd failed, aborting!"
+    ad_cd $_projectdir
 
     if [ ! -e pcre-mingw.patch ]; then
          cp $MINGLE_BASE/patches/pcre/$AD_PCRE_VERSION/pcre-mingw.patch .
@@ -2371,14 +2382,14 @@ buildInstallDBPerl() {
     
     local _projectdir=$(ad_getDirFromWC $_project)
     
-    cd $_projectdir || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectdir"
     
     perl Makefile.PL INC=-I/mingw/include LIBS="-lpthread -ldb-6.0.dll"
     dmake
     dmake test
     dmake install
     
-    cd $MINGLE_BUILD_DIR
+    ad_cd "$MINGLE_BUILD_DIR"
     
     _project="DB_File-*"
     
@@ -2386,14 +2397,14 @@ buildInstallDBPerl() {
     
     _projectdir=$(ad_getDirFromWC $_project)   
     
-    cd $_projectdir || mingleError $? "cd failed, aborting!"
+    ad_cd "$_projectdir"
     
     perl Makefile.PL INC=-I/mingw/include LIBS="-lpthread -ldb-6.0.dll"
     dmake
     dmake test
     dmake install
     
-    cd ..
+    ad_cd ".."
     
     if [ ! -e /mingw/lib/perl/site/lib/BerkeleyDB.pm ] || [ ! -e /mingw/lib/perl/site/lib/DB_File.pm ]; then
         mingleError 9999 "BerkeleyDB and DBFile install failed, aborting!"
@@ -2465,7 +2476,7 @@ buildInstallPostGIS () {
 
     local _projectdir=$(ad_getDirFromWC $_project)
 
-    cd $_project || mingleError $? "cd failed, aborting!"
+    ad_cd $_projectdir
 
     if [ ! -e postgis-mingw.patch ]; then
          cp $MINGLE_BASE/patches/postgis/$AD_POSTGIS_VERSION/postgis-mingw.patch .
@@ -2561,7 +2572,9 @@ initializePostGISDB () {
 
 installPostgresqlService() {
     local _startup=$1
-    cd $POSTGIS_PATH
+    
+    ad_cd $POSTGIS_PATH
+    
     local _winpath=`pwd -W`
     
     pg_ctl stop -w -D "/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main"
@@ -2573,7 +2586,8 @@ installPostgresqlService() {
 }
 
 uninstallPostgresql() {
-  cd $POSTGIS_PATH
+  ad_cd $POSTGIS_PATH
+  
   local _winpath=`pwd -W`
   
   net stop "PostGIS Database"
@@ -2596,7 +2610,7 @@ importOSMUSData() {
   
   echo "Importing US OSM data to Postgres..."
 
-  cd $MINGLE_BUILD_DIR
+  ad_cd "$MINGLE_BUILD_DIR"
 
   if [ ! -e database-data ]; then
       mkdir database-data
@@ -2608,7 +2622,7 @@ importOSMUSData() {
 
   mv -u cygwin-package/* database-data
 
-  cd database-data
+  ad_cd database-data
 
   if [ ! -e north-america-latest.osm.pbf ]; then
       wget -c --no-check-certificate $_downloadUrl
@@ -2637,7 +2651,7 @@ importOSMUSData() {
   updatePostgresSqlConf 'fsync' 'on'
   net start "PostGIS Database"
 
-  cd ..
+  ad_cd ".."
 }
 
 fullPostGISSetupWithImport() {
@@ -2676,7 +2690,7 @@ buildInstallProtobufC() {
         export "LDFLAGS=-L/mingw/lib -lmingle -lws2_32"
         export "CPPFLAGS=-I/mingw/include/mingle -I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"
         
-        cd $_projectDir || mingleError $? "cd failed, aborting!"
+        ad_cd $_projectDir
         
         ./autogen.sh --prefix=/mingw
         
@@ -2684,7 +2698,7 @@ buildInstallProtobufC() {
         sed 's/^LTCFLAGS=.*/LTCFLAGS="-D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"/g' libtool>libtool2
         mv -f libtool2 libtool
         
-        cd ..
+        ad_cd ".."
 
         ad_make "$_project"
     else
