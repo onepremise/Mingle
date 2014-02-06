@@ -2444,7 +2444,24 @@ buildInstallUserAgent() {
 
 buildInstallTextInfo() {
     local _project="texinfo-*"
-    
+
+    if [ -e /mingw/bin/texi2any ]; then
+        echo "$_project Already Installed." 
+        echo
+        return
+    fi
+	
+	mingleDecompress "$_project"
+
+    local _projectdir=$(ad_getDirFromWC $_project)
+
+    ad_cd $_projectdir
+
+    if [ ! -e texinfo-mingw.patch ]; then
+         cp $MINGLE_BASE/patches/texinfo/$AD_TEXTINFO/texinfo-mingw.patch .
+         ad_patch "texinfo-mingw.patch"
+    fi
+	
     buildInstallGeneric "$_project" true true "-I gnulib/m4" true true "" "" "texi2any" "" "texi2any --version"
 }
 

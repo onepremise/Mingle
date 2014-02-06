@@ -305,7 +305,7 @@ ad_configure() {
     
     local _projectDir=$(ad_getDirFromWC "$_project")
 
-    cd $_projectDir || mingleError $? "ad_configure cd failed, aborting!"
+    ad_cd $_projectDir
     
     if [ -e "autogen.sh" ]; then
         echo
@@ -412,7 +412,7 @@ ad_configure() {
         mv -f libtool2 libtool
     fi
         
-    cd $MINGLE_BUILD_DIR
+    ad_cd $MINGLE_BUILD_DIR
 }
 
 ad_make_clean() {
@@ -437,7 +437,8 @@ ad_make() {
     local _makeParameters="$2"
     
     local _projectDir=$(ad_getDirFromWC "$_project")
-    cd $_projectDir || mingleError $? "cd failed, aborting"
+	
+    ad_cd $_projectDir
 
     echo
     echo "GCC Version Information:"
@@ -464,7 +465,7 @@ ad_make() {
         make install || mingleError $? "make install failed, aborting"
     fi
 
-    cd ..
+    ad_cd ".."
 }
 
 ad_boost_jam() {

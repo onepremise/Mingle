@@ -1,0 +1,13 @@
+--- texinfo-5.1/gnulib/lib/msvc-inval.c	2013-02-19 16:25:30 -0600
++++ texinfo-5.1/gnulib/lib/msvc-inval2.c	2014-02-06 14:50:45 -0600
+@@ -16,6 +16,10 @@
+ 
+ #include <config.h>
+ 
++#ifndef cdecl
++#define cdecl
++#endif
++
+ /* Specification.  */
+ #include "msvc-inval.h"
+ 
