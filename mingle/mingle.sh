@@ -1538,7 +1538,7 @@ buildInstallFreeType() {
 
 buildInstallGraphite2() {
     local _project="graphite2-*"
-    $_projectlocal _binCheck="libgraphite2.dll"
+    local _binCheck="libgraphite2.dll"
 
     echo
     echo "Checking $_project..."
