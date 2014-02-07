@@ -36,3 +36,17 @@ Index: configure.in
              }
              else if (*fmt == 'h') {
                  var_type = IS_SHORT;
+--- apr-1.4.8/include/apr.h.in  2011-04-11 14:46:46 -0500
++++ apr-1.4.8/include/apr.h.in2 2014-02-07 09:14:42 -0600
+@@ -132,9 +132,9 @@
+ #define _WIN32_WINNT 0x0501
+ #endif
+
+-#ifndef NOUSER
++/*#ifndef NOUSER
+ #define NOUSER
+-#endif
++#endif*/
+ #ifndef NOMCX
+ #define NOMCX
+ #endif
