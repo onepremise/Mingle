@@ -50,3 +50,17 @@ Index: configure.in
  #ifndef NOMCX
  #define NOMCX
  #endif
+--- apr-1.4.8/include/arch/win32/apr_private.h  2007-05-31 18:55:22 -0500
++++ apr-1.4.8/include/arch/win32/apr_private2.h 2014-02-07 19:18:24 -0600
+@@ -48,9 +48,9 @@
+ #ifdef __wtypes_h__
+ #include <accctrl.h>
+ #else
+-#define __wtypes_h__
++//#define __wtypes_h__
+ #include <accctrl.h>
+-#undef __wtypes_h__
++//#undef __wtypes_h__
+ #endif
+ #else
+ #define HAVE_ACLAPI 0
