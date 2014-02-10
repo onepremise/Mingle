@@ -1564,7 +1564,7 @@ buildInstallGraphite2() {
 buildInstallHarfBuzz() {
     local _project="harfbuzz-*"
     
-    buildInstallGeneric "$_project" true false "" false true "--with-graphite2=yes" "" "libharfbuzz.dll.a" "" ""
+    buildInstallGeneric "$_project" true false "" false true "--with-graphite2=yes" "" "libharfbuzz.a" "" ""
 }
 
 buildInstallSQLite() {

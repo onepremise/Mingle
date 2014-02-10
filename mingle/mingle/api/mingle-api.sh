@@ -314,6 +314,11 @@ ad_configure() {
         echo "  _additionFlags=$_additionFlags"
 
         ./autogen.sh $_options $_additionFlags
+        
+        if [ $? -ge 1 ]; then
+            Echo "autogen failed. Trying without options."
+            ./autogen.sh
+        fi
     elif [ -e "configure.ac" ] || [ -e "configure.in" ]; then
         if [ -e "/mingw/bin/autoconf" ];then
             echo
