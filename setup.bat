@@ -74,15 +74,17 @@ REM ===========================================================================
 
 set MSYSTOOLS="MSYS-20111123.zip"
 
-if not exist "%MINGLE_CACHE%\%MSYSTOOLS%" (
-     ECHO "Downloading msys..."
-     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url 'http://sourceforge.net/projects/mingw-w64/files/External binary packages (Win64 hosted)/MSYS (32-bit)/%MSYSTOOLS%/download' -fileName '%MINGLE_CACHE%\\%MSYSTOOLS%'"
-)
+if not exist "msys\bin\bash.exe" (
+    if not exist "%MINGLE_CACHE%\%MSYSTOOLS%" (
+        ECHO "Downloading msys..."
+        powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url 'http://sourceforge.net/projects/mingw-w64/files/External binary packages (Win64 hosted)/MSYS (32-bit)/%MSYSTOOLS%/download' -fileName '%MINGLE_CACHE%\\%MSYSTOOLS%'"
+    )
 
-if not exist "%MINGLE_CACHE%\%MSYSTOOLS%" (
-    ECHO "Failed to download MSYS!"
-    ECHO.
-    EXIT /B 1
+    if not exist "%MINGLE_CACHE%\%MSYSTOOLS%" (
+        ECHO "Failed to download MSYS!"
+        ECHO.
+        EXIT /B 1
+    )
 )
 
 REM ===========================================================================
@@ -115,20 +117,17 @@ REM set GCCURL="'http://sourceforge.net/projects/mingwbuilds/files/host-windows/
 REM ===========================================================================
 REM Download compiler
 REM ===========================================================================
-if not exist "%MINGLE_CACHE%\%GCCCOMPILER%" (
-    ECHO "Downloading %GCCCOMPILER%..."
-    powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCURL% -fileName '%MINGLE_CACHE%/%GCCCOMPILER%'"
-)
+if not exist "mingw64\bin\gcc.exe" (
+    if not exist "%MINGLE_CACHE%\%GCCCOMPILER%" (
+        ECHO "Downloading %GCCCOMPILER%..."
+        powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCURL% -fileName '%MINGLE_CACHE%/%GCCCOMPILER%'"
+    )
 
-REM if not exist "packages\%GCCCOMPILERUPDATE%" (
-REM     ECHO "Downloading %GCCCOMPILERUPDATE%..."
-REM     powershell -command ". .\mingle\Get-WebFile.ps1; Get-WebFile -url %GCCUPDATEURL% -fileName '%MINGLE_CACHE%/%GCCCOMPILERUPDATE%'"
-REM )
-
-if not exist "%MINGLE_CACHE%\%GCCCOMPILER%" (
-    ECHO "Failed to download compiler!"
-    ECHO.
-    EXIT /B 1
+    if not exist "%MINGLE_CACHE%\%GCCCOMPILER%" (
+        ECHO "Failed to download compiler!"
+        ECHO.
+        EXIT /B 1
+    )
 )
 
 REM ===========================================================================

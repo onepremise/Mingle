@@ -9,16 +9,27 @@ ad_mkdir() {
     local _dir=$1
 
     if [ ! -e $_dir ]; then
-        mkdir $_dir
+        mkdir -p $_dir || mingleError $? "mkdir failed for $_dir, aborting!"
+    fi
+}
+
+ad_rmdir() {
+    local _dir=$1
+
+    if [ -e $_dir ]; then
+        rm -rf $_dir || mingleError $? "mkdir failed for $_dir, aborting!"
     fi
 }
 
 ad_cd() {
-    local _dir=$1
+    local _dir="$1"
     
-    echo
-    echo "Changing directory to $_dir..."
-    echo
+    if [ "$_dir" == ".." ]; then
+        local _curdirname=`pwd`
+        mingleLog "Changing directory to `dirname $_curdirname`..." true
+    else
+        mingleLog "Changing directory to $_dir..." true
+    fi
     
     if [ -z "$_dir" ]; then
        mingleError -1 "Please provide a valid directory."
@@ -49,9 +60,10 @@ ad_isDateNewerThanFileModTime() {
     return 1
 }
 
-ad_getLocalDirFromWC() {
+ad_getDirFromLocWC() {
     local _project="$1"
-    local _result=`find . -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
+    local _directory="$2"
+    local _result=`find $_directory -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
 
     echo "$_result"
 }
@@ -63,9 +75,10 @@ ad_getDirFromWC() {
     echo "$_result"
 }
 
-ad_getLocalArchiveFromWC() {
+ad_getArchiveFromLocWC() {
     local _project="$1"
-    local _result=`find . -maxdepth 1 -name "$_project" -prune -type f -print | head -1`
+    local _directory="$2"
+    local _result=`find $_directory -maxdepth 1 -name "$_project" -prune -type f -print | head -1`
 
     echo "$_result"
 }
@@ -81,7 +94,7 @@ ad_rename() {
     local _wildcard="$1"
     local _regex="$2"
     
-    echo "Renaming _wildcard=$1, _regex=$2 "
+    mingleLog "Renaming _wildcard=$1, _regex=$2 " true
     
     find . -regex "$_wildcard" | while read line; do
         A=`basename ${line} | sed $_regex`
@@ -95,7 +108,7 @@ ad_rename() {
 ad_relocate_bin_dlls() {
     local _dllPrefix="$1"
 
-    echo "Checking for DLLS with prefix: $_dllPrefix.*.dll..."
+    mingleLog "Checking for DLLS with prefix: $_dllPrefix.*.dll..." true
 
     find /mingw/lib -regex "/mingw/lib/$_dllPrefix.*\.dll" | while read line; do
         echo "Copying ${line} to /mingw/bin..."
@@ -113,9 +126,7 @@ ad_fix_pkg_cfg() {
 ad_create_libtool_la() {
 local _libraryName=$1
 
-echo
-echo "Generating /mingw/lib/lib$_libraryName.la..."
-echo
+mingleLog "Generating /mingw/lib/lib$_libraryName.la..." true
 
 cat > /mingw/lib/lib$_libraryName.la << EOF
 # lib${_libraryName}.la - a libtool library file
@@ -212,7 +223,7 @@ ad_fix_shared_lib() {
         echo "$_libraryName.la doesn't exist!. Generating..."
     fi
     
-    cd "$_origPath" || mingleError $? "ad_fix_shared_lib cd failed, aborting"
+    ad_cd "$_origPath" || mingleError $? "ad_fix_shared_lib cd failed, aborting"
 }
 
 ad_generateImportLibraryForDLL() {
@@ -220,9 +231,7 @@ ad_generateImportLibraryForDLL() {
     local _importName=`echo $_dll|sed 's/\.dll//'`
     local _searchPath=''
     
-    echo
-    echo "Generate Import Library..."
-    echo    
+    mingleLog "Generate Import Library..." true
     
     if ! echo $_dll|grep '^lib' ; then
         _importName="lib$_importName"
@@ -234,8 +243,7 @@ ad_generateImportLibraryForDLL() {
         _searchPath=/mingw/bin
     fi
     
-    echo
-    echo "Generating import library for dll: $_dll, import library: $_importName.a..."
+    mingleLog "Generating import library for dll: $_dll, import library: $_importName.a..." true
     
     pexports $_searchPath/$_dll |sed "s/^_//">$_importName.def || mingleError $? "ad_generateImportLibraryForDLL failed to pexport $_importName.a, aborting"
     dlltool -U -d $_importName.def -l $_importName.a || mingleError $? "ad_generateImportLibraryForDLL failed to generate def file for $_importName.a, aborting"
@@ -243,47 +251,43 @@ ad_generateImportLibraryForDLL() {
 }
 
 ad_clearEnv() {
-    echo
-    echo "Resetting environment flags..."
-    echo
+    mingleLog "Resetting environment flags..." true
 
     unset PKG_CONFIG_PATH; unset CFLAGS; unset LDFLAGS; unset CPPFLAGS; unset CRYPTO; unset CC; unset LIBS
 
-    cd $MINGLE_BUILD_DIR
+    ad_cd $MINGLE_BUILD_DIR
 }
 
 ad_setDefaultEnv() {
-    echo
-    echo "Resetting environment flags to default..."
-    echo
-
+    mingleLog "Resetting environment flags to default..." true
+    
+    # Additional optimizations can be found here: http://gcc.gnu.org/onlinedocs/gcc-4.4.2/gcc/i386-and-x86_002d64-Options.html
+    # used so far -mtune=amdfam10
+    #
+    
     #_POSIX_C_SOURCE=199309L or 200112L
     # -D_POSIX_C_SOURCE=200112L -D_GNU_SOURCE=200112L
     # -D_POSIX_TIMEOUTS -D_GLIBCXX__PTHREADS -D_GLIBCXX_HAS_GTHREADS
     export "PKG_CONFIG_PATH=/mingw/lib/pkgconfig"
     #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
-    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
+    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -Ofast -funroll-all-loops"
     export "LDFLAGS=-L/mingw/lib"
-    export "CPPFLAGS=-I/mingw/include  -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO"
+    export "CPPFLAGS=-I/mingw/include  -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO  -Ofast -funroll-all-loops"
     export "CRYPTO=POLARSSL"
     export "CC=x86_64-w64-mingw32-gcc"
     unset LIBS
 
-    cd $MINGLE_BUILD_DIR
+    ad_cd $MINGLE_BUILD_DIR
 }
 
 ad_patch() {
     local _patchFile=$1
     local _workingDir=`pwd`
     
-    echo
-    echo "Patching..."
-    echo
+    mingleLog "Patching..." true
 
     if [ "$MINGLE_BUILD_DIR" == "$_workingDir" ]; then
-        echo
-        echo "Patching failed! Patch should be ran from project directory."
-        echo
+        mingleLog "Patching failed! Patch should be ran from project directory." true
 
         mingleError -1 "Patching failed! Patch should be ran from project directory."
     fi
@@ -299,19 +303,17 @@ ad_configure() {
     local _options="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32"
     local _additionFlags=$5
     
-    echo
-    echo "Configuring..."
-    echo
+    mingleLog "Configuring..." true
     
     local _projectDir=$(ad_getDirFromWC "$_project")
 
     ad_cd $_projectDir
     
     if [ -e "autogen.sh" ]; then
-        echo
-        echo "Autgen.sh script found, executing script..."
-        echo "  _options=$_options"
-        echo "  _additionFlags=$_additionFlags"
+        mingleLog
+        mingleLog "Autgen.sh script found, executing script..."
+        mingleLog "  _options=$_options"
+        mingleLog "  _additionFlags=$_additionFlags"
 
         ./autogen.sh $_options $_additionFlags
         
@@ -334,7 +336,7 @@ ad_configure() {
             fi
 
             if $_runAutoconf; then
-                echo "Executing autoconf..."
+                mingleLog "Executing autoconf..." true
                 autoconf || mingleError $? "ad_configure autoconf failed, aborting!"
             fi
 
@@ -342,8 +344,7 @@ ad_configure() {
         fi
         
         if [ -e "/mingw/bin/autoheader" ];then
-            echo
-            echo "Executing autoheader..."
+            mingleLog "Executing autoheader..." true
 
             autoheader
         fi
@@ -354,14 +355,12 @@ ad_configure() {
         local _retries=3
         local _configFailed=false
 
-        echo
-        echo "Using CFLAGS: $CFLAGS"
-        echo "Using CPPFLAGS: $CPPFLAGS"
-        echo "Using LDFLAGS: $LDFLAGS"
+        mingleLog
+        mingleLog "Using CFLAGS: $CFLAGS"
+        mingleLog "Using CPPFLAGS: $CPPFLAGS"
+        mingleLog "Using LDFLAGS: $LDFLAGS"
 
-        echo
-        echo "executing: ./configure $_options $_additionFlags"
-        echo
+        mingleLog "executing: ./configure $_options $_additionFlags" true
 
         local _newflags="$_options $_additionFlags"
 
@@ -392,13 +391,8 @@ ad_configure() {
             _newflags=`echo "$_newflags "|sed -e "s/$_test[^ ]* //"`
             _counter=$(( $_counter + 1 ))
 
-            echo
-            echo "Retrying without option: $_test..."
-            echo
-
-            echo
-            echo "executing: ./configure $_newflags"
-            echo
+            mingleLog "Retrying without option: $_test..." true
+            mingleLog "Executing: ./configure $_newflags" true
             
             ./configure $_newflags &>out.txt
         done
@@ -423,9 +417,7 @@ ad_configure() {
 ad_make_clean() {
     local _project=$1
 
-    echo
-    echo "Executing make clean for $_project..."
-    echo
+    mingleLog "Executing make clean for $_project..." true
     
     local _projectDir=$(ad_getDirFromWC "$_project")
 
@@ -433,7 +425,7 @@ ad_make_clean() {
     
     make distclean || make clean
 
-    cd ..
+    ad_cd ".."
 }
 
 # Use single quotes for parameter defines, ex: TEST='cmd -h'
@@ -445,28 +437,18 @@ ad_make() {
 	
     ad_cd $_projectDir
 
-    echo
-    echo "GCC Version Information:"
-    echo
+    mingleLog "GCC Version Information:" true
     gcc --version
 
-    echo
-    echo "Executing make $_makeParameters..."
-    echo
+    mingleLog "Executing make $_makeParameters..." true
 
     if [ -n "$_makeParameters" ]; then    
         make "$_makeParameters" || mingleError $? "make failed, aborting!"
-
-        echo
-        echo "Executing make install $_makeParameters..."
-        echo
+        mingleLog "Executing make install $_makeParameters..." true
         make install "$_makeParameters" || mingleError $? "make install failed, aborting"
     else
         make || mingleError $? "make failed, aborting!"
-
-        echo
-        echo "Executing make install $_makeParameters..."
-        echo
+        mingleLog "Executing make install $_makeParameters..." true
         make install || mingleError $? "make install failed, aborting"
     fi
 
@@ -487,7 +469,7 @@ ad_boost_jam() {
    
     bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 threadapi=win32 variant=debug,release link=static,shared threading=multi define=MS_WIN64 define=BOOST_USE_WINDOWS_H --define=__MINGW32__ --define=_WIN64 --define=MS_WIN64 install || mingleError $? "ad_boost_jam bjam failed, aborting"
     
-    cd ..
+    ad_cd ".."
 }
 
 ad_build() {
@@ -498,7 +480,7 @@ ad_build() {
     
     ./build.sh  || mingleError $? "ad_build build.sh failed, aborting"
     
-    cd ..
+    ad_cd ".."
 }
 
 ad_exec_script() {
@@ -509,19 +491,18 @@ ad_exec_script() {
     cd $_projectDir || mingleError $? "cd failed, aborting"
         
     if [ ! -z "$_postBuildCommand" ]; then
-        echo "Executing post command: '$_postBuildCommand'"
+        mingleLog "Executing post command: '$_postBuildCommand'" true
         `$_postBuildCommand`
     fi
         
-    cd ..
+    ad_cd ".."
 }
 
 ad_run_test() {
     local _exeToTest=$1
     
     if [ ! -z "$_exeToTest" ]; then
-        echo
-        echo "Executing $_exeToTest..."
+        mingleLog "Executing $_exeToTest..." true
         if ! $_exeToTest; then
             mingleError -1 "Build failed, aborting!"
         fi 
@@ -541,6 +522,32 @@ ad_getShortLibName() {
     echo $_shortProjectName
 }
 
+mingleAutoBuild() {
+    local _projectName="$1"
+    local _version="$2"
+    local _url="$3"
+    local _target="$4"
+    local _projectSearchName="$5"
+    local _cleanEnv=$6 #true/false
+    local _runACLocal=$7 #true/false
+    local _aclocalFlags="$8"
+    local _runAutoconf=$9 #true/false
+    local _runConfigure=${10} #true/false
+    local _configureFlags="${11}"
+    local _makeParameters="${12}"
+    local _binCheck="${13}"
+    local _postBuildCommand="${14}"
+    local _exeToTest="${15}"
+    
+    mingleLog "Auto-check for binary $_binCheck..." true
+    
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        mingleCategoryDownload $_projectName $_version $_url $_target
+        mingleCategoryDecompress $_projectName $_version "$_projectSearchName"
+        buildInstallGeneric "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    fi
+}
+
 buildInstallGeneric() {
     local _project="$1"
     local _cleanEnv=$2 #true/false
@@ -554,28 +561,25 @@ buildInstallGeneric() {
     local _postBuildCommand="${10}"
     local _exeToTest="${11}"
 
-    cd $MINGLE_BUILD_DIR
+    ad_cd $MINGLE_BUILD_DIR
 
-    echo
-    echo "Generic Build Initiated:"
-    echo "  _project:          $_project"
-    echo "  _cleanEnv:         $_cleanEnv"
-    echo "  _runACLocal:       $_runACLocal"
-    echo "  _aclocalFlags:     $_aclocalFlags"
-    echo "  _runAutoconf:      $_runAutoconf"
-    echo "  _runConfigure:     $_runConfigure"
-    echo "  _configureFlags:   $_configureFlags"
-    echo "  _makeParameters:   $_makeParameters"
-    echo "  _binCheck:         $_binCheck"
-    echo "  _postBuildCommand: $_postBuildCommand"
-    echo "  _exeToTest:        $_exeToTest"
-    echo
-    echo "Checking for binary $_binCheck..."
-    echo
+    mingleLog
+    mingleLog "Generic Build Initiated:"
+    mingleLog "  _project:          $_project"
+    mingleLog "  _cleanEnv:         $_cleanEnv"
+    mingleLog "  _runACLocal:       $_runACLocal"
+    mingleLog "  _aclocalFlags:     $_aclocalFlags"
+    mingleLog "  _runAutoconf:      $_runAutoconf"
+    mingleLog "  _runConfigure:     $_runConfigure"
+    mingleLog "  _configureFlags:   $_configureFlags"
+    mingleLog "  _makeParameters:   $_makeParameters"
+    mingleLog "  _binCheck:         $_binCheck"
+    mingleLog "  _postBuildCommand: $_postBuildCommand"
+    mingleLog "  _exeToTest:        $_exeToTest"
+    mingleLog "Checking for binary $_binCheck..." true
+    
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
-        echo
-        echo "Building $_project..."
-        echo
+        mingleLog "Building $_project..." true
 
         if $_cleanEnv; then
             ad_setDefaultEnv
@@ -606,21 +610,46 @@ buildInstallGeneric() {
             
             local _shortProjectName=$(ad_getShortLibName $_project)
             
-            echo "Short Name: $_shortProjectName"
+            mingleLog "Short Name: $_shortProjectName"
             
             ad_fix_shared_lib "$_shortProjectName"
         fi
         
         ad_exec_script "$_project" "$_postBuildCommand"
 
-        cd $MINGLE_BUILD_DIR
+        ad_cd $MINGLE_BUILD_DIR
     else
-        echo "Already Installed."
+        mingleLog "Already Installed."
     fi
     
     ad_run_test "$_exeToTest"
     
     echo    
+}
+
+mingleLog() {
+    local _msg="$1"
+    local _dblSpace=$2
+    
+    if [ -z "$_dblSpace" ]; then
+        _dblSpace=false
+    fi
+    
+    if $_dblSpace; then
+        echo
+        echo $_msg
+    else
+        echo $_msg
+    fi
+}
+
+mingleThrowIfError() {
+    local _errorNum=$1
+    local _errorMsg="$2"
+    
+    if [ $_errorNum -ne 0 ]; then
+        mingleError $_errorNum "$_errorMsg"
+    fi
 }
 
 mingleError() {
@@ -635,12 +664,11 @@ mingleError() {
         _errorNum=9999
     fi
 
-    echo
-    echo "Current Project Dir: `pwd`"
-    echo
+    mingleLog "Current Project Dir: `pwd`" true
     
     mingleStackTrace "`date +%m-%d-%y\ %T`, $_errorNum $_errorMsg"
     
+    echo
     echo "`date +%m-%d-%y\ %T`, \"$_errorNum\", \"$_errorMsg\"">$MINGLE_BUILD_DIR/mingle_error.log
     echo
 
@@ -684,19 +712,21 @@ mingleInitialize() {
 
         mingleReportToolVersions
 
-        echo "Configuration:"
+        if [ -z "$MINGLE_CACHE" ] && [ -z "$MINGLE_BUILD_DIR" ]; then
+            mingleLog "Exporting Configuration:"
 
-        while read line
-        do
-            LINE="$line"
-            if [ "${LINE:0:1}" = "#" ] ; then
-                echo "Skipping disabled variable: $LINE"
-            else
-                BASHEXPORT=`echo $LINE|sed -e '0,/RE/s/\%/\$/' -e 's/\%//'`
-                echo "Exporting: $BASHEXPORT"
-                export "`eval echo $BASHEXPORT`"
-            fi
-        done <"$config"
+            while read line
+            do
+                LINE="$line"
+                if [ "${LINE:0:1}" = "#" ] ; then
+                    echo "Skipping disabled variable: $LINE"
+                else
+                    BASHEXPORT=`echo $LINE|sed -e '0,/RE/s/\%/\$/' -e 's/\%//'`
+                    echo "Exporting: $BASHEXPORT"
+                    export "`eval echo $BASHEXPORT`"
+                fi
+            done <"$config"
+        fi
 
         MINGLE_CACHE=`echo "$MINGLE_CACHE" | sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g'`
 
@@ -747,7 +777,7 @@ mingleInitialize() {
         MINGLE_INITIALIZE=true
     fi
 
-    cd $MINGLE_BUILD_DIR
+    ad_cd $MINGLE_BUILD_DIR
 
     if [ -e "mingle_error.log" ]; then
         rm mingle_error.log
@@ -768,10 +798,9 @@ mingleDownload() {
 
     local _savedir=`pwd`
 
-    cd $MINGLE_CACHE
+    ad_cd $MINGLE_CACHE
 
-    echo
-    echo "Downloading $_url"...
+    mingleLog "Checking for previous output, $_outputFile..." true
 
     if [ -e "$_outputFile" ]; then
         local _filesize=$(stat -c%s "$_outputFile")
@@ -784,7 +813,6 @@ mingleDownload() {
             _alreadyDownloaded=true
         fi
     fi
-
     
     if ! $_alreadyDownloaded; then
         local _tarcheck="`echo $_outputFile|sed 's/\(.*\)\..*/\1/'`"
@@ -794,6 +822,8 @@ mingleDownload() {
     fi
 
     if ! $_alreadyDownloaded; then
+        mingleLog "Downloading $_url..." true
+        
         if echo $_url|grep -i 'https://'; then
             wget  --no-check-certificate $_url -O $_outputFile || mingleError $? "Download failed for $_file, aborting!"
         else
@@ -806,40 +836,48 @@ mingleDownload() {
 
     echo
 
-    cd $_savedir
+    ad_cd $_savedir
 }
 
 mingleDecompress() {
     local _project="$1"
-    local _localDir="$2"
+    local _sourceDir="$2"
     local _targetDir="$3"
     local _projectDir=""
     local _decompFile=""
     local _tarcheck=false
     
-    if [ -n "$_localDir" ]; then
-        _projectDir=$(ad_getLocalDirFromWC "$_project")
+    mingleLog "mingleDecompress: Checking _project=$_project, _sourceDir=$_sourceDir..." true
+    
+    if [ -n "$_sourceDir" ]; then
+        _projectDir=$(ad_getDirFromLocWC "$_project" "$_sourceDir")
     else
         _projectDir=$(ad_getDirFromWC "$_project")
     fi
     
     if [ -z "$_projectDir" ]; then
-        _decompFile=$(ad_getArchiveFromWC "$_project")
-
-        if [ ! -e "$_decompFile" ]; then
-            mingleError $? "Failed to find archive for: $_project, aborting!"
+        if [ -n "$_sourceDir" ]; then
+            _decompFile=$(ad_getArchiveFromLocWC "$_project" "$_sourceDir")
+        else
+            _decompFile=$(ad_getArchiveFromWC "$_project")
         fi
 
-        if [ -z "$_localDir" ]; then
-            cd $MINGLE_BUILD_DIR || mingleError $? "Failed cd to $MINGLE_BUILD_DIR, aborting!"
+        if [ ! -e "$_decompFile" ]; then
+            mingleError $? "Failed to find archive for: $_sourceDir $_project, aborting!"
         fi
 
         if [ -n "$_targetDir" ]; then
+            if [ "`dirname $_targetDir`" == "." ]; then
+                echo "updating path..."
+                _targetDir=$MINGLE_BUILD_DIR/$_targetDir
+            fi
             ad_mkdir $_targetDir
-            cd $_targetDir
+            ad_cd $_targetDir
+        else
+            ad_cd $MINGLE_BUILD_DIR
         fi
             
-        echo "Decompressing $_decompFile to `pwd`"...
+        mingleLog "Decompressing $_decompFile to `pwd`..."
             
         if [ ${_decompFile: -4} == ".tgz" ]; then
             tar xzvf "$_decompFile" || mingleError $? "Decompression failed for $_decompFile, aborting!"
@@ -869,8 +907,8 @@ mingleDecompress() {
         fi
         
         if $_tarcheck; then
-            if [ -n "$_localDir" ]; then
-                _decompFile=$(ad_getLocalArchiveFromWC "$_project")
+            if [ -n "$_sourceDir" ]; then
+                _decompFile=$(ad_getArchiveFromLocWC "$_project" "$_sourceDir")
             else
                 _decompFile=$(ad_getArchiveFromWC "$_project")
             fi
@@ -881,13 +919,53 @@ mingleDecompress() {
         fi
 
         if [ -n "$_targetDir" ]; then
-            cd $MINGLE_BUILD_DIR || mingleError $? "Failed to cd $MINGLE_BUILD_DIR, aborting!"
+            ad_cd $MINGLE_BUILD_DIR
         fi
     fi
 }
 
+mingleCategoryDownload() {
+  local _projectName="$1"
+  local _version="$2"
+  local _url="$3"
+  local _overidename=$4
+  local _file="`echo $_url|sed 's/.*\///'`"
+  
+  mingleLog "Checking ${_projectName} for $_version" true
+  
+  if [ ! -e "$MINGLE_CACHE/$_projectName/$_version" ]; then
+      ad_mkdir $MINGLE_CACHE/$_projectName/$_version
+  elif [ "$_version" == "master" ]; then
+      mingleLog
+      mingleLog "I see you're using a git master branch."
+      mingleLog "I will remove any old remnants and download "
+      mingleLog "the head of master again."
+      mingleLog
+      ad_rmdir $MINGLE_CACHE/$_projectName/$_version
+      ad_mkdir $MINGLE_CACHE/$_projectName/$_version
+  fi
+  
+  if [ -z "$_overidename" ]; then
+      _outputfile=$MINGLE_CACHE/$_projectName/$_version/$_file
+  else
+      _outputfile=$MINGLE_CACHE/$_projectName/$_version/$_overidename
+  fi
+  
+  mingleDownload $_url $_outputfile
+}
+
+mingleCategoryDecompress() {
+  local _projectName="$1"
+  local _version="$2"
+  local _project="$3"
+  local _sourceDir=$MINGLE_CACHE/$_projectName/$_version
+  local _targetDir="$4"
+  
+  mingleDecompress "$_project" "$_sourceDir" "$_targetDir"
+}
+
 mingleCleanup() {
-    cd "$STOREPATH"
+    ad_cd "$STOREPATH"
 
     echo
     echo "Finished Building Modules."

@@ -1,0 +1,13 @@
+--- libxslt-master/libxslt/security.c   2013-12-20 11:54:14 -0500
++++ libxslt-master/libxslt/security2.c  2014-01-14 01:52:12 -0500
+@@ -34,6 +34,10 @@
+ #include <ctype.h>
+ #endif
+
++#if defined(__MINGW32__)
++#define mkdir(p,m) _mkdir(p)
++#endif
++
+ #if defined(WIN32) && !defined(__CYGWIN__)
+ #include <windows.h>
+ #ifndef INVALID_FILE_ATTRIBUTES
