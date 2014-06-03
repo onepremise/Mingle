@@ -6,7 +6,7 @@ SRC = test-lstat.c test-poll.c test-fcntl.c test-dup.c test-dup2.c test-accept.c
       test-sigprocmask.c test-gettimeofday.c test-fsync.c \
       test-random.c test-random_r.c test-isatty.c test-ftruncate.c \
       test-gethostname.c test-getsockname.c test-shutdown.c test-send.c \
-      test-sendto.c  test-recv.c test-recvfrom.c
+      test-sendto.c test-recv.c test-recvfrom.c test-time.c test-times.c
 OBJ = $(SRC:.c=.o)
 
 #INCLUDES = -isysteminclude -I/mingw/x86_64-w64-mingw32/include
@@ -21,7 +21,7 @@ MAIN = test-lstat.exe test-poll.exe test-fcntl.exe test-dup.exe test-dup2.exe \
        test-raise.exe test-sigprocmask.exe test-gettimeofday.exe test-fsync.exe \
        test-random.exe test-random_r.exe test-isatty.exe test-ftruncate.exe \
        test-gethostname.exe test-getsockname.exe test-shutdown.exe test-send.exe \
-       test-sendto.exe  test-recv.exe test-recvfrom.exe
+       test-sendto.exe test-recv.exe test-recvfrom.exe test-time.exe test-times.exe
 
 default: $(MAIN)
 
@@ -114,6 +114,12 @@ test-recv.exe: $(OBJ)
 	
 test-recvfrom.exe: $(OBJ)
 	x86_64-w64-mingw32-gcc  $(CFLAGS) -o $@ test-recvfrom.o $(LIBS) $(LFLAGS) -lws2_32
+	
+test-time.exe: $(OBJ)
+	x86_64-w64-mingw32-gcc  $(CFLAGS) -o $@ test-time.o $(LIBS) $(LFLAGS) -lws2_32
+
+test-times.exe: $(OBJ)
+	x86_64-w64-mingw32-gcc  $(CFLAGS) -o $@ test-times.o $(LIBS) $(LFLAGS) -lws2_32
 	
 .c.o:
 	gcc $(INCLUDES) $(CFLAGS) $(OPTIMISATIONS) -c $< -o $@

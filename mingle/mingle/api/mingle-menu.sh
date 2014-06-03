@@ -205,6 +205,10 @@ mingleProcessSelection() {
     minglePrintSelections
 }
 
+if [ -n "$MINGLE_SYNTAX_CHECK" ]; then
+    return;
+fi
+
 # http://mywiki.wooledge.org/BashFAQ/035#Manual_loop
 while :
 do
