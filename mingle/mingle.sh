@@ -2666,8 +2666,8 @@ buildInstalldMake() {
 
     mingleDecompress "$_project"
     
-    mingleCategoryDownload "dmake" "4.12-20090907" "http://search.cpan.org/CPAN/authors/id/S/SH/SHAY/dmake-4.12-20090907-SHAY.zip"
-    mingleCategoryDecompress "dmake" "4.12-20090907" "$_project"     
+    mingleCategoryDownload "dmake" "4.12.2.2" "http://search.cpan.org/CPAN/authors/id/S/SH/SHAY/dmake-4.12.2.2.zip"
+    mingleCategoryDecompress "dmake" "4.12.2.2" "$_project"  
 
     local _projectdir=$(ad_getDirFromWC $_project)
 
