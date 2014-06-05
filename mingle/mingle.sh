@@ -3185,9 +3185,9 @@ buildInstallOsm2pgsql() {
     export "CFLAGS=-I/mingw/include -DWIN32 -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"
     #export "LDFLAGS=-L/mingw/lib -lmingle"
     export "LIBS=-L/mingw/lib -lmingle"
-    export "CPPFLAGS=-I/mingw/include -DWIN32 -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"    
-    export "CC=x86_64-w64-mingw32-gcc"
-    export "CXX=x86_64-w64-mingw32-gcc"
+    export "CPPFLAGS=$CFLAGS"    
+    export "CC=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
+    export "CXX=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
     
     local _projectName="osm2pgsql"
     local _version="master"
@@ -3206,6 +3206,43 @@ buildInstallOsm2pgsql() {
     local _exeToTest="osm2pgsql.exe --version"
 
     mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+}
+
+buildInstallCPIO() {
+    local _projectName="cpio"
+    local _version="2.11"
+    local _url="http://ftp.gnu.org/gnu/cpio/cpio-2.11.tar.gz"
+    local _target=""
+    local _projectSearchName="cpio-*"
+    local _cleanEnv=true #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=false #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="xxxx"
+    local _postBuildCommand=""
+    local _exeToTest=""
+
+}
+
+buildInstallOpenJDK() {
+    local _projectName="openjdk"
+    local _version="8-src-b132-03_mar_2014"
+    local _url="http://download.java.net/openjdk/jdk8/promoted/b132/openjdk-8-src-b132-03_mar_2014.zip?q=download/openjdk/jdk8/promoted/b132/openjdk-8-src-b132-03_mar_2014.zip"
+    local _target=""
+    local _projectSearchName="openjdk-*"
+    local _cleanEnv=true #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=false #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="xxxx"
+    local _postBuildCommand=""
+    local _exeToTest=""
 }
 
 buildInstallOpenFTA() {

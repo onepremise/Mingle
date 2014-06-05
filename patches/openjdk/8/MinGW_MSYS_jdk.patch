@@ -1,0 +1,622 @@
+--- old/make/com/sun/java/pack/Makefile	2012-03-08 18:20:27.338712920 +0100
++++ new/make/com/sun/java/pack/Makefile	2012-03-08 18:20:27.198714632 +0100
+@@ -89,9 +89,9 @@
+   LDOUTPUT = -Fe
+ 
+   # JDK name required here
+-  RC_FLAGS += /D "JDK_FNAME=$(PGRM).exe" \
+-	/D "JDK_INTERNAL_NAME=$(PGRM)" \
+-	/D "JDK_FTYPE=0x1L"
++  RC_FLAGS += -D "JDK_FNAME=$(PGRM).exe" \
++	-D "JDK_INTERNAL_NAME=$(PGRM)" \
++	-D "JDK_FTYPE=0x1L"
+ 
+   RES = $(OBJDIR)/$(PGRM).res
+ else
+@@ -156,7 +156,7 @@
+ 	$(CP) mapfile-vers-unpack200 $(TEMPDIR)/mapfile-vers
+ 	$(LINKER)  $(LDDFLAGS) $(UNPACK_EXE_FILES_o) $(RES) $(LIBCXX) $(LDOUTPUT)$(TEMPDIR)/unpack200$(EXE_SUFFIX)
+ ifdef MT
+-	$(MT) /manifest $(OBJDIR)/unpack200$(EXE_SUFFIX).manifest /outputresource:$(TEMPDIR)/unpack200$(EXE_SUFFIX);#1
++	$(MT) -manifest $(OBJDIR)/unpack200$(EXE_SUFFIX).manifest -outputresource:$(TEMPDIR)/unpack200$(EXE_SUFFIX);#1
+ endif
+ 	$(CP) $(TEMPDIR)/unpack200$(EXE_SUFFIX) $(UNPACK_EXE)
+ 	@$(call binary_file_verification,$@)
+--- old/make/common/Defs-windows.gmk	2012-03-08 18:20:27.888713066 +0100
++++ new/make/common/Defs-windows.gmk	2012-03-08 18:20:27.748712960 +0100
+@@ -73,7 +73,7 @@
+   MS_RUNTIME_LIBRARIES = $(MSVCRNN_DLL)
+ endif
+ 
+-EXTRA_LFLAGS += /LIBPATH:$(DXSDK_LIB_PATH)
++EXTRA_LFLAGS += -LIBPATH:$(DXSDK_LIB_PATH)
+ 
+ # C Compiler flag definitions
+ 
+@@ -154,7 +154,7 @@
+ #   -MTd       Use static debug version (better than -MDd, no runtime issues)
+ #   -D_DEBUG   Change use of malloc/free/etc to use special debug ones (-MTd)
+ #
+-#      NOTE: We also will use /D _STATIC_CPPLIB  so we don't need msvcpnn.dll
++#      NOTE: We also will use -D _STATIC_CPPLIB  so we don't need msvcpnn.dll
+ #
+ # If MS_RUNTIME_STATIC is requested we may have a problem, it is no longer
+ #     supported by VS2010
+@@ -179,12 +179,12 @@
+ endif
+ 
+ # Always add _STATIC_CPPLIB definition
+-STATIC_CPPLIB_OPTION = /D _STATIC_CPPLIB
++STATIC_CPPLIB_OPTION = -D _STATIC_CPPLIB
+ 
+ # Silence the warning about using _STATIC_CPPLIB
+ ifneq ($(SHOW_ALL_WARNINGS),true)
+   # Needed with VS2010 to turn off the deprecated warning.
+-  STATIC_CPPLIB_OPTION += /D _DISABLE_DEPRECATE_STATIC_CPPLIB
++  STATIC_CPPLIB_OPTION += -D _DISABLE_DEPRECATE_STATIC_CPPLIB
+ endif
+ 
+ MS_RUNTIME_OPTION += $(STATIC_CPPLIB_OPTION)
+@@ -198,7 +198,7 @@
+   #   -Od      Turns off optimization and speeds compilation
+   #   -YX -Fp/.../foobar.pch   Use precompiled headers (try someday?)
+   #   -nologo  Don't print out startup message
+-  #   /D _STATIC_CPPLIB
++  #  -D _STATIC_CPPLIB
+   #            Use static link for the C++ runtime (so msvcpnn.dll not needed)
+   #   
+   CFLAGS_COMMON  += -Zi -nologo
+@@ -210,11 +210,11 @@
+   # All builds get the same runtime setting
+   CFLAGS_COMMON += $(MS_RUNTIME_OPTION) $(CFLAGS_$(COMPILER_VERSION))
+ 
+-  LDEBUG = /debug
++  LDEBUG = -debug
+   
+   ifeq ($(VTUNE_SUPPORT), true)
+     OTHER_CFLAGS = -Z7 -Ox 
+-    LDEBUG += /pdb:NONE
++    LDEBUG += -pdb:NONE
+   endif
+   
+   # VS2010, always need safe exception handlers, not needed on 64bit
+@@ -223,7 +223,7 @@
+   endif
+ 
+   # LFLAGS are the flags given to $(LINK) and used to build the actual DLL file
+-  BASELFLAGS = -nologo /opt:REF /incremental:no
++  BASELFLAGS = -nologo -opt:REF -incremental:no
+ 
+   LFLAGS = $(BASELFLAGS) $(LDEBUG) $(EXTRA_LFLAGS) $(LFLAGS_$(COMPILER_VERSION))
+   LDDFLAGS += $(LFLAGS_$(COMPILER_VERSION))
+@@ -352,7 +352,7 @@
+   JDK_UPDATE_VER := 0
+ endif
+ 
+-RC_FLAGS = /l 0x409 /r
++RC_FLAGS = -l 0x409 -r
+ 
+ ifeq ($(VARIANT), OPT)
+   RC_FLAGS += -d NDEBUG 
+--- old/make/common/Demo.gmk	2012-03-08 18:20:28.438713073 +0100
++++ new/make/common/Demo.gmk	2012-03-08 18:20:28.298714992 +0100
+@@ -292,9 +292,9 @@
+ 
+ ifeq ($(PLATFORM),windows)
+ # JDK name required here
+-RC_FLAGS += /D "JDK_FNAME=$(LIBRARY).dll" \
+-            /D "JDK_INTERNAL_NAME=$(LIBRARY)" \
+-            /D "JDK_FTYPE=0x2L"
++RC_FLAGS += -D "JDK_FNAME=$(LIBRARY).dll" \
++            -D "JDK_INTERNAL_NAME=$(LIBRARY)" \
++            -D "JDK_FTYPE=0x2L"
+ endif
+ 
+ # Native library building
+--- old/make/common/Library.gmk	2012-03-08 18:20:28.988712942 +0100
++++ new/make/common/Library.gmk	2012-03-08 18:20:28.848713739 +0100
+@@ -183,9 +183,9 @@
+ 	@$(ECHO) Created $@ 
+ 
+ # JDK name required here
+-RC_FLAGS += /D "JDK_FNAME=$(LIBRARY).dll" \
+-            /D "JDK_INTERNAL_NAME=$(LIBRARY)" \
+-            /D "JDK_FTYPE=0x2L"
++RC_FLAGS += -D "JDK_FNAME=$(LIBRARY).dll" \
++            -D "JDK_INTERNAL_NAME=$(LIBRARY)" \
++            -D "JDK_FTYPE=0x2L"
+ 
+ $(OBJDIR)/$(LIBRARY).res: $(VERSIONINFO_RESOURCE)
+ ifndef LOCAL_RESOURCE_FILE
+--- old/make/common/Program.gmk	2012-03-08 18:20:29.538713161 +0100
++++ new/make/common/Program.gmk	2012-03-08 18:20:29.398717937 +0100
+@@ -121,9 +121,9 @@
+ ifeq ($(PLATFORM), windows)
+ 
+ # JDK name required here
+-RC_FLAGS += /D "JDK_FNAME=$(PROGRAM)$(EXE_SUFFIX)" \
+-	    /D "JDK_INTERNAL_NAME=$(PROGRAM)" \
+-	    /D "JDK_FTYPE=0x1L"
++RC_FLAGS += -D "JDK_FNAME=$(PROGRAM)$(EXE_SUFFIX)" \
++	    -D "JDK_INTERNAL_NAME=$(PROGRAM)" \
++	    -D "JDK_FTYPE=0x1L"
+ 
+ $(OBJDIR)/$(PROGRAM).res: $(VERSIONINFO_RESOURCE)
+ 	@$(prep-target)
+@@ -162,11 +162,11 @@
+ 	@$(prep-target)
+ 	@set -- $?; \
+ 	    $(ECHO) Rebuilding $@ because of $$1 $$2 $$3 $$4 $$5 $$6 $${7:+...};
+-	$(LINK) -out:$@ /STACK:$(STACK_SIZE) \
++	$(LINK) -out:$@ -STACK:$(STACK_SIZE) \
+ 	    -map:$(OBJDIR)/$(PROGRAM).map $(LFLAGS) $(LDFLAGS) \
+ 	    @$(OBJDIR)/$(PROGRAM).lcf $(LDLIBS)
+ ifdef MT
+-	$(MT) /manifest $(OBJDIR)/$(PROGRAM).exe.manifest /outputresource:$@;#1
++	$(MT) -manifest $(OBJDIR)/$(PROGRAM).exe.manifest -outputresource:$@;#1
+ endif
+ 	@$(call binary_file_verification,$@)
+ 
+--- old/make/common/Release.gmk	2012-03-08 18:20:30.088713099 +0100
++++ new/make/common/Release.gmk	2012-03-08 18:20:29.948718224 +0100
+@@ -766,22 +766,16 @@
+ 	$(RM) `$(FIND) $(JRE_IMAGE_DIR)/lib -name 'ir.idl'`
+ 
+ # Construct an initial jre image (initial jdk jre) no trimming or stripping
+-# See "initial-image-jdk-setup" for an explanation of the rm of
+-# drive names like C:
+ initial-image-jre:: initial-image-jre-setup \
+ 		    $(JRE_DOCFILES) \
+ 		    $(RT_JAR) $(RESOURCES_JAR) $(JSSE_JAR) $(JFR_JAR) \
+ 		    $(BUILDMETAINDEX_JARFILE)
+ 	@# Copy in bin directory
+-	$(CD) $(OUTPUTDIR) && $(FIND) bin -depth | $(CPIO) -pdum $(JRE_IMAGE_DIR)
++	$(CD) $(OUTPUTDIR) && $(TAR) -cf - bin | ($(CD) $(JRE_IMAGE_DIR) && $(TAR) -xpf -)
+ 	@# CTE plugin security change require new empty directory lib/applet
+ 	$(MKDIR) -p $(JRE_IMAGE_DIR)/lib/applet
+ 	@# Copy in lib directory
+-	$(CD) $(OUTPUTDIR) && $(FIND) lib -depth | $(CPIO) -pdum $(JRE_IMAGE_DIR)
+-  ifeq ($(USING_CYGWIN),true)
+-	  $(RM) -rf $(JRE_IMAGE_DIR)/[A-Za-z]:
+-	  $(RM) -rf $(OUTPUTDIR)/[A-Za-z]:
+-  endif
++	$(CD) $(OUTPUTDIR) && $(TAR) -cf - lib | ($(CD) $(JRE_IMAGE_DIR) && $(TAR) -xpf -)
+ 	@# Make sure all directories are read/execute for everyone
+ 	$(CHMOD) a+rx `$(FIND) $(JRE_IMAGE_DIR) -type d`
+ 	@# Remove some files from the jre area
+@@ -888,29 +882,12 @@
+ ######################################################
+ # JDK Image
+ ######################################################
+-# Note: cpio ($(CPIO)) sometimes leaves directories without rx access.
+ 
+-# REMIND: the $(RM) calls for patterns like c:, d: following $(CPIO)
+-# are because the 1.7.x versions of cygwin's cpio command drops these
+-# in the working directory if the output path begins with that pattern
+-# The one for the output jre subdirectory gets there because cpio sees its
+-# own dropping in the input jre subdirectory. Need to remove both of these.
+-# We can remove these RM's if someone figures out how to stop cpio from
+-# leaving these there.
+-# Note that its a real problem not because this directory can end up in the
+-# bundle (I think it won't since it not in bin or lib and those are the
+-# only places from which we copy everything), but because the presence
+-# of this file causes cygwin's find to bomb out, thus breaking the build
+-# in "install".
+ initial-image-jdk-setup:
+ 	$(RM) -r $(JDK_IMAGE_DIR)
+ 	$(MKDIR) -p $(JDK_IMAGE_DIR)/jre
+-	($(CD) $(JRE_IMAGE_DIR) && $(FIND) . -depth -print \
+-	      | $(CPIO) -pdum $(JDK_IMAGE_DIR)/jre )
+-  ifeq ($(USING_CYGWIN),true)
+-	  $(RM) -rf $(JRE_IMAGE_DIR)/[A-Za-z]:
+-	  $(RM) -rf $(JDK_IMAGE_DIR)/jre/[A-Za-z]:
+-  endif
++	($(CD) $(JRE_IMAGE_DIR) && $(TAR) -cf - . \
++	      | ($(CD) $(JDK_IMAGE_DIR)/jre && $(TAR) -xpf -))
+ 	$(RM) -rf $(JDK_IMAGE_DIR)/jre/man
+ 	$(CHMOD) a+rx `$(FIND) $(JDK_IMAGE_DIR) -type d`
+ 
+--- old/make/common/shared/Defs-utils.gmk	2012-03-08 18:20:30.658714030 +0100
++++ new/make/common/shared/Defs-utils.gmk	2012-03-08 18:20:30.508717403 +0100
+@@ -93,7 +93,6 @@
+ COMM           = $(UTILS_USR_BIN_PATH)comm
+ COMPRESS       = $(UTILS_USR_BIN_PATH)compress
+ CP             = $(UTILS_COMMAND_PATH)cp
+-CPIO           = $(UTILS_COMMAND_PATH)cpio
+ CUT            = $(UTILS_USR_BIN_PATH)cut
+ DATE           = $(UTILS_COMMAND_PATH)date
+ DF             = $(UTILS_COMMAND_PATH)df
+@@ -167,9 +166,16 @@
+     # Some CYGWIN nawk versions require BINMODE=w for proper '\r' interpretation
+     NAWK   = $(UNIXCOMMAND_PATH)awk -v BINMODE=w
+   else
+-    ZIPEXE = $(UTILS_DEVTOOL_PATH)zip
+-    UNZIP  = $(UTILS_DEVTOOL_PATH)unzip
+-    NAWK   = $(UNIXCOMMAND_PATH)awk
++    ifdef USING_MINGW
++      ECHO = $(UTILS_COMMAND_PATH)echo -e
++      NAWK = $(UTILS_COMMAND_PATH)awk
++      # 'ar' comes from the MinGW path..
++      AR = /mingw/bin/ar.exe
++    else
++      ZIPEXE = $(UTILS_DEVTOOL_PATH)zip
++      UNZIP  = $(UTILS_DEVTOOL_PATH)unzip
++      NAWK   = $(UNIXCOMMAND_PATH)awk
++    endif
+   endif
+   # Re-define some utilities
+   LEX            =# override GNU Make intrinsic: no lex on windows
+--- old/make/common/shared/Defs-windows.gmk	2012-03-08 18:20:31.198713469 +0100
++++ new/make/common/shared/Defs-windows.gmk	2012-03-08 18:20:31.058715596 +0100
+@@ -112,6 +112,15 @@
+ $(shell if [ "$1" != "" -a -d "$1" ]; then $(CYGPATH_CMD) "$1" 2> $(DEV_NULL); else echo "$1"; fi)
+ endef
+ else
++ifdef USING_MINGW
++DOSPATH_CMD:=$(shell cd $(JDK_TOPDIR) 2> $(DEV_NULL) && pwd)/make/tools/mingw_build_scripts/dospath.sh
++define FullPath
++$(subst \,/,$(shell $(DOSPATH_CMD) $1))
++endef
++define OptFullPath
++$(shell if [ "$1" != "" -a -d "$1" ]; then (cd $1 && pwd); else echo "$1"; fi)
++endef
++else
+ # Temporary until we upgrade to MKS 8.7, MKS pwd returns mixed mode path
+ define FullPath
+ $(shell cd $1 2> $(DEV_NULL) && pwd)
+@@ -120,6 +129,7 @@
+ $(shell if [ "$1" != "" -a -d "$1" ]; then (cd $1 && pwd); else echo "$1"; fi)
+ endef
+ endif
++endif
+ 
+ # System drive
+ ifdef SYSTEMDRIVE
+@@ -146,43 +156,47 @@
+   ifdef USING_CYGWIN
+     UNIXCOMMAND_PATH :=$(call PrefixPath,/usr/bin)
+   else
+-    ifdef ROOTDIR
+-      xROOTDIR :="$(subst \,/,$(ROOTDIR))"
+-      _rootdir :=$(call FullPath,$(xROOTDIR))
++    ifdef USING_MINGW
++      UNIXCOMMAND_PATH :=$(call PrefixPath,/bin)
+     else
+-      xROOTDIR :="$(_system_drive)/mksnt"
+-      _rootdir :=$(call FullPath,$(xROOTDIR))
+-    endif
+-    ifneq ($(_rootdir),)
+-      UNIXCOMMAND_PATH :=$(call PrefixPath,$(_rootdir)/mksnt)
+-    endif
+-  endif
++      ifdef ROOTDIR
++        xROOTDIR :="$(subst \,/,$(ROOTDIR))"
++        _rootdir :=$(call FullPath,$(xROOTDIR))
++      else
++        xROOTDIR :="$(_system_drive)/mksnt"
++        _rootdir :=$(call FullPath,$(xROOTDIR))
++      endif
++      ifneq ($(_rootdir),)
++        UNIXCOMMAND_PATH :=$(call PrefixPath,$(_rootdir)/mksnt)
++      endif
++    endif # USING_MINGW
++  endif # USING_CYGWIN
+ endif
+ UNIXCOMMAND_PATH:=$(call AltCheckSpaces,UNIXCOMMAND_PATH)
+ 
+ # Get version of MKS or CYGWIN
+-ifndef USING_CYGWIN
+-_MKS_VER :=$(shell $(MKSINFO) 2>&1 | $(GREP) Release | $(TAIL) -1 | $(SED) -e 's@.*\(Release.*\)@\1@')
+-MKS_VER  :=$(call GetVersion,$(_MKS_VER))
+-# At this point, we can re-define FullPath to use DOSNAME_CMD
+-CHECK_MKS87:=$(call CheckVersions,$(MKS_VER),8.7)
+-TRY_DOSNAME:=false
+-ifeq ($(CHECK_MKS87),same)
+-TRY_DOSNAME:=true
+-endif
+-# Newer should be ok
+-ifeq ($(CHECK_MKS87),newer)
+-TRY_DOSNAME:=true
+-endif
+-ifeq ($(TRY_DOSNAME),true)
+-ifeq ($(shell $(UNIXCOMMAND_PATH)dosname -s $(_system_drive)/ 2> $(DEV_NULL)),$(_system_drive)/)
+-_DOSNAME=$(UNIXCOMMAND_PATH)dosname
+-DOSNAME_CMD:=$(_DOSNAME) -s
++ifdef USING_MKS
++  _MKS_VER :=$(shell $(MKSINFO) 2>&1 | $(GREP) Release | $(TAIL) -1 | $(SED) -e 's@.*\(Release.*\)@\1@')
++  MKS_VER  :=$(call GetVersion,$(_MKS_VER))
++  # At this point, we can re-define FullPath to use DOSNAME_CMD
++  CHECK_MKS87:=$(call CheckVersions,$(MKS_VER),8.7)
++  TRY_DOSNAME:=false
++  ifeq ($(CHECK_MKS87),same)
++    TRY_DOSNAME:=true
++  endif
++  # Newer should be ok
++  ifeq ($(CHECK_MKS87),newer)
++    TRY_DOSNAME:=true
++  endif
++  ifeq ($(TRY_DOSNAME),true)
++    ifeq ($(shell $(UNIXCOMMAND_PATH)dosname -s $(_system_drive)/ 2> $(DEV_NULL)),$(_system_drive)/)
++      _DOSNAME=$(UNIXCOMMAND_PATH)dosname
++      DOSNAME_CMD:=$(_DOSNAME) -s
+ define FullPath
+ $(subst //,/,$(shell echo $1 | $(DOSNAME_CMD) 2> $(DEV_NULL)))
+ endef
+-endif # test dosname -s
+-endif # TRY_DOSNAME
++    endif # test dosname -s
++  endif # TRY_DOSNAME
+ endif # MKS
+ 
+ # We try to get references to what we need via the default component
+@@ -440,10 +454,14 @@
+   ifdef USING_CYGWIN
+     DEVTOOLS_PATH :=$(UNIXCOMMAND_PATH)
+   else
+-    xDEVTOOLS_PATH  :="$(_system_drive)/utils"
+-    fxDEVTOOLS_PATH :=$(call FullPath,$(xDEVTOOLS_PATH))
+-    DEVTOOLS_PATH  :=$(call PrefixPath,$(fxDEVTOOLS_PATH))
+-  endif
++    ifdef USING_MINGW
++      DEVTOOLS_PATH :=$(UNIXCOMMAND_PATH)
++    else
++      xDEVTOOLS_PATH  :="$(_system_drive)/utils"
++      fxDEVTOOLS_PATH :=$(call FullPath,$(xDEVTOOLS_PATH))
++      DEVTOOLS_PATH  :=$(call PrefixPath,$(fxDEVTOOLS_PATH))
++    endif # USING_MINGW
++  endif # USING_CYGWIN
+ endif
+ DEVTOOLS_PATH:=$(call AltCheckSpaces,DEVTOOLS_PATH)
+ 
+@@ -636,7 +654,7 @@
+ 
+ # Special define for checking the binaries
+ 
+-# All windows dll and exe files should have been built with /NXCOMPAT
++# All windows dll and exe files should have been built with -NXCOMPAT
+ #   and be setup for dynamic base addresses.
+ #   In addition, we should not be dependent on certain dll files that
+ #   we do not or cannot redistribute.
+@@ -648,37 +666,37 @@
+   BANNED_DLLS=msvcp100[.]dll|msvcr100d[.]dll|msvcrtd[.]dll
+ endif
+ 
+-# Check for /safeseh (only used on 32bit)
++# Check for -safeseh (only used on 32bit)
+ define binary_file_safeseh_verification # binary_file
+ ( \
+-  $(ECHO) "Checking for /SAFESEH usage in: $1" && \
+-  if [ "`$(DUMPBIN) /loadconfig $1 | $(EGREP) -i 'Safe Exception Handler Table'`" = "" ] ; then \
++  $(ECHO) "Checking for -SAFESEH usage in: $1" && \
++  if [ "`$(DUMPBIN) -loadconfig $1 | $(EGREP) -i 'Safe Exception Handler Table'`" = "" ] ; then \
+     $(ECHO) "ERROR: Did not find 'Safe Exception Handler Table' in loadconfig: $1" ; \
+-    $(DUMPBIN) /loadconfig $1 ; \
++    $(DUMPBIN) -loadconfig $1 ; \
+     exit 6 ; \
+   fi ; \
+ )
+ endef
+ 
+-# Check for /NXCOMPAT usage
++# Check for -NXCOMPAT usage
+ define binary_file_nxcompat_verification # binary_file
+ ( \
+-  $(ECHO) "Checking for /NXCOMPAT usage in: $1" && \
+-  if [ "`$(DUMPBIN) /headers $1 | $(EGREP) -i 'NX compatible'`" = "" ] ; then \
++  $(ECHO) "Checking for -NXCOMPAT usage in: $1" && \
++  if [ "`$(DUMPBIN) -headers $1 | $(EGREP) -i 'NX compatible'`" = "" ] ; then \
+     $(ECHO) "ERROR: Did not find 'NX compatible' in headers: $1" ; \
+-    $(DUMPBIN) /headers $1 ; \
++    $(DUMPBIN) -headers $1 ; \
+     exit 7 ; \
+   fi ; \
+ )
+ endef
+ 
+-# Check for /DYNAMICBASE usage
++# Check for -DYNAMICBASE usage
+ define binary_file_dynamicbase_verification # binary_file
+ ( \
+-  $(ECHO) "Checking for /DYNAMICBASE usage in: $1" && \
+-  if [ "`$(DUMPBIN) /headers $1 | $(EGREP) -i 'Dynamic base'`" = "" ] ; then \
++  $(ECHO) "Checking for -DYNAMICBASE usage in: $1" && \
++  if [ "`$(DUMPBIN) -headers $1 | $(EGREP) -i 'Dynamic base'`" = "" ] ; then \
+     $(ECHO) "ERROR: Did not find 'Dynamic base' in headers: $1" ; \
+-    $(DUMPBIN) /headers $1 ; \
++    $(DUMPBIN) -headers $1 ; \
+     exit 8 ; \
+   fi ; \
+ )
+@@ -688,9 +706,9 @@
+ define binary_file_dll_verification # binary_file
+ ( \
+   $(ECHO) "Checking for banned dependencies in: $1" && \
+-  if [ "`$(DUMPBIN) /dependents $1 | $(EGREP) -i '$(BANNED_DLLS)'`" != "" ] ; then \
++  if [ "`$(DUMPBIN) -dependents $1 | $(EGREP) -i '$(BANNED_DLLS)'`" != "" ] ; then \
+     $(ECHO) "ERROR: Found use of $(BANNED_DLLS)"; \
+-    $(DUMPBIN) /dependents $1 ; \
++    $(DUMPBIN) -dependents $1 ; \
+     exit 9 ; \
+   fi ; \
+ )
+--- old/make/common/shared/Platform.gmk	2012-03-08 18:20:31.758712993 +0100
++++ new/make/common/shared/Platform.gmk	2012-03-08 18:20:31.618718336 +0100
+@@ -70,6 +70,8 @@
+ #     LIBARCH32                   solaris only: sparc or i386
+ #     LIBARCH64                   solaris only: sparcv9 or amd64
+ #     USING_CYGWIN                windows only: true or false
++#     USING_MINGW                 windows only: true or false
++#     USING_MKS                   windows only: true or false
+ #     ISHIELD_TEMP_MIN            windows only: minimum disk space in temp area
+ 
+ # Only run uname once in this make session.
+@@ -227,6 +229,8 @@
+ # Windows with and without CYGWIN will be slightly different
+ ifeq ($(SYSTEM_UNAME), Windows_NT)
+   PLATFORM = windows
++  USING_MKS = true
++  export USING_MKS
+ endif
+ ifneq (,$(findstring CYGWIN,$(SYSTEM_UNAME)))
+   PLATFORM = windows
+@@ -239,6 +243,11 @@
+     export CYGWIN_HOME
+   endif
+ endif
++ifneq (,$(findstring MINGW,$(SYSTEM_UNAME)))
++  PLATFORM = windows
++  USING_MINGW = true
++  export USING_MINGW
++endif
+ 
+ # Platform settings specific to Windows
+ ifeq ($(PLATFORM), windows)
+--- old/make/common/shared/Sanity-Settings.gmk	2012-03-08 18:20:32.338717281 +0100
++++ new/make/common/shared/Sanity-Settings.gmk	2012-03-08 18:20:32.196216494 +0100
+@@ -180,8 +180,13 @@
+     ALL_SETTINGS+=$(call addRequiredVersionSetting,CYGWIN_VER)
+     ALL_SETTINGS+=$(call addRequiredSetting,CYGPATH_CMD)
+   else
+-    ALL_SETTINGS+=$(call addRequiredVersionSetting,MKS_VER)
+-    ALL_SETTINGS+=$(call addOptionalSetting,DOSNAME_CMD)
++    ifdef USING_MINGW
++      ALL_SETTINGS+=$(call addRequiredSetting,USING_MINGW)
++      ALL_SETTINGS+=$(call addRequiredSetting,DOSPATH_CMD)
++    else
++      ALL_SETTINGS+=$(call addRequiredVersionSetting,MKS_VER)
++      ALL_SETTINGS+=$(call addOptionalSetting,DOSNAME_CMD)
++    endif
+   endif
+ endif
+ ifeq ($(PLATFORM),linux)
+--- old/make/common/shared/Sanity.gmk	2012-03-08 18:20:32.888713796 +0100
++++ new/make/common/shared/Sanity.gmk	2012-03-08 18:20:32.736221731 +0100
+@@ -382,7 +382,7 @@
+ ifeq ($(PLATFORM), windows)
+     MKS_CHECK :=$(call CheckVersions,$(MKS_VER),$(REQUIRED_MKS_VER))
+ sane-mks:
+-  ifndef USING_CYGWIN
++  ifdef USING_MKS
+     ifeq ($(MKS_CHECK),missing)
+ 	@$(call OfficialErrorMessage,MKS version,$(MKS_VER),$(REQUIRED_MKS_VER))
+     endif
+@@ -889,7 +889,7 @@
+ 	    "" >> $(ERROR_FILE) ; \
+ 	fi
+ ifeq ($(PLATFORM), windows)
+-	@for utility in cpio ar file m4 ; do \
++	@for utility in $(AR) $(FILE) $(M4) ; do \
+ 	  if [ ! -r "`$(WHICH) $${utility}`" ]; then \
+ 	    $(ECHO) "WARNING: You do not have the utility $${utility} in the \n" \
+ 	      "      directory $(UNIXCOMMAND_PATH). \n" \
+--- old/make/tools/freetypecheck/Makefile	2012-03-08 18:20:33.468713129 +0100
++++ new/make/tools/freetypecheck/Makefile	2012-03-08 18:20:33.318720067 +0100
+@@ -37,11 +37,11 @@
+ 
+ # Start with CFLAGS (which gets us the required -xarch setting on solaris)
+ ifeq ($(PLATFORM), windows)
+-  FT_OPTIONS  = /nologo /c
++  FT_OPTIONS  = -nologo -c
+   FREETYPE_DLL = $(FREETYPE_LIB_PATH)/freetype.dll
+   FT_LD_OPTIONS  = $(FREETYPE_LIB_PATH)/freetype.lib
+   ifdef MT
+-    FT_LD_OPTIONS += /manifest
++    FT_LD_OPTIONS += -manifest
+   endif
+ else
+   FT_OPTIONS  = $(CFLAGS)
+@@ -69,11 +69,11 @@
+ 	$(prep-target)
+ ifeq ($(PLATFORM), windows)
+ 	$(CC) $(FT_OPTIONS) $(CC_OBJECT_OUTPUT_FLAG)$(FT_OBJ) $<
+-	$(LINK) $(FT_LD_OPTIONS) /OUT:$(FT_TEST) $(FT_OBJ)
++	$(LINK) $(FT_LD_OPTIONS) -OUT:$(FT_TEST) $(FT_OBJ)
+ 	$(CP) $(FREETYPE_DLL) $(@D)/
+   ifdef MT
+ 	$(CP) $(MSVCRNN_DLL_PATH)/$(MSVCRNN_DLL) $(@D)/
+-	$(MT) /manifest $(FT_TEST).manifest /outputresource:$(FT_TEST);#1
++	$(MT) -manifest $(FT_TEST).manifest -outputresource:$(FT_TEST);#1
+   endif
+ else
+ 	@$(CC) $(FT_OPTIONS) -o $@ $< $(FT_LD_OPTIONS)
+--- /dev/null	2012-03-05 10:24:45.905894417 +0100
++++ new/make/tools/mingw_build_scripts/dospath.sh	2012-03-08 18:20:33.898714299 +0100
+@@ -0,0 +1,42 @@
++#
++# Copyright (c) 1998, 2005, Oracle and/or its affiliates. All rights reserved.
++# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++#
++# This code is free software; you can redistribute it and/or modify it
++# under the terms of the GNU General Public License version 2 only, as
++# published by the Free Software Foundation.  Oracle designates this
++# particular file as subject to the "Classpath" exception as provided
++# by Oracle in the LICENSE file that accompanied this code.
++#
++# This code is distributed in the hope that it will be useful, but WITHOUT
++# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++# version 2 for more details (a copy is included in the LICENSE file that
++# accompanied this code).
++#
++# You should have received a copy of the GNU General Public License version
++# 2 along with this work; if not, write to the Free Software Foundation,
++# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++#
++# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++# or visit www.oracle.com if you need additional information or have any
++# questions.
++#
++
++# A shell script which converts its first argument, which must be an existing 
++# path name, into a DOS (aka 8.3) path name. If the path is a file, only the 
++# directory part of the whole path will be converted.
++# This shell script executes the Visual Basic helper script 'dospath.vbs'
++# which must be located in the same directotry like this script itself.
++# The Visual Basic script will be invoked trough the "Windows Script Host"
++# which is available by default on Windows since Windows 98.
++
++pushd `dirname "$0"` > /dev/null
++ABS_PATH=`pwd`
++popd > /dev/null
++if [ -d "$1" ]; then
++  echo `cd "$1" && cscript.exe -nologo $ABS_PATH/dospath.vbs`;
++elif [ -f "$1" ]; then
++  DIR=`dirname "$1"`;
++  echo `cd "$DIR" && cscript.exe -nologo $ABS_PATH/dospath.vbs`\\`basename "$1"`;
++fi
+--- /dev/null	2012-03-05 10:24:45.905894417 +0100
++++ new/make/tools/mingw_build_scripts/dospath.vbs	2012-03-08 18:20:34.448717100 +0100
+@@ -0,0 +1,33 @@
++'
++' Copyright (c) 1998, 2005, Oracle and/or its affiliates. All rights reserved.
++' DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++'
++' This code is free software; you can redistribute it and/or modify it
++' under the terms of the GNU General Public License version 2 only, as
++' published by the Free Software Foundation.  Oracle designates this
++' particular file as subject to the "Classpath" exception as provided
++' by Oracle in the LICENSE file that accompanied this code.
++'
++' This code is distributed in the hope that it will be useful, but WITHOUT
++' ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++' FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++' version 2 for more details (a copy is included in the LICENSE file that
++' accompanied this code).
++'
++' You should have received a copy of the GNU General Public License version
++' 2 along with this work; if not, write to the Free Software Foundation,
++' Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++'
++' Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++' or visit www.oracle.com if you need additional information or have any
++' questions.
++'
++
++'
++' Visual Basic Script which returns the DOS (aka 8.3) filename of the current
++' directory. Only called from 'dospath.sh' during a Windows build under MinGW.
++'
++
++Set fso=CreateObject("Scripting.FileSystemObject")
++Set path = fso.GetFolder(".")
++WScript.Echo path.ShortPath
