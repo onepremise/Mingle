@@ -2663,8 +2663,6 @@ buildInstalldMake() {
     fi
     
     mingleLog "Installing $_project..." true
-
-    mingleDecompress "$_project"
     
     mingleCategoryDownload "dmake" "4.12.2.2" "http://search.cpan.org/CPAN/authors/id/S/SH/SHAY/dmake-4.12.2.2.zip"
     mingleCategoryDecompress "dmake" "4.12.2.2" "$_project"  
@@ -3030,8 +3028,8 @@ initializePostGISDB () {
     psql -U osm -d osm -f /mingw/share/postgresql/contrib/postgis-2.0/postgis.sql
     psql -U osm -d osm -f /mingw/share/postgresql/contrib/postgis-2.0/spatial_ref_sys.sql
 
-    mingleLog "Initialization Complete." true
-    mingleLog "Your OSM dbname=osm, username=osm, password=osm." true
+    mingleLog "Initialization Complete."
+    mingleLog "Your OSM dbname=osm, username=osm, password=osm."
     mingleLog "However, I recommend updating your password for production use as a start."
 }
 
@@ -3061,19 +3059,19 @@ uninstallPostgresql() {
   
   rm -rf $POSTGIS_PATH
   
-  echo "Uninstall Complete."
+  mingleLog "Uninstall Complete."
 }
 
 importOSMUSData() {
   local _downloadUrl="http://download.geofabrik.de/north-america-latest.osm.pbf"
-  echo "Tune Database for Import..."
+  mingleLog "Tune Database for Import..." true
   
   net stop "PostGIS Database"
   updatePostgresSqlConf 'autovacuum' 'off'
   updatePostgresSqlConf 'fsync' 'off'
   net start "PostGIS Database"
   
-  echo "Importing US OSM data to Postgres..."
+  mingleLog "Importing US OSM data to Postgres..." true
 
   ad_cd "$MINGLE_BUILD_DIR"
 
@@ -3103,9 +3101,7 @@ importOSMUSData() {
       done
   fi
   
-  echo
-  echo "Importing north-america-latest.osm.pbf to the database. This may take several hours..."
-  echo
+  mingleLog "Importing north-america-latest.osm.pbf to the database. This may take several hours..." true
   
   ./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1400 --hstore -r pbf north-america-latest.osm.pbf
   #./osm2pgsql.exe -v -c -d osm -U osm -H localhost -P 5432 -S default.style -s -C 1600 --hstore -r pbf us-northeast.osm.pbf
@@ -3150,12 +3146,10 @@ buildInstallProtobufC() {
     local _binCheck="protoc-c.exe"
     local _exeToTest="protoc-c.exe --version"
     
-    echo
-    echo "Building $_project..."
-    echo
-    
-    echo "Checking for binary $_binCheck..."
+    mingleLog "Checking $_project..." true
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        mingleLog "Building $_project..." true
+        
         mingleCategoryDownload "protobuf-c" "master" "https://github.com/onepremise/protobuf-c/archive/master.zip" "protobuf-c-latest.zip"
         mingleCategoryDecompress "protobuf-c" "master" "$_project"
 
@@ -3179,7 +3173,7 @@ buildInstallProtobufC() {
 
         ad_make "$_project"
     else
-        echo "Already Installed."
+        mingleLog "Already Installed."
     fi
     
     ad_run_test "$_exeToTest"
@@ -3214,6 +3208,40 @@ buildInstallOsm2pgsql() {
     mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
+buildInstallOpenFTA() {
+    local _projectName="OpenFTA"
+    local _version="master"
+    local _url="https://github.com/onepremise/OpenFTA/archive/master.zip"
+    local _target="OpenFTA-master.zip"
+    local _projectSearchName="OpenFTA-*"
+    local _cleanEnv=true #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=false #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="xxxx"
+    local _postBuildCommand=""
+    local _exeToTest=""
+
+    mingleLog "Checking $_project..." true
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        mingleLog "Building $_project..." true
+        
+        mingleCategoryDownload "$_projectName" "master" "$_url" "$_target"
+        mingleCategoryDecompress "$_projectName" "master" "$_projectSearchName"
+
+        local _projectDir=$(ad_getDirFromWC "$_projectSearchName")
+        
+        ad_cd $_projectDir/src
+        
+        
+    else
+        mingleLog "Already Installed."
+    fi
+}
+
 MINGLE_SUITE_BASE=false
 MINGLE_SUITE_XML=false
 MINGLE_SUITE_FONTS=false
@@ -3235,6 +3263,7 @@ MINGLE_SUITE_UI=false
 MINGLE_SUITE_GEO_SPATIAL=false
 MINGLE_MAPNIK=false
 MINGLE_MAPNIK_TOOLS=false
+MINGLE_SIMULATION=false
 MINGLE_OSM2PGSQL=false
 MINGLE_EXCLUDE_DEP=false
 
@@ -3729,6 +3758,20 @@ suiteMapnikTools() {
 
     #buildInstallNode
     #buildInstallNodeMapnik
+}
+
+suiteSimulation() {
+    if $MINGLE_SIMULATION; then
+        return;
+    else
+        MINGLE_SIMULATION=true
+    fi
+
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+    fi
+    
+    buildInstallOpenFTA
 }
 
 suiteOSM2PTSQL() {

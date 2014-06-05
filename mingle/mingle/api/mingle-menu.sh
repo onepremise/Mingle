@@ -1,7 +1,7 @@
 OPTIONS=
 
 mingleGetSelections() {
-    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "CA Certs" "Database Tools" "Python Toolkit" "Perl Toolkit" "Text Editors and Converters" "Debugging and Testing" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "osm2pgsql" "All" "Create PostGIS DB" "Import US OSM Data" "Full PostGIS Setup and US Data" "Uninstall PostGIS DB" "Quit")
+    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "CA Certs" "Database Tools" "Python Toolkit" "Perl Toolkit" "Text Editors and Converters" "Debugging and Testing" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "osm2pgsql" "All" "Create PostGIS DB" "Import US OSM Data" "Full PostGIS Setup and US Data" "Uninstall PostGIS DB" "Simulation" "Quit")
 }
 
 mingleGetMaxSetting() {
@@ -186,6 +186,9 @@ mingleProcessSelection() {
     "Uninstall PostGIS DB")
         uninstallPostgresql
         break
+        ;;
+    "Simulation")
+        suiteSimulation
         ;;
     "Quit")
         break
