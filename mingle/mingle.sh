@@ -310,6 +310,9 @@ buildInstallAutoMake() {
 buildInstallGMP() {
     ad_clearEnv
     
+    export "CFLAGS=-Ofast -funroll-all-loops"
+    export "CPPFLAGS=$CFLAGS"
+    
     local _projectName="gmp"
     local _version="$AD_GMP"
     local _url="ftp://ftp.gmplib.org/pub/gmp-$AD_GMP/gmp-$AD_GMP.tar.xz"
@@ -3357,7 +3360,7 @@ suiteBase() {
     
     buildInstallRagel
     buildInstallCMake
-    buildInstallCPIO
+    #buildInstallCPIO
 }
 
 suiteXML() {
