@@ -275,6 +275,7 @@ ad_setDefaultEnv() {
     export "CPPFLAGS=-I/mingw/include  -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO  -Ofast -funroll-all-loops"
     export "CRYPTO=POLARSSL"
     export "CC=x86_64-w64-mingw32-gcc"
+    export "CXX=x86_64-w64-mingw32-gcc"
     unset LIBS
 
     ad_cd $MINGLE_BUILD_DIR

@@ -304,14 +304,14 @@ buildInstallAutoMake() {
 
     mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
     
-    cp -rf $MINGLE_BASE/patches/automake/share /mingw/share/aclocal-1.12 || mingleError $? "failed to copy m4 includes, aborting!"
+    cp -rf $MINGLE_BASE/patches/automake/share/*.m4 /mingw/share/aclocal-1.12 || mingleError $? "failed to copy m4 includes, aborting!"
 }
 
 buildInstallGMP() {
     ad_clearEnv
     
     local _projectName="gmp"
-    local _version="$AD_AUTOMAKE"
+    local _version="$AD_GMP"
     local _url="ftp://ftp.gmplib.org/pub/gmp-$AD_GMP/gmp-$AD_GMP.tar.xz"
     local _target=""
     local _projectSearchName="gmp-*"
@@ -3209,22 +3209,30 @@ buildInstallOsm2pgsql() {
 }
 
 buildInstallCPIO() {
+    export "CFLAGS=-I/mingw/include"
+    export "LDFLAGS=-L/mingw/lib -lmingle"
+    export "CPPFLAGS=$CFLAGS"
+    export "LIBS="
+    export "CC=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
+    export "CXX=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
+    
     local _projectName="cpio"
     local _version="2.11"
     local _url="http://ftp.gnu.org/gnu/cpio/cpio-2.11.tar.gz"
     local _target=""
     local _projectSearchName="cpio-*"
-    local _cleanEnv=true #true/false
-    local _runACLocal=false #true/false
-    local _aclocalFlags=""
-    local _runAutoconf=false #true/false
-    local _runConfigure=false #true/false
+    local _cleanEnv=false #true/false
+    local _runACLocal=true #true/false
+    local _aclocalFlags="-I m4"
+    local _runAutoconf=true #true/false
+    local _runConfigure=true #true/false
     local _configureFlags=""
     local _makeParameters=""
-    local _binCheck="xxxx"
+    local _binCheck="cpio"
     local _postBuildCommand=""
-    local _exeToTest=""
+    local _exeToTest="cpio --version"
 
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallOpenJDK() {
@@ -3349,6 +3357,7 @@ suiteBase() {
     
     buildInstallRagel
     buildInstallCMake
+    buildInstallCPIO
 }
 
 suiteXML() {
