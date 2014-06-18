@@ -1,0 +1,13 @@
+--- gettext-0.19/gettext-tools/woe32dll/gettextlib-exports.c	2012-12-24 21:06:44 -0500
++++ gettext-0.19/gettext-tools/woe32dll/gettextlib-exports2.c	2014-06-10 17:48:32 -0400
+@@ -29,8 +29,10 @@
+ VARIABLE(gl_linkedhash_list_implementation)
+ VARIABLE(program_name)
+ #if GNULIB_DEFINED_GETOPT
++#if !(defined _WIN32 || defined _WIN64)
+ VARIABLE(rpl_optarg)
+ VARIABLE(rpl_optind)
+ #endif
++#endif
+ VARIABLE(simple_backup_suffix)
+ VARIABLE(styled_ostream_typeinfo)

@@ -25,10 +25,12 @@ The following projects are fully building in the environment setup:
 * mpc
 * pthreads
 * autoconf
+* automake
 * libtool
 * pkgconfig
 * zlib
 * bzip2
+* gperf
 * libiconv
 * libjpeg-turbo
 * libpng
@@ -57,6 +59,9 @@ The following projects are fully building in the environment setup:
 * Git
 * Git - ca-bundle.crt
 * Git-SVN
+* textinfo
+* gettext
+* cpio
 * libproj
 * projdatumgrid
 * libgeotiff
@@ -80,8 +85,10 @@ The following projects are fully building in the environment setup:
 * swig
 * pycairo
 * mapnik
+* postgis
 * osm2pgsql
 * Automation tasks for setting up PostgresDB and importing OSM Data
+* OpenFTA
 
 This build includes python27 with the sqlite3 extention:
 

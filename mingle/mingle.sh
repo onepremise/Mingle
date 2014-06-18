@@ -164,7 +164,7 @@ updateGCC() {
         if [ ! -e "/mingw/lib/libmingle.a" ]; then
             mingleLog "Supplementing GCC with libmingle..."
             cp -rf $MINGLE_BASE/mingle/libmingle .
-            buildInstallGeneric "libmingle" false false "" false false "" "" "libmingle.a" "" ""
+            buildInstallGeneric "libmingle" false true false "" false false "" "" "libmingle.a" "" ""
         fi
     fi
 }
@@ -181,7 +181,7 @@ updateFindCommand() {
 #experimental
 updateTarCommand() {
     if ad_isDateNewerThanFileModTime "2013-01-01" "/mingw/bin/tar.exe"; then
-        mingleAutoBuild  "tar" "1.26" "http://ftp.gnu.org/gnu/tar/tar-1.26.tar.gz" "" "tar-*" true false "" true true "" "" "tar.exe" "" "tar --version"
+        mingleAutoBuild  "tar" "1.26" "http://ftp.gnu.org/gnu/tar/tar-1.26.tar.gz" "" "tar-*" true true false "" true true "" "" "tar.exe" "" "tar --version"
     else
         mingleLog "TAR is up to date." true
     fi
@@ -230,6 +230,7 @@ buildInstallSomething() {
     local _target=""
     local _projectSearchName=""
     local _cleanEnv= #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal= #true/false
     local _aclocalFlags=""
     local _runAutoconf= #true/false
@@ -240,7 +241,7 @@ buildInstallSomething() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallM4() {
@@ -250,6 +251,7 @@ buildInstallM4() {
     local _target=""
     local _projectSearchName="m4-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -260,7 +262,7 @@ buildInstallM4() {
     local _postBuildCommand=""
     local _exeToTest="m4 --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallAutoconf() {
@@ -272,6 +274,7 @@ buildInstallAutoconf() {
     local _target=""
     local _projectSearchName="autoconf-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -282,7 +285,7 @@ buildInstallAutoconf() {
     local _postBuildCommand=""
     local _exeToTest="autoconf --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallAutoMake() {
@@ -292,6 +295,7 @@ buildInstallAutoMake() {
     local _target=""
     local _projectSearchName="automake-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -302,7 +306,7 @@ buildInstallAutoMake() {
     local _postBuildCommand=""
     local _exeToTest="automake --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
     
     cp -rf $MINGLE_BASE/patches/automake/share/*.m4 /mingw/share/aclocal-1.12 || mingleError $? "failed to copy m4 includes, aborting!"
 }
@@ -319,6 +323,7 @@ buildInstallGMP() {
     local _target=""
     local _projectSearchName="gmp-*"
     local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -329,7 +334,7 @@ buildInstallGMP() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"      
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"      
 }
 
 buildInstallMPFR() {
@@ -339,6 +344,7 @@ buildInstallMPFR() {
     local _target=""
     local _projectSearchName="mpfr-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -349,7 +355,7 @@ buildInstallMPFR() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"          
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"          
 }
 
 buildInstallMPC() {
@@ -359,6 +365,7 @@ buildInstallMPC() {
     local _target=""
     local _projectSearchName="mpc-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -369,7 +376,7 @@ buildInstallMPC() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"      
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"      
 }
 
 buildInstallMingw64CRT() {
@@ -379,6 +386,7 @@ buildInstallMingw64CRT() {
     local _target=""
     local _projectSearchName="mingw-w64-*"
     local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -391,7 +399,7 @@ buildInstallMingw64CRT() {
     
     if ad_isDateNewerThanFileModTime "2013-01-01" "/mingw/x86_64-w64-mingw32/lib/libcrtdll.a"; then
         ad_clearEnv
-        mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+        mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
     else
         mingleLog "Mingw64 CRT is up to date." true
     fi    
@@ -404,6 +412,7 @@ buildInstallLibtool() {
     local _target=""
     local _projectSearchName="libtool-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -414,7 +423,7 @@ buildInstallLibtool() {
     local _postBuildCommand=""
     local _exeToTest="libtool --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"      
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"      
 }
 
 buildInstallPExports() {
@@ -424,6 +433,7 @@ buildInstallPExports() {
     local _target=""
     local _projectSearchName="pexports-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -434,7 +444,7 @@ buildInstallPExports() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"      
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"      
 }
 
 buildInstallGenDef() {
@@ -454,7 +464,7 @@ buildInstallGenDef() {
         
         ad_cd "$MINGLE_BUILD_DIR"
     
-        buildInstallGeneric "$_project" true true "" true true "" "" "$_binCheck"
+        buildInstallGeneric "$_project" true true true "" true true "" "" "$_binCheck"
     fi
 }
 
@@ -465,6 +475,7 @@ buildInstallGLibC() {
     local _target=""
     local _projectSearchName="glibc-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -475,7 +486,7 @@ buildInstallGLibC() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"          
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"          
 }
 
 buildInstallRagel() {
@@ -485,6 +496,7 @@ buildInstallRagel() {
     local _target=""
     local _projectSearchName="ragel-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=true #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -495,7 +507,7 @@ buildInstallRagel() {
     local _postBuildCommand=""
     local _exeToTest="ragel --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"            
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"            
 }
 
 buildInstallCMake() { 
@@ -505,6 +517,7 @@ buildInstallCMake() {
     local _target=""
     local _projectSearchName="cmake-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
@@ -515,7 +528,28 @@ buildInstallCMake() {
     local _postBuildCommand=""
     local _exeToTest="cmake --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"              
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"              
+}
+
+buildInstallGperf() {
+    local _projectName="gperf"
+    local _version="3.0.4"
+    local _url="http://ftp.gnu.org/pub/gnu/gperf/gperf-$_version.tar.gz"
+    local _target=""
+    local _projectSearchName="gperf-*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=true #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=true #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="gperf"
+    local _postBuildCommand=""
+    local _exeToTest="gperf --version"
+
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"   
 }
 
 # Things to watch:
@@ -569,7 +603,7 @@ buildInstallGDB() {
         export "LDFLAGS=-L/mingw/lib -L$_savedir/dependencies/lib -lmingle"
         export "CPPFLAGS=-I/mingw/include -I$_savedir/dependencies/include -D_WIN64 -DMS_WIN64 -D__MINGW__"
 
-        buildInstallGeneric "$_project" false false "" true true "--with-gmp --with-mpfr --with-mpc --with-python --enable-shared" "" "x" "" "gdb --version"
+        buildInstallGeneric "$_project" false true false "" true true "--with-gmp --with-mpfr --with-mpc --with-python --enable-shared" "" "x" "" "gdb --version"
 
         ad_cd $_projectDir/gdb
 
@@ -592,6 +626,7 @@ buildInstallCUnit() {
     local _target=""
     local _projectSearchName="CUnit-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -602,7 +637,7 @@ buildInstallCUnit() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"                  
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"                  
 }
 
 buildInstallTCL() {
@@ -873,6 +908,7 @@ buildInstallBinutils() {
     local _target=""
     local _projectSearchName="binutils-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -883,7 +919,7 @@ buildInstallBinutils() {
     local _postBuildCommand=""
     local _exeToTest="dllwrap.exe --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"                      
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"                      
 }
 
 buildInstallPkgconfig() {
@@ -908,7 +944,7 @@ buildInstallPkgconfig() {
     
         ad_cd "$MINGLE_BUILD_DIR"
     
-        buildInstallGeneric "$_project" true true "" true true "--with-internal-glib" "" "pkg-config" "" "pkg-config --version"
+        buildInstallGeneric "$_project" true true true "" true true "--with-internal-glib" "" "pkg-config" "" "pkg-config --version"
     else
         mingleLog "$_project already installed."
     fi
@@ -998,6 +1034,7 @@ installLibTiff() {
     local _target=""
     local _projectSearchName="tiff-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1008,16 +1045,23 @@ installLibTiff() {
     local _postBuildCommand=""
     local _exeToTest="tiffinfo"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
 }
 
 buildInstallSigc() {
+    ad_clearEnv
+    
+    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -Ofast -funroll-all-loops"
+    export "CPPFLAGS=$CFLAGS"
+    export "LDFLAGS=-L/mingw/lib"
+    
     local _projectName="libsigc"
     local _version="$AD_LIBSIGC_VERSION"
     local _url="http://ftp.gnome.org/pub/GNOME/sources/libsigc++/$AD_LIBSIGC_PATH_VERSION/libsigc++-$AD_LIBSIGC_VERSION.tar.xz"
     local _target=""
     local _projectSearchName="libsigc++-*"
-    local _cleanEnv=true #true/false
+    local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1028,7 +1072,7 @@ buildInstallSigc() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
 }
 
 buildInstallPixman() {
@@ -1038,6 +1082,7 @@ buildInstallPixman() {
     local _target=""
     local _projectSearchName="pixman-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1048,7 +1093,7 @@ buildInstallPixman() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"   
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"   
 }
 
 buildInstallCairo() {
@@ -1060,6 +1105,7 @@ buildInstallCairo() {
     local _target=""
     local _projectSearchName="$_project"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1070,7 +1116,7 @@ buildInstallCairo() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
     
     if ! ( [ -e "/mingw/lib/libcairo.dll" ] && [ -e "/mingw/bin/libcairo.dll" ] );then
         mingleLog "Manually generating libcairo DLL..." true
@@ -1103,6 +1149,7 @@ buildInstallCairomm() {
     local _target=""
     local _projectSearchName="cairomm-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1113,7 +1160,7 @@ buildInstallCairomm() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"   
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"   
 }
 
 buildInstallPolarSSL() {
@@ -1190,6 +1237,7 @@ buildInstallLibXML2() {
     local _target=""
     local _projectSearchName="libxml2-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1200,7 +1248,7 @@ buildInstallLibXML2() {
     local _postBuildCommand=""
     local _exeToTest="xmllint --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallXerces() {
@@ -1210,6 +1258,7 @@ buildInstallXerces() {
     local _target=""
     local _projectSearchName="xerces-c*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=true #true/false
     local _aclocalFlags="-I m4"
     local _runAutoconf=true #true/false
@@ -1220,7 +1269,7 @@ buildInstallXerces() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallLibXSLT() {
@@ -1252,7 +1301,7 @@ buildInstallLibXSLT() {
 
     ad_cd "$MINGLE_BUILD_DIR"
     
-    buildInstallGeneric "$_project" false false "" false true "" "" "xsltproc" "" "xsltproc --version"
+    buildInstallGeneric "$_project" false true false "" false true "" "" "xsltproc" "" "xsltproc --version"
 }
 
 buildInstallCurl() {
@@ -1280,7 +1329,7 @@ buildInstallCurl() {
         mkdir -p /mingw/share/curl
     fi
     
-    buildInstallGeneric "$_project" true false "" false true "--with-ca-bundle=$MINGLE_BASE/mingw64/share/curl/ca-bundle.crt" "" "libcurl.a" "" "curl --version"
+    buildInstallGeneric "$_project" true true false "" false true "--with-ca-bundle=$MINGLE_BASE/mingw64/share/curl/ca-bundle.crt" "" "libcurl.a" "" "curl --version"
 }
 
 buildInstallAPR() {
@@ -1311,7 +1360,7 @@ buildInstallAPR() {
 
     ad_cd ".."
     
-    buildInstallGeneric "apr-*" false false "" true true "--enable-shared" "" "libapr-1.a" "" "apr-1-config --version"
+    buildInstallGeneric "apr-*" false true false "" true true "--enable-shared" "" "libapr-1.a" "" "apr-1-config --version"
 
     mkdir -p /mingw/include/apr-1/arch/win32
     cp -f $_projectDir/include/arch/apr_private_common.h /mingw/include/apr-1/arch
@@ -1347,7 +1396,7 @@ buildInstallAPRUtil() {
         
         ad_cd ".."
         
-        buildInstallGeneric "$_project" false true "-I build" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
+        buildInstallGeneric "$_project" false true true "-I build" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
     else
         mingleLog "$_project Already Installed." true
     fi
@@ -1553,7 +1602,7 @@ buildInstallGTKDoc() {
             ad_patch "gtk-mingw.patch"
         fi
 
-        buildInstallGeneric "$_project" true true "-I m4" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
+        buildInstallGeneric "$_project" true true true "-I m4" true true "$_additionFlags" "" "$_binCheck" "" "$_exeToTest"
 
         ad_cd "$MINGLE_BUILD_DIR"
     else
@@ -1609,7 +1658,7 @@ buildInstallSVN() {
         # Make sure you build this with drive substitution turned on, "setup.bat -b -c"
         # Otherwise, gcc will crash from parsing paths, which concatenate out too long.
         # This causes segfault.
-        buildInstallGeneric "$_project" false false "" false true "$_additionFlags" "" "$_binCheck" "" ""
+        buildInstallGeneric "$_project" false true false "" false true "$_additionFlags" "" "$_binCheck" "" ""
         
         ad_cd "$_projectdir"
         make check-swig-pl MAKE=dmake || mingleError $? "make check-swig-pl failed, aborting!"
@@ -1781,7 +1830,7 @@ buildInstallGraphite2() {
 
         cmake.exe -G "MSYS Makefiles" --debug-output -DGRAPHITE2_NTRACING=ON -DCMAKE_INSTALL_PREFIX=$MINGLE_BASE_MX/mingw64
 
-        buildInstallGeneric "$_project" true false "" false false "" "" "$_binCheck" "" ""
+        buildInstallGeneric "$_project" true true false "" false false "" "" "$_binCheck" "" ""
     else
         mingleLog "Already Installed."  
     fi
@@ -1794,6 +1843,7 @@ buildInstallHarfBuzz() {
     local _target="harfbuzz-$AD_HARFBUZZ_VERSION.zip"
     local _projectSearchName="harfbuzz-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
@@ -1804,7 +1854,7 @@ buildInstallHarfBuzz() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallSQLite() {
@@ -1814,6 +1864,7 @@ buildInstallSQLite() {
     local _target=""
     local _projectSearchName="sqlite-*"
     local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1829,7 +1880,7 @@ buildInstallSQLite() {
     export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -O2"
     export "CPPFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -O2"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallICU() {
@@ -1942,7 +1993,7 @@ buildInstallPostgres() {
     export "LDFLAGS=-L/mingw/lib"
     export "CPPFLAGS=-I/mingw/include  -D_WIN64 -DMS_WIN64"
 
-    buildInstallGeneric "$_project" false false "" true true "" "" "postgres" "" "postgres --version"
+    buildInstallGeneric "$_project" false true false "" true true "" "" "postgres" "" "postgres --version"
     
     if [ -e /mingw/lib/libpq.dll ]; then
         cp -rf /mingw/lib/libpq.dll /mingw/bin
@@ -1964,6 +2015,7 @@ buildInstallExpat() {
     local _target=""
     local _projectSearchName="expat-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1974,7 +2026,7 @@ buildInstallExpat() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallLibproj() {
@@ -1984,6 +2036,7 @@ buildInstallLibproj() {
     local _target=""
     local _projectSearchName="proj-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1994,7 +2047,7 @@ buildInstallLibproj() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallProjDatumgrid() {
@@ -2033,6 +2086,7 @@ buildInstallLibGeotiff() {
     local _target=""
     local _projectSearchName="libgeotiff-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -2043,12 +2097,12 @@ buildInstallLibGeotiff() {
     local _postBuildCommand=""
     local _exeToTest="geotifcp"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
     
     _configureFlags="--enable-static --enable-incode-epsg"
     _binCheck="libgeotiff.a"
     
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallLibgeos() {
@@ -2058,6 +2112,7 @@ buildInstallLibgeos() {
     local _target=""
     local _projectSearchName="geos-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=true #true/false
     local _aclocalFlags="-I macros"
     local _runAutoconf=true #true/false
@@ -2068,7 +2123,7 @@ buildInstallLibgeos() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallGDAL() {
@@ -2367,6 +2422,7 @@ buildInstallNode() {
     local _target=""
     local _projectSearchName="node-v*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -2377,7 +2433,7 @@ buildInstallNode() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallNodeMapnik() {
@@ -2387,6 +2443,7 @@ buildInstallNodeMapnik() {
     local _target=""
     local _projectSearchName="node-mapnik*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -2397,7 +2454,7 @@ buildInstallNodeMapnik() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallWAF() {
@@ -2421,7 +2478,7 @@ buildInstallWAF() {
 
         ad_cd ".."
 
-        buildInstallGeneric "waf-*" true false "" true true "" "" "waf" "" ""
+        buildInstallGeneric "waf-*" true true false "" true true "" "" "waf" "" ""
 
         ad_cd "$_projectdir"
 
@@ -2440,6 +2497,7 @@ buildInstallBoostJam() {
     local _target=""
     local _projectSearchName="boost-jam*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -2450,7 +2508,7 @@ buildInstallBoostJam() {
     local _postBuildCommand="cp bin.ntx86_64/*.exe /mingw/bin"
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallBoost() {
@@ -2477,7 +2535,7 @@ buildInstallBoost() {
         ad_cd ".."
 
         export CPLUS_INCLUDE_PATH=/mingw/include/python2.7
-        buildInstallGeneric "boost_*" true false "" true true "" "" "boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll" "" ""
+        buildInstallGeneric "boost_*" true true false "" true true "" "" "boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll" "" ""
         export CPLUS_INCLUDE_PATH=
 
         ad_relocate_bin_dlls "boost_"
@@ -2576,7 +2634,7 @@ buildInstallMapnik() {
 
     ad_cd ".."
 
-    buildInstallGeneric "$_project" true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
+    buildInstallGeneric "$_project" true true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=x86_64-w64-mingw32-gcc-4.7.2.exe CXX=x86_64-w64-mingw32-g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll || mingleError $? "Mapnik install failed, aborting!"
 }
@@ -2595,7 +2653,7 @@ buildInstallMapnikDev() {
     mingleCategoryDownload "mapnik" "master" "https://github.com/onepremise/mapnik/archive/master.zip" "mapnik-master.zip"
     mingleCategoryDecompress "mapnik" "master" "$_project"
 
-    buildInstallGeneric "$_project" true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=gcc.exe CXX=g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
+    buildInstallGeneric "$_project" true true false "" true true "PREFIX=/mingw CUSTOM_CXXFLAGS=-DMS_WIN64 CUSTOM_CXXFLAGS=-D__MINGW__ BOOST_INCLUDES=/mingw/include/boost-1_53 BOOST_LIBS=/mingw/lib CC=gcc.exe CXX=g++.exe" "" "mapnik.dll" "" "mapnik-config --version"
 
     ln -sf /mingw/lib/mapnik.dll /mingw/bin/mapnik.dll || mingleError $? "Mapnik install failed, aborting!"
 }
@@ -2751,7 +2809,7 @@ buildInstallPCRE() {
          ad_patch "pcre-mingw.patch"
     fi
 
-    buildInstallGeneric "$_project" true true "-I m4" true true "--disable-cpp --disable-shared --enable-newline-is-anycrlf --enable-utf8 --enable-unicode-properties" "" "pcregrep" "" ""
+    buildInstallGeneric "$_project" true true true "-I m4" true true "--disable-cpp --disable-shared --enable-newline-is-anycrlf --enable-utf8 --enable-unicode-properties" "" "pcregrep" "" ""
 }
 
 buildInstallCPANMinus() {
@@ -2878,7 +2936,61 @@ buildInstallTextInfo() {
          ad_patch "texinfo-mingw.patch"
     fi
 	
-    buildInstallGeneric "$_project" true true "-I gnulib/m4" true true "" "" "texi2any" "" "texi2any --version"
+    buildInstallGeneric "$_project" true true true "-I gnulib/m4" true true "" "" "texi2any" "" "texi2any --version"
+}
+
+buildInstallGetText() {
+    local _projectName="gettext"
+    local _version="0.19"
+    local _url="http://ftp.gnu.org/pub/gnu/gettext/gettext-$_version.tar.gz"
+    local _target=""
+    local _projectSearchName="gettext-*"
+    local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=false #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags="--enable-shared --enable-static"
+    local _makeParameters=""
+    local _binCheck="gettext"
+    local _postBuildCommand=""
+    local _exeToTest="gettext --version"
+    
+    mingleLog "Checking $_projectName..." true
+    if [ -e /mingw/bin/$_binCheck ]; then
+        mingleLog "$_projectName Already Installed." true
+        return
+    fi
+    
+    mingleLog "Building $_projectName..." true
+    
+    mingleCategoryDownload "$_projectName" "$_version" "$_url"
+    mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
+    
+    local _projectdir=$(ad_getDirFromWC $_projectSearchName)
+
+    ad_cd $_projectdir
+
+    if [ ! -e $_projectName-mingw.patch ]; then
+         cp $MINGLE_BASE/patches/$_projectName/$_version/$_projectName-mingw.patch .
+         ad_patch "$_projectName-mingw.patch"
+    fi
+    
+    ad_setDefaultEnv
+    
+    export "CFLAGS=-I/mingw/include -O2"
+    export "CPPFLAGS=$CFLAGS"
+    export "CXXFLAGS=$CPPFLAGS"
+    export "CC=x86_64-w64-mingw32-gcc"
+    export "CXX=x86_64-w64-mingw32-g++"    
+	
+    buildInstallGeneric "$_projectName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+
+    #Currently, msmerge hangs.
+    if [ -e /mingw/bin/msgmerge.exe ]; then
+        mv /mingw/bin/msgmerge.exe /mingw/bin/msgmerge.exe.disabled
+    fi
 }
 
 buildInstallSwig() {
@@ -2894,6 +3006,7 @@ buildInstallSwig() {
     local _target=""
     local _projectSearchName="swig-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -2904,7 +3017,7 @@ buildInstallSwig() {
     local _postBuildCommand=""
     local _exeToTest="swig -version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
     
     export "SWIG_LIB=/mingw/share/swig/2.0.10"
     echo "export SWIG_LIB=/mingw/share/swig/2.0.10">>/etc/profile
@@ -2917,6 +3030,7 @@ buildInstallJSONC() {
     local _target="json-c-$AD_JSONC_VERSION.zip"
     local _projectSearchName="json-c-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -2927,7 +3041,7 @@ buildInstallJSONC() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
 
     if [ ! -e /mingw/include/json ]; then
         ln -s /mingw/include/json-c/ /mingw/include/json || mingleError $? "json-c: ln failed, aborting!"
@@ -2956,7 +3070,7 @@ buildInstallPostGIS () {
         
     export "PG_CPPFLAGS=-D__ERRCODE_DEFINED_MS"
 
-    buildInstallGeneric "$_project" true false "" true true "--with-jsondir=/mingw" "" "/mingw/lib/postgresql/postgis-2.0.dll"
+    buildInstallGeneric "$_project" true true false "" true true "--with-jsondir=/mingw" "" "/mingw/lib/postgresql/postgis-2.0.dll"
 }
 
 updatePostgresSqlConf() {
@@ -3130,6 +3244,7 @@ buildInstalProtobuf() {
     local _target=""
     local _projectSearchName="protobuf-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=true #true/false
     local _aclocalFlags="-I m4"
     local _runAutoconf=true #true/false
@@ -3140,7 +3255,7 @@ buildInstalProtobuf() {
     local _postBuildCommand=""
     local _exeToTest=""
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallProtobufC() {
@@ -3198,6 +3313,7 @@ buildInstallOsm2pgsql() {
     local _target="osm2pgsql.zip"
     local _projectSearchName="osm2pgsql*"
     local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=true #true/false
     local _runACLocal=true #true/false
     local _aclocalFlags="-I m4"
     local _runAutoconf=true #true/false
@@ -3208,23 +3324,17 @@ buildInstallOsm2pgsql() {
     local _postBuildCommand=""
     local _exeToTest="osm2pgsql.exe --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallCPIO() {
-    export "CFLAGS=-I/mingw/include"
-    export "LDFLAGS=-L/mingw/lib -lmingle"
-    export "CPPFLAGS=$CFLAGS"
-    export "LIBS="
-    export "CC=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
-    export "CXX=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
-    
     local _projectName="cpio"
     local _version="2.11"
-    local _url="http://ftp.gnu.org/gnu/cpio/cpio-2.11.tar.gz"
+    local _url="http://ftp.gnu.org/gnu/cpio/cpio-$_version.tar.gz"
     local _target=""
     local _projectSearchName="cpio-*"
     local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=false #true/false
     local _runACLocal=true #true/false
     local _aclocalFlags="-I m4"
     local _runAutoconf=true #true/false
@@ -3235,7 +3345,35 @@ buildInstallCPIO() {
     local _postBuildCommand=""
     local _exeToTest="cpio --version"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    if [ -e /mingw/bin/$_binCheck ]; then
+        mingleLog "$_projectName Already Installed." true
+        return;
+    fi
+    
+    mingleLog "Building $_projectName..." true
+
+    ad_setDefaultEnv
+    
+    export "CFLAGS=-D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -Ofast -funroll-all-loops -I/mingw/include"
+    export "LDFLAGS=-lws2_32"
+    export "CPPFLAGS=$CFLAGS -I/mingw/include"
+    export "LIBS=-lws2_32"
+    export "CC=x86_64-w64-mingw32-gcc"
+    export "CXX=x86_64-w64-mingw32-gcc"
+ 
+    mingleCategoryDownload "$_projectName" "$_version" "$_url"
+    mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
+
+    local _projectDir=$(ad_getDirFromWC "$_projectSearchName")
+
+    ad_cd "$_projectDir"
+
+    if [ ! -e $_projectName-mingw.patch ]; then
+        cp $MINGLE_BASE/patches/$_projectName/$_version/$_projectName-mingw.patch .
+        ad_patch "$_projectName-mingw.patch"
+    fi
+    
+    buildInstallGeneric "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
 
 buildInstallOpenJDK() {
@@ -3257,34 +3395,34 @@ buildInstallOpenJDK() {
 }
 
 buildInstallOpenFTA() {
+    export UPD_JH=`echo $JAVA_HOME | sed -e 's/ /\\\ /g'`
+    export UPD_JH_MX=`echo $JAVA_HOME_MX | sed -e 's/ /\\\ /g'`
+    
     local _projectName="OpenFTA"
     local _version="master"
     local _url="https://github.com/onepremise/OpenFTA/archive/master.zip"
     local _target="OpenFTA-master.zip"
     local _projectSearchName="OpenFTA-*"
     local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=false #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
     local _runConfigure=false #true/false
     local _configureFlags=""
-    local _makeParameters=""
-    local _binCheck="xxxx"
+    local _makeParameters="JAVAHOME=\"$UPD_JH\" CFLAGS=\"-I$UPD_JH/include/win32  -O -fPIC -c\" LFLAGS=\"-shared -fPIC -v -L$UPD_JH/lib\" JLIBRARIES=\" -L$UPD_JH_MX/jre/lib/amd64 -L$UPD_JH_MX/jre/lib/i386 -ljawt\""
+    local _binCheck="fta.dll"
     local _postBuildCommand=""
     local _exeToTest=""
-
-    mingleLog "Checking $_project..." true
+    
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
-        mingleLog "Building $_project..." true
-        
-        mingleCategoryDownload "$_projectName" "master" "$_url" "$_target"
-        mingleCategoryDecompress "$_projectName" "master" "$_projectSearchName"
-
+        mingleLog "Updating $_projectName..." true
         local _projectDir=$(ad_getDirFromWC "$_projectSearchName")
         
-        ad_cd $_projectDir/src
-        
-        
+        ad_cd $_projectDir/bin
+        mv libfta.so fta.dll
     else
         mingleLog "Already Installed."
     fi
@@ -3299,8 +3437,10 @@ MINGLE_SUITE_CA=false
 MINGLE_SUITE_DB=false
 MINGLE_SUITE_PERL=false
 MINGLE_SUITE_TEXT=false
+MINGLE_SUITE_UTIL=false
 MINGLE_SUITE_SWIG=false
 MINGLE_SUITE_PYTHON=false
+MINGLE_SUITE_JAVA=false
 MINGLE_SUITE_DEBUG=false
 MINGLE_SUITE_BOOST=false
 MINGLE_SUITE_IMAGE_TOOLS=false
@@ -3360,7 +3500,7 @@ suiteBase() {
     
     buildInstallRagel
     buildInstallCMake
-    #buildInstallCPIO
+    buildInstallGperf
 }
 
 suiteXML() {
@@ -3534,6 +3674,47 @@ suiteTextEditorsConvertors() {
     fi
 
     buildInstallTextInfo
+    buildInstallGetText
+}
+
+suiteUtilities() {
+    if $MINGLE_SUITE_UTIL ; then
+        return;
+    else
+        MINGLE_SUITE_UTIL=true
+    fi
+
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suitePython
+        suitePerl
+        suiteTextEditorsConvertors
+    fi
+    
+    buildInstallCPIO
+}
+
+suiteJava() {
+    if $MINGLE_SUITE_JAVA ; then
+        return;
+    else
+        MINGLE_SUITE_JAVA=true
+    fi
+
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteTextEditorsConvertors
+        suiteUtilities
+    fi
+    
+    buildInstallOpenJDK
 }
 
 suiteSwig() {
@@ -3850,6 +4031,7 @@ suiteAllExceptMapnik() {
     suitePerl
     suiteSwig
     suiteTextEditorsConvertors
+    suiteUtilities
     suiteSCMTools
     suiteImageTools
     suiteMathLibraries

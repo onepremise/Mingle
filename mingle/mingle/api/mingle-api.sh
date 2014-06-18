@@ -273,9 +273,10 @@ ad_setDefaultEnv() {
     export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -Ofast -funroll-all-loops"
     export "LDFLAGS=-L/mingw/lib"
     export "CPPFLAGS=-I/mingw/include  -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO  -Ofast -funroll-all-loops"
+    export "CXXFLAGS=$CPPFLAGS"
     export "CRYPTO=POLARSSL"
     export "CC=x86_64-w64-mingw32-gcc"
-    export "CXX=x86_64-w64-mingw32-gcc"
+    export "CXX=x86_64-w64-mingw32-g++"
     unset LIBS
 
     ad_cd $MINGLE_BUILD_DIR
@@ -298,11 +299,12 @@ ad_patch() {
 
 ad_configure() {
     local _project=$1
-    local _runACLocal=$2
-    local _aclocalFlags=$3
-    local _runAutoconf=$4
+    local _runAutoGenIfExists=$2 #true/false
+    local _runACLocal=$3 #true/false
+    local _aclocalFlags=$4
+    local _runAutoconf=$5 #true/false
     local _options="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32"
-    local _additionFlags=$5
+    local _additionFlags=$6
     
     mingleLog "Configuring..." true
     
@@ -310,7 +312,7 @@ ad_configure() {
 
     ad_cd $_projectDir
     
-    if [ -e "autogen.sh" ]; then
+    if [ -e "autogen.sh" ] && $_runAutoGenIfExists; then
         mingleLog
         mingleLog "Autgen.sh script found, executing script..."
         mingleLog "  _options=$_options"
@@ -324,10 +326,8 @@ ad_configure() {
         fi
     elif [ -e "configure.ac" ] || [ -e "configure.in" ]; then
         if [ -e "/mingw/bin/autoconf" ];then
-            echo
-
             if $_runACLocal; then
-                echo "Executing aclocal $_aclocalFlags..."
+                mingleLog "Executing aclocal $_aclocalFlags..." true
                 
                 if [ -n "$_aclocalFlags" ]; then
                     aclocal $_aclocalFlags || mingleError $? "ad_configure aclocal failed, aborting!"
@@ -339,15 +339,10 @@ ad_configure() {
             if $_runAutoconf; then
                 mingleLog "Executing autoconf..." true
                 autoconf || mingleError $? "ad_configure autoconf failed, aborting!"
+                
+                mingleLog "Executing autoheader..." true
+                autoheader               
             fi
-
-            echo
-        fi
-        
-        if [ -e "/mingw/bin/autoheader" ];then
-            mingleLog "Executing autoheader..." true
-
-            autoheader
         fi
     fi
         
@@ -443,10 +438,13 @@ ad_make() {
 
     mingleLog "Executing make $_makeParameters..." true
 
-    if [ -n "$_makeParameters" ]; then    
-        make "$_makeParameters" || mingleError $? "make failed, aborting!"
+    if [ -n "$_makeParameters" ]; then
+        IFS=';'
+        local _args=(`echo $_makeParameters|sed -e 's/\([^=]\)\" /\1\";/g' -e s/\"//g`)
+        IFS=' '
+        make "${_args[@]}" || mingleError $? "make failed, aborting!"
         mingleLog "Executing make install $_makeParameters..." true
-        make install "$_makeParameters" || mingleError $? "make install failed, aborting"
+        make install "${_args[@]}" || mingleError $? "make install failed, aborting"
     else
         make || mingleError $? "make failed, aborting!"
         mingleLog "Executing make install $_makeParameters..." true
@@ -530,37 +528,39 @@ mingleAutoBuild() {
     local _target="$4"
     local _projectSearchName="$5"
     local _cleanEnv=$6 #true/false
-    local _runACLocal=$7 #true/false
-    local _aclocalFlags="$8"
-    local _runAutoconf=$9 #true/false
-    local _runConfigure=${10} #true/false
-    local _configureFlags="${11}"
-    local _makeParameters="${12}"
-    local _binCheck="${13}"
-    local _postBuildCommand="${14}"
-    local _exeToTest="${15}"
+    local _runAutoGenIfExists=$7 #true/false
+    local _runACLocal=$8 #true/false
+    local _aclocalFlags="$9"
+    local _runAutoconf=${10} #true/false
+    local _runConfigure=${11} #true/false
+    local _configureFlags="${12}"
+    local _makeParameters="${13}"
+    local _binCheck="${14}"
+    local _postBuildCommand="${15}"
+    local _exeToTest="${16}"
     
     mingleLog "Auto-check for binary $_binCheck..." true
     
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleCategoryDownload $_projectName $_version $_url $_target
         mingleCategoryDecompress $_projectName $_version "$_projectSearchName"
-        buildInstallGeneric "$_projectSearchName" $_cleanEnv $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+        buildInstallGeneric "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
     fi
 }
 
 buildInstallGeneric() {
     local _project="$1"
     local _cleanEnv=$2 #true/false
-    local _runACLocal=$3 #true/false
-    local _aclocalFlags="$4"
-    local _runAutoconf=$5 #true/false
-    local _runConfigure=$6 #true/false
-    local _configureFlags="$7"
-    local _makeParameters="$8"
-    local _binCheck="$9"
-    local _postBuildCommand="${10}"
-    local _exeToTest="${11}"
+    local _runAutoGenIfExists=$3 #true/false
+    local _runACLocal=$4 #true/false
+    local _aclocalFlags="$5"
+    local _runAutoconf=$6 #true/false
+    local _runConfigure=$7 #true/false
+    local _configureFlags="$8"
+    local _makeParameters="$9"
+    local _binCheck="${10}"
+    local _postBuildCommand="${11}"
+    local _exeToTest="${12}"
 
     ad_cd $MINGLE_BUILD_DIR
 
@@ -591,7 +591,7 @@ buildInstallGeneric() {
         local _projectDir=$(ad_getDirFromWC "$_project")
 
         if $_runConfigure; then
-            ad_configure "$_project" $_runACLocal "$_aclocalFlags" $_runAutoconf "$_configureFlags"
+            ad_configure "$_project" $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf "$_configureFlags"
         fi
 
         local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"`
@@ -876,6 +876,14 @@ mingleDecompress() {
             ad_cd $_targetDir
         else
             ad_cd $MINGLE_BUILD_DIR
+        fi
+        
+        _removePath="${_decompFile##*/}"
+        _targetdircheck="${_removePath%.*}"
+
+        if [ -d "$_targetdircheck" ]; then
+            mingleLog "$_targetdircheck already decompressed. Using..." true
+            return
         fi
             
         mingleLog "Decompressing $_decompFile to `pwd`..."

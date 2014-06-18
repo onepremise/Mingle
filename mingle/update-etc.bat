@@ -29,6 +29,10 @@ IF NOT EXIST "msys\etc\profile" (
     msys\bin\bash -l -c "echo 'export MINGLE_BASE=%CD%'|sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g' -e 's|\/$||g' >>/etc/profile"
     msys\bin\bash -l -c "echo 'export CURL_CA_BUNDLE=$MINGLE_BASE/mingw64/share/curl/ca-bundle.crt'>>/etc/profile"
     msys\bin\bash -l -c "echo 'export GIT_SSL_CAPATH=$MINGLE_BASE/mingw64/share/curl/ca-bundle.crt'>>/etc/profile"
+    REM msys\bin\bash -l -c "echo 'export\"JAVA_HOME=%JAVA_HOME%\"'|sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g' -e 's|\/$||g' -e 's| |\\\ |g' -e 's|export|export |g'>>/etc/profile"
+    msys\bin\bash -l -c "echo 'export\"JAVA_HOME=%JAVA_HOME%\"'|sed -e 's/\([a-xA-X]\):\\\/\/\1\//' -e 's/\\\/\//g' -e 's|\/$||g' -e 's|export|export |g'>>/etc/profile"
+    msys\bin\bash -l -c "echo 'export\"JAVA_HOME_MX=%JAVA_HOME:\=/%\"'|sed -e 's/\\\/\//g' -e 's/\/$//g' -e 's|export|export |g'>>/etc/profile"
+    msys\bin\bash -l -c "echo 'export JAVAHOME=$JAVA_HOME'>>/etc/profile"
 ) ELSE (
     ECHO.
     ECHO "Updating MSYS profile..."
@@ -48,7 +52,18 @@ IF NOT EXIST "msys\etc\profile" (
     
     msys\bin\bash -l -c "newpath=!NPATH!; sed -e 's|export MINGLE_BASE=.*|export MINGLE_BASE='$newpath'|' -e 's|\/$||g' /etc/profile>/etc/profile2"
     ECHO.>>msys\etc\profile2
-    msys\bin\bash -l -c "mv /etc/profile2 /etc/profile"    
+    msys\bin\bash -l -c "mv /etc/profile2 /etc/profile"
+    
+    SET JH=!JAVA_HOME:\=/!
+    SET JHB=/!JH::=!
+    
+    msys\bin\bash -l -c "sed -e 's|JAVA_HOME=.*|JAVA_HOME=!JHB!""|' /etc/profile>/etc/profile2"
+    ECHO.>>msys\etc\profile2
+    msys\bin\bash -l -c "mv /etc/profile2 /etc/profile" 
+    
+    msys\bin\bash -l -c "sed -e 's|JAVA_HOME_MX=.*|JAVA_HOME_MX=!JH!""|' /etc/profile>/etc/profile2"
+    ECHO.>>msys\etc\profile2
+    msys\bin\bash -l -c "mv /etc/profile2 /etc/profile" 
 )
 
 REM ===========================================================================
