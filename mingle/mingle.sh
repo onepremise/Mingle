@@ -1769,7 +1769,7 @@ buildInstallFontConfig() {
         ad_cd ".."
     
         #export "CFLAGS=$CFLAGS -DFC_DBG_CONFIG"
-        ad_configure "$_project" false "" true "$_additionFlags"
+        ad_configure "$_project" true false "" true "$_additionFlags"
         ad_make "$_project"
 
         local _shortProjectName=$(ad_getShortLibName $_project)
@@ -2144,7 +2144,7 @@ buildInstallGDAL() {
 
         local _projectDir=$(ad_getDirFromWC "$_project")
   
-        ad_configure "$_project" false "" true "$_configureFlags"
+        ad_configure "$_project" true false "" true "$_configureFlags"
 
         #Not sure why but libtool crashes in bash if you have CPPFLAGS set
         ad_clearEnv
@@ -2237,7 +2237,7 @@ buildInstallPython() {
         export "LDFLAGS=-Ldependencies/lib"
         export "LIBS=-lmingle"
                
-        ad_configure "$_project" false "" true "--with-libs=-lmingle --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
+        ad_configure "$_project" true false "" true "--with-libs=-lmingle --with-system-expat --enable-loadable-sqlite-extensions build_alias=x86_64-w64-mingw32 host_alias=x86_64-w64-mingw32 target_alias=x86_64-w64-mingw32"
 
         ad_cd "$MINGLE_BUILD_DIR"        
 
