@@ -1342,6 +1342,8 @@ buildInstallAPR() {
     
     mingleLog "Building $_project..." true
 
+    ad_clearEnv
+    
     export "CFLAGS=-I/mingw/include -D__MINGW__ -DAPU_DECLARE_STATIC"
     export "LDFLAGS=-L/mingw/lib"
     export "CPPFLAGS=-I/mingw/include -D__MINGW__  -DAPU_DECLARE_STATIC"
@@ -1626,7 +1628,7 @@ buildInstallQt() {
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
     local _runConfigure=true #true/false
-    local _configureFlags=""
+    local _configureFlags="-platform win32-g++"
     local _makeParameters=""
     local _binCheck="qt"
     local _postBuildCommand=""
