@@ -374,7 +374,11 @@ ad_configure() {
                 if [ -z "$_test" ]; then
                     _test=`cat out.txt|grep -i "Unknown option:"|sed -e "s/^.*\(--.*\)/\1/"`
                     if [ -z "$_test" ]; then
-                        _configFailed=true
+                        #--host=x86_64-w64-mingw32: invalid command-line switch
+                        _test=`cat out.txt|grep -i "invalid command-line switch"|sed -e "s/\(--.*\): invalid.*/\1/"`
+                        if [ -z "$_test" ]; then
+                            _configFailed=true
+                        fi
                     fi
                 fi
             fi

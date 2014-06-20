@@ -1614,6 +1614,48 @@ buildInstallGTK() {
     local _project="gtk-*"
 }
 
+buildInstallQt() {
+    local _projectName="qt"
+    local _version="5.3.0"
+    local _url="http://download.qt-project.org/archive/qt/5.3/5.3.0/single/qt-everywhere-opensource-src-5.3.0.tar.gz"
+    local _target="qt-$_version.tar.gz"
+    local _projectSearchName="qt-*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="qt"
+    local _postBuildCommand=""
+    local _exeToTest=""
+    
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+}
+
+buildInstallBitcoin() {
+    local _projectName="bitcoin"
+    local _version="master"
+    local _url="https://github.com/bitcoin/bitcoin/archive/master.zip"
+    local _target="bitcoin-$_version.zip"
+    local _projectSearchName="bitcoin-*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="bitcoin-qt"
+    local _postBuildCommand=""
+    local _exeToTest=""
+
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+}
+
 buildInstallSVN() {
     local _project="subversion-*"
     local _additionFlags="--libdir=/mingw/lib/perl/site/lib --with-swig --with-berkeley-db --enable-bdb6 --with-apr-util=/mingw --with-apr=/mingw --with-serf=/mingw --enable-shared PERL=/mingw/bin/perl MAKE=dmake"
@@ -2985,7 +3027,7 @@ buildInstallGetText() {
     export "CC=x86_64-w64-mingw32-gcc"
     export "CXX=x86_64-w64-mingw32-g++"    
 	
-    buildInstallGeneric "$_projectName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    buildInstallGeneric "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 
     #Currently, msmerge hangs.
     if [ -e /mingw/bin/msgmerge.exe ]; then
@@ -3448,6 +3490,7 @@ MINGLE_SUITE_MATH=false
 MINGLE_SUITE_SCM=false
 MINGLE_SUITE_GRAPHICS=false
 MINGLE_SUITE_UI=false
+MINGLE_SUITE_CRYPTOCURRENCY=false
 MINGLE_SUITE_GEO_SPATIAL=false
 MINGLE_MAPNIK=false
 MINGLE_MAPNIK_TOOLS=false
@@ -3848,6 +3891,7 @@ suiteUILibraries() {
     fi
 
     buildInstallGTK
+    buildInstallQt
 }
 
 suiteMathLibraries() {
@@ -3868,6 +3912,20 @@ suiteMathLibraries() {
         suiteDebugTest
         suiteBoost
     fi
+}
+
+suiteCryptoCurrency() {
+    if $MINGLE_SUITE_CRYPTOCURRENCY ; then
+        return;
+    else
+        MINGLE_SUITE_CRYPTOCURRENCY=true
+    fi
+    
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteUILibraries
+    fi
+    
+    buildInstallBitcoin
 }
 
 suiteGrpahicLibraries() {
