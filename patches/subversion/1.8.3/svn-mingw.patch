@@ -34,6 +34,18 @@ $ diff -u subversion-1.7.9/autogen.sh subversion-1.7.9/autogen2.sh
      AC_MSG_RESULT([yes])
      AC_DEFINE([SVN_AVOID_CIRCULAR_LINKAGE_AT_ALL_COSTS_HACK], 1,
                [Define if circular linkage is not possible on this platform.])
+$ diff -u subversion-1.8.3/configure.ac subversion-1.8.3/configure2.ac
+--- subversion-1.8.3/configure.ac       2014-06-21 15:04:58 -0400
++++ subversion-1.8.3/configure2.ac      2014-06-21 14:59:41 -0400
+@@ -696,6 +696,7 @@
+    translated.  Expand to X. */
+ #define U_(x) x
+ #ifdef ENABLE_NLS
++#define SVN_LOCALE_RELATIVE_PATH "../share/locale"
+ #include <locale.h>
+ #include <libintl.h>
+ /* Indicate to translators that string X should be translated.  At run time,
+
 --- subversion-1.7.9/build/get-py-info.py	2009-11-16 14:07:18 -0500
 +++ subversion-1.7.9/build/get-py-info2.py	2013-08-05 13:08:34 -0400
 @@ -79,7 +79,7 @@

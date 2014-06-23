@@ -1622,17 +1622,27 @@ buildInstallQt() {
     local _url="http://download.qt-project.org/archive/qt/5.3/5.3.0/single/qt-everywhere-opensource-src-5.3.0.tar.gz"
     local _target="qt-$_version.tar.gz"
     local _projectSearchName="qt-*"
+    local _projectDir=$(ad_getDirFromWC "$_projectSearchName")
     local _cleanEnv=true #true/false
     local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
     local _runConfigure=true #true/false
-    local _configureFlags="-platform win32-g++"
+    local _configureFlags="-prefix /mingw -shared -opensource -confirm-license -platform win32-g++ -developer-build -c++11 -system-freetype -iconv -icu -system-harfbuzz -opengl desktop -openssl -plugin-sql-odbc -plugin-sql-sqlite -qt-sql-psql -nomake tests -I /mingw/include -L $_projectDir/dependencies -L /mingw/lib -v"
     local _makeParameters=""
     local _binCheck="qt"
     local _postBuildCommand=""
     local _exeToTest=""
+    
+    ad_setDefaultEnv
+
+    ad_cd $_projectDir
+    
+    ad_mkdir "$_projectDir/dependencies"
+    
+    cp /mingw/lib/libicui18n.dll.a dependencies/libicuin.dll.a || mingleError $? "cp failed, aborting!"
+    cp /mingw/lib/libicui18n.dll dependencies/libicuin.dll || mingleError $? "cp failed, aborting!"
     
     mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
@@ -1660,7 +1670,7 @@ buildInstallBitcoin() {
 
 buildInstallSVN() {
     local _project="subversion-*"
-    local _additionFlags="--libdir=/mingw/lib/perl/site/lib --with-swig --with-berkeley-db --enable-bdb6 --with-apr-util=/mingw --with-apr=/mingw --with-serf=/mingw --enable-shared PERL=/mingw/bin/perl MAKE=dmake"
+    local _additionFlags="--libdir=/mingw/lib/perl/site/lib --with-swig --with-berkeley-db --enable-bdb6 --disable-nls --with-apr-util=/mingw --with-apr=/mingw --with-serf=/mingw --enable-shared PERL=/mingw/bin/perl MAKE=dmake"
     local _binCheck="svn.exe"
     local _exeToTest="svn --version"
 
@@ -1673,7 +1683,7 @@ buildInstallSVN() {
         export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -I$MINGLE_BASE_MX/mingw64/include/apr-1 -DAPU_DECLARE_STATIC -DAPR_DECLARE_STATIC -D__MINGW32__"
         export "CPPFLAGS=$CFLAGS"
         export "LDFLAGS=$LDFLAGS -L$MINGLE_BASE_MX/mingw64/x86_64-w64-mingw32/lib -lole32 -lmlang -luuid -lws2_32"
-        export "LIBS=-lserf-1 -lpsapi -lversion"
+        export "LIBS=-lintl -lserf-1 -lpsapi -lversion"
         
         mingleLog MINGLE_BASE_MX = $MINGLE_BASE_MX
         
@@ -1692,7 +1702,9 @@ buildInstallSVN() {
             cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/auth-mingw.patch .
             ad_patch "auth-mingw.patch" 
             cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/compiler-mingw.patch .
-            ad_patch "compiler-mingw.patch"            
+            ad_patch "compiler-mingw.patch"
+            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/svn-po-mingw.patch .
+            ad_patch "svn-po-mingw.patch"
         fi
         
         dos2unix build/generator/templates/build-outputs.mk.ezt
@@ -1703,6 +1715,8 @@ buildInstallSVN() {
         # Otherwise, gcc will crash from parsing paths, which concatenate out too long.
         # This causes segfault.
         buildInstallGeneric "$_project" false true false "" false true "$_additionFlags" "" "$_binCheck" "" ""
+        
+        export "CFLAGS=$CFLAGS -I$MINGLE_BASE_MX/mingw64/include"
         
         ad_cd "$_projectdir"
         make check-swig-pl MAKE=dmake || mingleError $? "make check-swig-pl failed, aborting!"
@@ -1735,14 +1749,16 @@ buildInstallGit() {
 
         ad_cd $_project
 
-        make CFLAGS='-O2 -Icompat/win32 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 prefix=/mingw CC=gcc INSTALL=/bin/install sysconfdir=/mingw/etc|| mingleError $? "make failed, aborting!"
+        make CFLAGS='-O2 -Icompat/win32 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' LDFLAGS='-L/mingw/lib -lgrep' USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 prefix=/mingw CC=gcc INSTALL=/bin/install sysconfdir=/mingw/etc EXTLIBS='-lgrep -lws2_32 -lpcre -lz -liconv -lintl' || mingleError $? "make failed, aborting!"
 
-        make install CFLAGS='-O2 -Icompat/win32 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' LDFLAGS=-L/mingw/lib NO_GETTEXT=Yes USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 prefix=/mingw CC=gcc INSTALL=/bin/install sysconfdir=/mingw/etc|| mingleError $? "make install failed, aborting!"
+        make install CFLAGS='-O2 -Icompat/win32 -I/mingw/include -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO -DWIN32 -DHAVE_MMAP -DPCRE_STATIC' LDFLAGS='-L/mingw/lib -lgrep' USE_LIBPCRE=Yes LIBPCREDIR=/mingw CURLDIR=/mingw EXPATDIR=/mingw PERL_PATH=/mingw/bin/perl.exe PYTHON_PATH=/mingw/bin/python.exe TCL_PATH=/mingw/bin/tclsh.exe TCLTK_PATH=/mingw/bin/tclsh.exe DEFAULT_EDITOR=/bin/vim NO_R_TO_GCC_LINKER=Yes NEEDS_LIBICONV=True V=1 prefix=/mingw CC=gcc INSTALL=/bin/install sysconfdir=/mingw/etc EXTLIBS='-lgrep -lws2_32 -lpcre -lz -liconv -lintl' || mingleError $? "make install failed, aborting!"
 
         ad_cd ".."
         
 	git config --system push.default matching
         git config --system http.sslcainfo $CURL_CA_BUNDLE
+        
+        ad_run_test "$_exeToTest"
     else
         mingleLog "Already Installed."          
     fi
@@ -3023,7 +3039,7 @@ buildInstallGetText() {
     
     ad_setDefaultEnv
     
-    export "CFLAGS=-I/mingw/include -O2"
+    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -O2 -D__MINGW32__"
     export "CPPFLAGS=$CFLAGS"
     export "CXXFLAGS=$CPPFLAGS"
     export "CC=x86_64-w64-mingw32-gcc"
@@ -3034,6 +3050,14 @@ buildInstallGetText() {
     #Currently, msmerge hangs.
     if [ -e /mingw/bin/msgmerge.exe ]; then
         mv /mingw/bin/msgmerge.exe /mingw/bin/msgmerge.exe.disabled
+    fi
+    
+    #copy libgrep.a and langinfo.h
+    #gettext-tools/libgrep
+    
+    if [ -e /mingw/bin/msgmerge.exe ]; then
+        cp gettext-tools/libgrep/libgrep.a /mingw/lib
+        cp gettext-tools/libgrep/langinfo.h /mingw/include
     fi
 }
 
@@ -3888,8 +3912,16 @@ suiteUILibraries() {
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
-        suiteImageTools
+        suiteBase
         suiteXML
+        suiteFonts
+        suiteEncryption
+        suiteNetworking
+        suiteDatabase
+        suitePython
+        suiteDebugTest
+        suiteBoost
+        suiteImageTools
     fi
 
     buildInstallGTK
