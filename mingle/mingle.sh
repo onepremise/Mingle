@@ -3039,7 +3039,7 @@ buildInstallGetText() {
     
     ad_setDefaultEnv
     
-    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -O2 -D__MINGW32__"
+    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -O2 -D__MINGW32__"
     export "CPPFLAGS=$CFLAGS"
     export "CXXFLAGS=$CPPFLAGS"
     export "CC=x86_64-w64-mingw32-gcc"
