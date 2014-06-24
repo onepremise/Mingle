@@ -888,10 +888,18 @@ mingleDecompress() {
         
         _removePath="${_decompFile##*/}"
         _targetdircheck="${_removePath%.*}"
-
+        
+        mingleLog "Scanning $_removePath, $_targetdircheck..." true
         if [ -d "$_targetdircheck" ]; then
             mingleLog "$_targetdircheck already decompressed. Using..." true
             return
+        else
+            mingleLog "Secondary Scan using $_project..." true
+            _targetdircheck=$(ad_getDirFromWC "$_project")
+            if [ -d "$_targetdircheck" ]; then
+	        mingleLog "$_targetdircheck already decompressed. Using..." true
+                return
+            fi
         fi
             
         mingleLog "Decompressing $_decompFile to `pwd`..."
@@ -965,6 +973,7 @@ mingleCategoryDownload() {
   if [ -z "$_overidename" ]; then
       _outputfile=$MINGLE_CACHE/$_projectName/$_version/$_file
   else
+      mingleLog "Using overide=$_overidename..." true
       _outputfile=$MINGLE_CACHE/$_projectName/$_version/$_overidename
   fi
   

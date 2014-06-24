@@ -22,19 +22,6 @@ else
     exit 9999
 fi
 
-export AD_MFOUR=1.4.16
-export AD_AUTOCONF=2.69
-export AD_AUTOMAKE=1.12.5
-export AD_GMP=5.1.2
-export AD_MPFR=3.1.2
-export AD_MPC=1.0.1
-export AD_MINGW64_CRT=2.0.8
-export AD_PEXPORTS=0.46
-export AD_GLIBC=2.16.0
-export AD_BZIP=1.0.6
-export AD_SEVENZIPPATH=9.20
-export AD_SEVENZIP=920
-export AD_PTHREADS=2-9-1
 export AD_PKGCONFIG=0.27.1
 export AD_BINUTILS_VERSION=2.23.1
 export AD_ICU_VERSION=50_1
@@ -189,16 +176,19 @@ updateTarCommand() {
 
 
 install7Zip() {
+    local _version="920"
+    local _versionpath="9.20"
+    
     if ! 7za &> /dev/null; then
         mingleLog "Installing 7zip..." true
         
-        mingleCategoryDownload "7zip" "$AD_SEVENZIP" "http://sourceforge.net/projects/sevenzip/files/7-Zip/$AD_SEVENZIPPATH/7za$AD_SEVENZIP.zip/download" "7za$AD_SEVENZIP.zip"
+        mingleCategoryDownload "7zip" "$_version" "http://sourceforge.net/projects/sevenzip/files/7-Zip/$_versionpath/7za$_version.zip/download" "7za$_version.zip"
         
         ad_cd "$MINGLE_BUILD_DIR"
         
         ad_mkdir 7zip
         
-        mingleCategoryDecompress "7zip" "$AD_SEVENZIP" "7za$AD_SEVENZIP.*" "7zip"
+        mingleCategoryDecompress "7zip" "$_version" "7za$_version.*" "7zip"
         
         ad_cd 7zip
     
@@ -246,8 +236,8 @@ buildInstallSomething() {
 
 buildInstallM4() {
     local _projectName="m4"
-    local _version="$AD_MFOUR"
-    local _url="http://ftp.gnu.org/gnu/m4/m4-$AD_MFOUR.tar.xz"
+    local _version="1.4.16"
+    local _url="http://ftp.gnu.org/gnu/m4/m4-$_version.tar.xz"
     local _target=""
     local _projectSearchName="m4-*"
     local _cleanEnv=true #true/false
@@ -269,8 +259,8 @@ buildInstallAutoconf() {
     export "M4=/bin/m4"
 
     local _projectName="autoconf"
-    local _version="$AD_AUTOCONF"
-    local _url="http://ftp.gnu.org/gnu/autoconf/autoconf-$AD_AUTOCONF.tar.gz"
+    local _version="2.69"
+    local _url="http://ftp.gnu.org/gnu/autoconf/autoconf-$_version.tar.gz"
     local _target=""
     local _projectSearchName="autoconf-*"
     local _cleanEnv=true #true/false
@@ -290,8 +280,8 @@ buildInstallAutoconf() {
 
 buildInstallAutoMake() {
     local _projectName="automake"
-    local _version="$AD_AUTOMAKE"
-    local _url="http://ftp.gnu.org/gnu/automake/automake-$AD_AUTOMAKE.tar.gz"
+    local _version="1.12.5"
+    local _url="http://ftp.gnu.org/gnu/automake/automake-$_version.tar.gz"
     local _target=""
     local _projectSearchName="automake-*"
     local _cleanEnv=true #true/false
@@ -318,8 +308,8 @@ buildInstallGMP() {
     export "CPPFLAGS=$CFLAGS"
     
     local _projectName="gmp"
-    local _version="$AD_GMP"
-    local _url="ftp://ftp.gmplib.org/pub/gmp-$AD_GMP/gmp-$AD_GMP.tar.xz"
+    local _version="5.1.2"
+    local _url="ftp://ftp.gmplib.org/pub/gmp-$_version/gmp-$_version.tar.xz"
     local _target=""
     local _projectSearchName="gmp-*"
     local _cleanEnv=false #true/false
@@ -339,8 +329,8 @@ buildInstallGMP() {
 
 buildInstallMPFR() {
     local _projectName="mpfr"
-    local _version="$AD_MPFR"
-    local _url="http://www.mpfr.org/mpfr-current/mpfr-$AD_MPFR.tar.xz"
+    local _version="3.1.2"
+    local _url="http://www.mpfr.org/mpfr-current/mpfr-$_version.tar.xz"
     local _target=""
     local _projectSearchName="mpfr-*"
     local _cleanEnv=true #true/false
@@ -360,8 +350,8 @@ buildInstallMPFR() {
 
 buildInstallMPC() {
     local _projectName="mpc"
-    local _version="$AD_MPC"
-    local _url="http://multiprecision.org/mpc/download/mpc-$AD_MPC.tar.gz"
+    local _version="1.0.1"
+    local _url="http://multiprecision.org/mpc/download/mpc-$_version.tar.gz"
     local _target=""
     local _projectSearchName="mpc-*"
     local _cleanEnv=true #true/false
@@ -381,8 +371,8 @@ buildInstallMPC() {
 
 buildInstallMingw64CRT() {
     local _projectName="mingw-w64"
-    local _version="$AD_MPC"
-    local _url="http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-v$AD_MINGW64_CRT.tar.gz"
+    local _version="2.0.8"
+    local _url="http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-v$_version.tar.gz"
     local _target=""
     local _projectSearchName="mingw-w64-*"
     local _cleanEnv=false #true/false
@@ -428,8 +418,8 @@ buildInstallLibtool() {
 
 buildInstallPExports() {
     local _projectName="pexports"
-    local _version="$AD_PEXPORTS"
-    local _url="http://downloads.sourceforge.net/project/mingw/MinGW/Extension/pexports/pexports-$AD_PEXPORTS/pexports-$AD_PEXPORTS-mingw32-src.tar.xz"
+    local _version="0.46"
+    local _url="http://downloads.sourceforge.net/project/mingw/MinGW/Extension/pexports/pexports-$_version/pexports-$_version-mingw32-src.tar.xz"
     local _target=""
     local _projectSearchName="pexports-*"
     local _cleanEnv=true #true/false
@@ -470,8 +460,8 @@ buildInstallGenDef() {
 
 buildInstallGLibC() {
     local _projectName="glibc"
-    local _version="$AD_GLIBC"
-    local _url="http://ftp.gnu.org/gnu/libc/glibc-$AD_GLIBC.tar.xz"
+    local _version="2.16.0"
+    local _url="http://ftp.gnu.org/gnu/libc/glibc-$_version.tar.xz"
     local _target=""
     local _projectSearchName="glibc-*"
     local _cleanEnv=true #true/false
@@ -799,13 +789,14 @@ buildInstallZlib() {
 
 buildInstallBzip2() {
     local _project="bzip2-*"
+    local _version="1.0.6"
 
     mingleLog "Building bzip2..." true
     
     if [ ! -e /mingw/bin/bzip2 ]; then
-        mingleCategoryDownload "bzip2" "$AD_BZIP" "http://www.bzip.org/$AD_BZIP/bzip2-$AD_BZIP.tar.gz"
+        mingleCategoryDownload "bzip2" "$_version" "http://www.bzip.org/$_version/bzip2-$_version.tar.gz"
 			        
-        mingleCategoryDecompress "bzip2" "$AD_BZIP" "$_project"
+        mingleCategoryDecompress "bzip2" "$_version" "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
     
@@ -881,13 +872,14 @@ buildInstallLibiconv() {
 }
 
 buildInstallPThreads() {
+    local _version="2-9-1"
     if [ ! -e /mingw/bin/pthreadGC2.dll ]; then
         mingleLog "Installing pThreads..." true
         
         local _project="pthreads-*"
 
-        mingleCategoryDownload "pthreads" "$AD_PTHREADS" "ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-$AD_PTHREADS-release.zip"
-        mingleCategoryDecompress "pthreads" "$AD_PTHREADS" "$_project"
+        mingleCategoryDownload "pthreads" "$_version" "ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-$_version-release.zip"
+        mingleCategoryDecompress "pthreads" "$_version" "$_project"
 
         ad_cd Pre-built.2
 
@@ -1061,7 +1053,7 @@ buildInstallSigc() {
     local _target=""
     local _projectSearchName="libsigc++-*"
     local _cleanEnv=false #true/false
-    local _runAutoGenIfExists=true #true/false
+    local _runAutoGenIfExists=false #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=true #true/false
@@ -1629,22 +1621,32 @@ buildInstallQt() {
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
     local _runConfigure=true #true/false
-    local _configureFlags="-prefix /mingw -shared -opensource -confirm-license -platform win32-g++ -developer-build -c++11 -system-freetype -iconv -icu -system-harfbuzz -opengl desktop -openssl -plugin-sql-odbc -plugin-sql-sqlite -qt-sql-psql -nomake tests -I /mingw/include -L $_projectDir/dependencies -L /mingw/lib -v"
+    local _configureFlags="-prefix /mingw -shared -opensource -confirm-license -platform win32-g++ -developer-build -c++11 -fontconfig -system-freetype -iconv -icu -system-harfbuzz -opengl desktop -openssl -plugin-sql-odbc -plugin-sql-sqlite -qt-pcre -qt-sql-psql -nomake tests -I /mingw/include -L $_projectDir/dependencies -L /mingw/lib -v"
     local _makeParameters=""
     local _binCheck="qt"
     local _postBuildCommand=""
     local _exeToTest=""
     
-    ad_setDefaultEnv
+    mingleLog "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        mingleLog "Building $_projectName..." true
+        
+        mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
+        mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
 
-    ad_cd $_projectDir
+        local _projectdir=$(ad_getDirFromWC $_projectSearchName)
+        
+        ad_cd "$_projectdir"        
     
-    ad_mkdir "$_projectDir/dependencies"
+        ad_setDefaultEnv
     
-    cp /mingw/lib/libicui18n.dll.a dependencies/libicuin.dll.a || mingleError $? "cp failed, aborting!"
-    cp /mingw/lib/libicui18n.dll dependencies/libicuin.dll || mingleError $? "cp failed, aborting!"
+        ad_mkdir "dependencies"
     
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+        cp /mingw/lib/libicui18n.dll.a dependencies/libicuin.dll.a || mingleError $? "cp failed, aborting!"
+        cp /mingw/lib/libicui18n.dll dependencies/libicuin.dll || mingleError $? "cp failed, aborting!"
+    
+        mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    fi
 }
 
 buildInstallBitcoin() {
@@ -1674,7 +1676,7 @@ buildInstallSVN() {
     local _binCheck="svn.exe"
     local _exeToTest="svn --version"
 
-    echo "Checking for binary $_binCheck..."
+    mingleLog "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleLog "Building $_project..." true
         
@@ -3055,7 +3057,10 @@ buildInstallGetText() {
     #copy libgrep.a and langinfo.h
     #gettext-tools/libgrep
     
-    if [ -e /mingw/bin/msgmerge.exe ]; then
+    ad_cd $_projectdir
+    
+    if [ -e gettext-tools/libgrep/libgrep.a ]; then
+        mingleLog "Installing libgrep..." true
         cp gettext-tools/libgrep/libgrep.a /mingw/lib
         cp gettext-tools/libgrep/langinfo.h /mingw/include
     fi
