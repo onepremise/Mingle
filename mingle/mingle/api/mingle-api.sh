@@ -63,7 +63,7 @@ ad_isDateNewerThanFileModTime() {
 ad_getDirFromLocWC() {
     local _project="$1"
     local _directory="$2"
-    local _result=`find $_directory -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
+    local _result=`find $_directory -mindepth 1 -maxdepth 1 -name "$_project" -prune -type d -print | head -1`
 
     echo "$_result"
 }
@@ -587,7 +587,7 @@ buildInstallGeneric() {
     mingleLog "  _exeToTest:        $_exeToTest"
     mingleLog "Checking for binary $_binCheck..." true
     
-    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+    if ! ( [ -f "/mingw/lib/$_binCheck" ] || [ -f "/mingw/bin/$_binCheck" ] );then
         mingleLog "Building $_project..." true
 
         if $_cleanEnv; then
@@ -890,12 +890,17 @@ mingleDecompress() {
         _targetdircheck="${_removePath%.*}"
         
         mingleLog "Scanning $_removePath, $_targetdircheck..." true
-        if [ -d "$_targetdircheck" ]; then
+        if [ -z "$_targetDir" ] && [ -d "$_targetdircheck" ]; then
             mingleLog "$_targetdircheck already decompressed. Using..." true
             return
         else
-            mingleLog "Secondary Scan using $_project..." true
-            _targetdircheck=$(ad_getDirFromWC "$_project")
+            mingleLog "Secondary Scan using $_project $_targetDir..." true
+            if [ -n "$_targetDir" ]; then
+                _targetdircheck=$(ad_getDirFromLocWC "$_project" "$_targetDir")
+            else
+                _targetdircheck=$(ad_getDirFromWC "$_project")
+            fi
+            
             if [ -d "$_targetdircheck" ]; then
 	        mingleLog "$_targetdircheck already decompressed. Using..." true
                 return

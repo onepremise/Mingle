@@ -1631,14 +1631,14 @@ buildInstallQt() {
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleLog "Building $_projectName..." true
         
+        ad_setDefaultEnv
+        
         mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
         mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
 
         local _projectdir=$(ad_getDirFromWC $_projectSearchName)
         
-        ad_cd "$_projectdir"        
-    
-        ad_setDefaultEnv
+        ad_cd "$_projectdir"
     
         ad_mkdir "dependencies"
     
@@ -1757,8 +1757,8 @@ buildInstallGit() {
 
         ad_cd ".."
         
-	git config --system push.default matching
-        git config --system http.sslcainfo $CURL_CA_BUNDLE
+	git config --system push.default matching || mingleError $? "git config failed, aborting!"
+        git config --system http.sslcainfo $CURL_CA_BUNDLE || mingleError $? "git config failed, aborting!"
         
         ad_run_test "$_exeToTest"
     else
@@ -2120,14 +2120,10 @@ buildInstallProjDatumgrid() {
     if [ ! -e /mingw/share/proj/ntv1_can.dat ]; then
         mingleLog "Building $_project..." true
         
-        if [ ! -e proj-datumgrid ]; then
-            mkdir proj-datumgrid
-        fi
-        
         mingleCategoryDownload "proj-datumgrid" "$AD_PROJ_GRIDS_VERSION" "http://download.osgeo.org/proj/proj-datumgrid-$AD_PROJ_GRIDS_VERSION.zip"
         mingleCategoryDecompress "proj-datumgrid" "$AD_PROJ_GRIDS_VERSION" "$_project" "proj-datumgrid"
         
-        ad_cd proj-datumgrid
+        ad_cd $MINGLE_BUILD_DIR/proj-datumgrid
 
         cp -rf * /mingw/share/proj || mingleError $? "cp failed, aborting!"
      
@@ -2135,7 +2131,7 @@ buildInstallProjDatumgrid() {
 
         mingleLog "export PROJ_LIB=/mingw/share/proj">>/etc/profile
 
-        ad_cd ".."
+        ad_cd "$MINGLE_BUILD_DIR"
     else
         mingleLog "Already Installed."        
     fi  
@@ -3041,7 +3037,7 @@ buildInstallGetText() {
     
     ad_setDefaultEnv
     
-    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -O2 -D__MINGW32__"
+    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -O2 -D__MINGW32__ -D__USE_MINGW_ANSI_STDIO"
     export "CPPFLAGS=$CFLAGS"
     export "CXXFLAGS=$CPPFLAGS"
     export "CC=x86_64-w64-mingw32-gcc"
