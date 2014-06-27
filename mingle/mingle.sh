@@ -3479,7 +3479,7 @@ buildInstallOpenFTA() {
     local _runAutoconf=false #true/false
     local _runConfigure=false #true/false
     local _configureFlags=""
-    local _makeParameters="JAVAHOME=\"$UPD_JH\" CFLAGS=\"-I$UPD_JH/include/win32  -O -fPIC -c\" LFLAGS=\"-shared -fPIC -v -L$UPD_JH/lib\" JLIBRARIES=\" -L$UPD_JH_MX/jre/lib/amd64 -L$UPD_JH_MX/jre/lib/i386 -ljawt\""
+    local _makeParameters="JAVAHOME=\"$UPD_JH\" JAVAC=\"$UPD_JH/bin/javac -XDignore.symbol.file\" CFLAGS=\"-I$UPD_JH/include/win32  -O -fPIC -c\" LFLAGS=\"-shared -fPIC -v -L$UPD_JH/lib\" JLIBRARIES=\" -L$UPD_JH_MX/jre/lib/amd64 -L$UPD_JH_MX/jre/lib/i386 -ljawt\""
     local _binCheck="fta.dll"
     local _postBuildCommand=""
     local _exeToTest=""
