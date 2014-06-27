@@ -28,13 +28,13 @@
    symbols.  Also, Solaris 8 <time.h> eventually includes itself
    recursively; if that is happening, just include the system <time.h>
    without adding our own declarations.  */
-//#if (defined __need_time_t || defined __need_clock_t \
-//     || defined __need_timespec \
-//     || defined _GL_TIME_H)
+#if (defined __need_time_t || defined __need_clock_t \
+     || defined __need_timespec \
+     || defined _GL_TIME_H)
 
-//# include_next <time.h>
+# include_next <time.h>
 
-//#else
+#else
 
 //# define _GL_TIME_H
 
@@ -559,5 +559,5 @@ _GL_WARN_ON_USE (asctime, "ctime_r can overrun buffers in some cases - "
                  "better use strftime (or even sprintf) instead");
 # endif
 
-//#endif
+#endif
 #endif
