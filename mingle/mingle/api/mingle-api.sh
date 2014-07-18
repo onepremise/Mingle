@@ -38,6 +38,12 @@ ad_cd() {
     cd $_dir || mingleError $? "cd failed, aborting!"
 }
 
+ad_cwd() {
+    local _curDir=`pwd -W | sed -e 's/\([a-xA-X]\):/\/\1/' -e 's/\\\/\//g' -e 's|\/$||g'`
+
+    echo $_curDir
+}
+
 ad_isDateNewerThanFileModTime() {
     local _checkdate=$1
     local _filename=$2
@@ -282,11 +288,37 @@ ad_setDefaultEnv() {
     ad_cd $MINGLE_BUILD_DIR
 }
 
+ad_auto_patch() {
+    local _project=$1
+    local _version=$2
+    local _projectPath=$3
+
+    if [ -e "$MINGLE_BASE/patches/$_project/$_version" ]; then
+        mingleLog "Patch directory found. Applying patches..." true
+
+        ad_cd $MINGLE_BASE/patches/$_project/$_version
+
+        find . -name "*.patch"|
+        while read filename; do
+            if [ ! -e $_projectPath/$filename ]; then
+                cp $filename $_projectPath/$filename  || mingleError $? "ad_auto_patch failed, aborting!"
+                ad_cd "$_projectPath"
+                ad_patch "$filename"
+                ad_cd $MINGLE_BASE/patches/$_project/$_version
+            else
+                mingleLog "Patch already applied, $filename."
+            fi
+        done
+
+        ad_cd "$_projectPath"
+    fi
+}
+
 ad_patch() {
     local _patchFile=$1
     local _workingDir=`pwd`
     
-    mingleLog "Patching..." true
+    mingleLog "Patching with $_patchFile..." true
 
     if [ "$MINGLE_BUILD_DIR" == "$_workingDir" ]; then
         mingleLog "Patching failed! Patch should be ran from project directory." true
@@ -321,7 +353,7 @@ ad_configure() {
         ./autogen.sh $_options $_additionFlags
         
         if [ $? -ge 1 ]; then
-            Echo "autogen failed. Trying without options."
+            mingleLog "autogen failed. Trying without options."
             ./autogen.sh
         fi
     elif [ -e "configure.ac" ] || [ -e "configure.in" ]; then

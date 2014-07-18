@@ -22,12 +22,6 @@ else
     exit 9999
 fi
 
-export AD_PKGCONFIG=0.27.1
-export AD_BINUTILS_VERSION=2.23.1
-export AD_ICU_VERSION=50_1
-export AD_ZLIB_VERSION=1.2.8
-
-export AD_LIBICONV=1.14
 export AD_POLAR_VERSION=1.2.3
 export AD_OPENSSL_VERSION=1.0.1c
 
@@ -458,6 +452,46 @@ buildInstallGenDef() {
     fi
 }
 
+buildInstallHexdump() {
+    local _projectName="hexdump"
+    local _version="1.0"
+    local _url="https://github.com/wahern/hexdump/archive/master.zip"
+    local _target="hexdump-$_version.zip"
+    local _projectSearchName="hexdump-*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=true #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="hexdump"
+    local _postBuildCommand=""
+    local _exeToTest="hexdump -V"
+
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        mingleLog "Building $_projectName..." true
+        
+        ad_setDefaultEnv
+        
+        mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
+        mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
+
+        local _projectdir=$(ad_getDirFromWC "$_projectSearchName")
+	
+	ad_cd $_projectdir
+	
+	make CFLAGS="-std=gnu99 -Ofast -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-error=clobbered" || mingleError $? "make failed, aborting!"
+	
+	cp $_binCheck /mingw/bin || mingleError $? "Failed to copy $_binCheck, aborting!"
+    else
+        mingleLog "$_project Already Installed." true
+    fi
+    
+    ad_run_test "$_exeToTest"	
+}
+
 buildInstallGLibC() {
     local _projectName="glibc"
     local _version="2.16.0"
@@ -756,13 +790,14 @@ buildInstallTk() {
 
 buildInstallZlib() {
     local _project="zlib-*"
+    local _version="1.2.8"
     
     if [ ! -e /mingw/bin/zlib1.dll ]; then
         mingleLog "Building zlib..." true
         
-        mingleCategoryDownload "zlib" "$AD_ZLIB_VERSION" "http://www.zlib.net/zlib-$AD_ZLIB_VERSION.tar.gz"
+        mingleCategoryDownload "zlib" "$_version" "http://www.zlib.net/zlib-$_version.tar.gz"
 		        
-        mingleCategoryDecompress "zlib" "$AD_ZLIB_VERSION" "$_project"
+        mingleCategoryDecompress "zlib" "$_version" "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
     
@@ -817,6 +852,7 @@ buildInstallBzip2() {
 
 buildInstallLibiconv() {
     local _project="libiconv-*"
+    local _version="1.14"
 
     mingleLog "Building libiconv..." true
 
@@ -825,9 +861,9 @@ buildInstallLibiconv() {
         return
     fi
     
-    mingleCategoryDownload "libiconv" "$AD_LIBICONV" "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$AD_LIBICONV.tar.gz"
+    mingleCategoryDownload "libiconv" "$_version" "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$_version.tar.gz"
 			        
-    mingleCategoryDecompress "libiconv" "$AD_LIBICONV" "$_project"
+    mingleCategoryDecompress "libiconv" "$_version" "$_project"
 
     local _projectdir=$(ad_getDirFromWC $_project)
     
@@ -895,8 +931,8 @@ buildInstallPThreads() {
 
 buildInstallBinutils() {   
     local _projectName="binutils"
-    local _version="$AD_BINUTILS_VERSION"
-    local _url="http://ftp.gnu.org/gnu/binutils/binutils-$AD_BINUTILS_VERSION.tar.gz"
+    local _version="2.23.1"
+    local _url="http://ftp.gnu.org/gnu/binutils/binutils-$_version.tar.gz"
     local _target=""
     local _projectSearchName="binutils-*"
     local _cleanEnv=true #true/false
@@ -916,12 +952,13 @@ buildInstallBinutils() {
 
 buildInstallPkgconfig() {
     local _project="pkg-config-*"
+    local _version=0.27.1
 
     if [ ! -e /mingw/bin/pkg-config ]; then
         mingleLog "Installing $_project..." true
         
-        mingleCategoryDownload "pkg-config" "$AD_PKGCONFIG" "http://pkgconfig.freedesktop.org/releases/pkg-config-$AD_PKGCONFIG.tar.gz"
-        mingleCategoryDecompress "pkg-config" "$AD_PKGCONFIG" "$_project"
+        mingleCategoryDownload "pkg-config" "$_version" "http://pkgconfig.freedesktop.org/releases/pkg-config-$_version.tar.gz"
+        mingleCategoryDecompress "pkg-config" "$_version" "$_project"
 
         ad_setDefaultEnv
 
@@ -1600,12 +1637,27 @@ buildInstallGTKDoc() {
 
         ad_cd "$MINGLE_BUILD_DIR"
     else
-        mingleLog "$_project Already Installed."
+        mingleLog "$_project Already Installed." true
     fi
 }
 
 buildInstallGTK() {
     local _project="gtk-*"
+}
+
+fixQTHeaderPaths() {
+    local _projectPath=$1
+    local _relPath=$2
+
+    ad_cd "$_projectPath/$_relPath"
+
+    find . -name "*_p.h"|
+    while read filename; do
+        sed 's/\.\.\/\.\.\/\.\.\/\.\.\/\.\.\//\.\.\/\.\.\/\.\.\/\.\.\//g' $filename>$filename.backup
+        mv $filename.backup $filename
+    done
+
+    ad_cd "$_projectPath"
 }
 
 buildInstallQt() {
@@ -1614,31 +1666,63 @@ buildInstallQt() {
     local _url="http://download.qt-project.org/archive/qt/5.3/5.3.0/single/qt-everywhere-opensource-src-5.3.0.tar.gz"
     local _target="qt-$_version.tar.gz"
     local _projectSearchName="qt-*"
-    local _projectDir=$(ad_getDirFromWC "$_projectSearchName")
-    local _cleanEnv=true #true/false
+    local _projectDir=$(ad_getDirFromWC $_projectSearchName)
+    local _cleanEnv=false #true/false
     local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
     local _runConfigure=true #true/false
-    local _configureFlags="-prefix /mingw -shared -opensource -confirm-license -platform win32-g++ -developer-build -c++11 -fontconfig -system-freetype -iconv -icu -system-harfbuzz -opengl desktop -openssl -plugin-sql-odbc -plugin-sql-sqlite -qt-pcre -qt-sql-psql -nomake tests -I /mingw/include -L $_projectDir/dependencies -L /mingw/lib -v"
+    local _configureFlags="-prefix /mingw -shared -opensource -confirm-license -platform win32-g++ -developer-build -c++11 -fontconfig -system-freetype -iconv -icu -system-harfbuzz -opengl desktop -openssl -plugin-sql-odbc -plugin-sql-sqlite -qt-pcre -qt-sql-psql -nomake tests -I /mingw/include -L $_projectDir/dependencies -L /mingw/lib -lfontconfig -lfreetype -v"
     local _makeParameters=""
-    local _binCheck="qt"
+    local _binCheck="qtdiag.exe"
     local _postBuildCommand=""
-    local _exeToTest=""
+    local _exeToTest="qtdiag.exe"
     
     mingleLog "Checking for binary $_binCheck..."
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleLog "Building $_projectName..." true
         
         ad_setDefaultEnv
-        
+
+        # -fno-strict-aliasing
+        export "CFLAGS=-I/mingw/include -I/mingw/include/freetype2 -D__MINGW__ -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -Wno-error=switch -Wno-error=strict-aliasing -Wno-error=sign-compare"
+        export "CPPFLAGS=$CFLAGS"
+        export "CXXFLAGS=$CFLAGS"
+
         mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
         mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
-
-        local _projectdir=$(ad_getDirFromWC $_projectSearchName)
         
-        ad_cd "$_projectdir"
+        ad_cd "$_projectDir"
+
+        fixQTHeaderPaths "$_projectDir" "qtactiveqt/include"
+        fixQTHeaderPaths "$_projectDir" "qtbase/include"
+        fixQTHeaderPaths "$_projectDir" "qtconnectivity/include"
+        fixQTHeaderPaths "$_projectDir" "qtdeclarative/include"
+        fixQTHeaderPaths "$_projectDir" "qtenginio/include"
+        fixQTHeaderPaths "$_projectDir" "qtlocation/include"
+        fixQTHeaderPaths "$_projectDir" "qtmultimedia/include"
+        fixQTHeaderPaths "$_projectDir" "qtquick1/include"
+        fixQTHeaderPaths "$_projectDir" "qtscript/include"
+        fixQTHeaderPaths "$_projectDir" "qtsensors/include"
+        fixQTHeaderPaths "$_projectDir" "qtserialport/include"
+        fixQTHeaderPaths "$_projectDir" "qtsvg/include"
+        fixQTHeaderPaths "$_projectDir" "qttools/include"
+        fixQTHeaderPaths "$_projectDir" "qtwebkit/include"
+        fixQTHeaderPaths "$_projectDir" "qtwebsockets/include"
+        fixQTHeaderPaths "$_projectDir" "qtwinextras/include"
+        fixQTHeaderPaths "$_projectDir" "qtx11extras/include"
+        fixQTHeaderPaths "$_projectDir" "qtxmlpatterns/include"
+
+        ad_cd "$_projectDir"
+
+        ad_auto_patch $_projectName $_version "$_projectDir"
+        
+        ad_cd "$_projectDir"
+
+        export "PATH=$PATH:$(ad_cwd)/qtbase/lib"
+
+        mingleLog "PATH=$PATH" true
     
         ad_mkdir "dependencies"
     
@@ -1646,6 +1730,11 @@ buildInstallQt() {
         cp /mingw/lib/libicui18n.dll dependencies/libicuin.dll || mingleError $? "cp failed, aborting!"
     
         mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+
+        export QT_PLUGIN_PATH=/mingw/plugins
+        echo "export QT_PLUGIN_PATH=/mingw/plugins">>/etc/profile
+    else
+        mingleLog "$_projectName Already Installed." true
     fi
 }
 
@@ -1655,19 +1744,49 @@ buildInstallBitcoin() {
     local _url="https://github.com/bitcoin/bitcoin/archive/master.zip"
     local _target="bitcoin-$_version.zip"
     local _projectSearchName="bitcoin-*"
-    local _cleanEnv=true #true/false
+    local _cleanEnv=false #true/false
     local _runAutoGenIfExists=true #true/false
     local _runACLocal=false #true/false
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
     local _runConfigure=true #true/false
-    local _configureFlags=""
+    local _configureFlags="--with-gui --with-qt-incdir=/mingw/include --with-qt-libdir=/mingw/lib --with-boost=/mingw --with-incompatible-bdb --enable-shared --enable-static=no"
     local _makeParameters=""
     local _binCheck="bitcoin-qt"
     local _postBuildCommand=""
     local _exeToTest=""
+ 
+     mingleLog "Checking for binary $_binCheck..."
+     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+         mingleLog "Building $_project..." true
+        
+         ad_setDefaultEnv
+    
+         #export "CFLAGS=$CFLAGS -I/mingw/include/boost-1_52 -DBOOST_USE_WINDOWS_H -DWIN32_LEAN_AND_MEAN"
+         #export "CPPFLAGS=$CPPFLAGS -I/mingw/include/boost-1_52 -DBOOST_USE_WINDOWS_H -DWIN32_LEAN_AND_MEAN"
+         #export "CXXFLAGS=$CXXFLAGS -I/mingw/include/boost-1_52 -DBOOST_USE_WINDOWS_H -DWIN32_LEAN_AND_MEAN"
 
-    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+         export "CFLAGS=$CFLAGS -I/mingw/include/boost-1_52 -DBOOST_USE_WINDOWS_H"
+         export "CPPFLAGS=$CPPFLAGS -I/mingw/include/boost-1_52 -DBOOST_USE_WINDOWS_H"
+         export "CXXFLAGS=$CXXFLAGS -I/mingw/include/boost-1_52 -DBOOST_USE_WINDOWS_H"
+         export "LDFLAGS=$LDFLAGS -lboost_program_options-48-mt-1_52"
+    
+         mingleCategoryDownload "$_projectName" "$_version" "$_url"
+         mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
+
+         local _projectdir=$(ad_getDirFromWC $_projectSearchName)
+        
+         ad_cd "$_projectdir"
+
+         if [ ! -e bitcoin-mingw.patch ]; then
+            cp $MINGLE_BASE/patches/$_projectName/$_version/bitcoin-mingw.patch .
+            ad_patch "bitcoin-mingw.patch"    
+         fi
+    
+         mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    else
+        mingleLog "$_projectName Already Installed." true
+    fi
 }
 
 buildInstallSVN() {
@@ -1726,7 +1845,7 @@ buildInstallSVN() {
         
         ad_cd "$MINGLE_BUILD_DIR"
     else
-        mingleLog "Already Installed."
+        mingleLog "$_project Already Installed." true
     fi
 
     ad_run_test "$_exeToTest"
@@ -1762,7 +1881,7 @@ buildInstallGit() {
         
         ad_run_test "$_exeToTest"
     else
-        mingleLog "Already Installed."          
+        mingleLog "$_project Already Installed." true      
     fi
     
     echo
@@ -1840,7 +1959,7 @@ buildInstallFontConfig() {
             
         ad_fix_shared_lib "$_shortProjectName"
     else
-        mingleLog "Already Installed."
+        mingleLog "$_project Already Installed." true
     fi
     
     ad_run_test "$_exeToTest"
@@ -1870,7 +1989,7 @@ buildInstallFreeType() {
 
         ad_cd ".."
     else
-        mingleLog "Already Installed."          
+        mingleLog "Already Installed." true
     fi
     
     echo
@@ -1947,14 +2066,15 @@ buildInstallSQLite() {
 
 buildInstallICU() {
     local _project="icu4c-*"
+    local _version="50_1"
     
     mingleLog "Checking $_project..." true
     
     if [ ! -e /mingw/lib/libicui18n.dll ]; then
         mingleLog "Building $_project..." true
         
-        mingleCategoryDownload "icu4c" "$AD_ICU_VERSION" "http://download.icu-project.org/files/icu4c/50.1/icu4c-$AD_ICU_VERSION-src.tgz"
-        mingleCategoryDecompress "icu4c" "$AD_ICU_VERSION" "$_project"
+        mingleCategoryDownload "icu4c" "$_version" "http://download.icu-project.org/files/icu4c/50.1/icu4c-$_version-src.tgz"
+        mingleCategoryDecompress "icu4c" "$_version" "$_project"
 
         #Apply patch http://bugs.icu-project.org/trac/ticket/9728
         mingleLog "Applying patch from http://bugs.icu-project.org/trac/ticket/9728..."
@@ -1971,7 +2091,7 @@ buildInstallICU() {
         cd icu || mingleError $? "cd failed, aborting!"
 		
 	    if [ ! -e icu-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/icu/$AD_ICU_VERSION/icu-mingw.patch .
+            cp $MINGLE_BASE/patches/icu/$_version/icu-mingw.patch .
             ad_patch "icu-mingw.patch"
         fi	
 		
@@ -2473,6 +2593,7 @@ buildInstallTileLite() {
     cd $_savedir
 }
 
+# Developer abandoned, left for Go.
 buildInstallNode() {
     local _projectName="node"
     local _version=""
@@ -3553,6 +3674,7 @@ suiteBase() {
     buildInstallMingw64CRT
     buildInstallPExports
     buildInstallGenDef
+    buildInstallHexdump
     
     buildInstallZlib
     buildInstallBzip2

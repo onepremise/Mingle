@@ -89,6 +89,8 @@ The following projects are fully building in the environment setup:
 * osm2pgsql
 * Automation tasks for setting up PostgresDB and importing OSM Data
 * OpenFTA
+* QT
+* Bitcoin-qt
 
 This build includes python27 with the sqlite3 extention:
 

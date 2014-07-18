@@ -43,28 +43,29 @@ IF NOT EXIST "msys\etc\profile" (
     SET NPATH=/!CPATH::=!
     
     msys\bin\bash -l -c "sed -e 's|export MINGLE_BASE_DOS=.*|export MINGLE_BASE_DOS='%CD:\=\\\\\\\\\\\\\\\%'|' -e 's|\\\*$||g' /etc/profile>/etc/profile2"
-    ECHO.>>msys\etc\profile2
     msys\bin\bash -l -c "mv /etc/profile2 /etc/profile"
     
     msys\bin\bash -l -c "sed -e 's|export MINGLE_BASE_MX=.*|export MINGLE_BASE_MX='%CD:\=/%'|' -e 's|\/$||g' /etc/profile>/etc/profile2"
-    ECHO.>>msys\etc\profile2
     msys\bin\bash -l -c "mv /etc/profile2 /etc/profile"    
     
     msys\bin\bash -l -c "newpath=!NPATH!; sed -e 's|export MINGLE_BASE=.*|export MINGLE_BASE='$newpath'|' -e 's|\/$||g' /etc/profile>/etc/profile2"
-    ECHO.>>msys\etc\profile2
     msys\bin\bash -l -c "mv /etc/profile2 /etc/profile"
     
     SET JH=!JAVA_HOME:\=/!
     SET JHB=/!JH::=!
     
     msys\bin\bash -l -c "sed -e 's|JAVA_HOME=.*|JAVA_HOME=!JHB!""|' /etc/profile>/etc/profile2"
-    ECHO.>>msys\etc\profile2
     msys\bin\bash -l -c "mv /etc/profile2 /etc/profile" 
     
     msys\bin\bash -l -c "sed -e 's|JAVA_HOME_MX=.*|JAVA_HOME_MX=!JH!""|' /etc/profile>/etc/profile2"
-    ECHO.>>msys\etc\profile2
     msys\bin\bash -l -c "mv /etc/profile2 /etc/profile" 
 )
+
+REM ===========================================================================
+REM REMOVE ALL TRAILING LINES
+REM ===========================================================================
+msys\bin\bash -l -c "sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba' /etc/profile>/etc/profile2"
+msys\bin\bash -l -c "mv /etc/profile2 /etc/profile"
 
 REM ===========================================================================
 REM SETUP FSTAB

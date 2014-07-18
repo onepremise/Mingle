@@ -23,6 +23,7 @@
 #endif
 
 #include <mingle/config.h>
+
 /* Don't get in the way of glibc when it includes time.h merely to
    declare a few standard symbols, rather than to declare all the
    symbols.  Also, Solaris 8 <time.h> eventually includes itself
@@ -38,7 +39,7 @@
 
 //# define _GL_TIME_H
 
-# include_next <time.h>
+#include_next <time.h>
 
 /* NetBSD 5.0 mis-defines NULL.  */
 # include <stddef.h>
@@ -364,10 +365,10 @@ _GL_WARN_EXTERN_C int _gl_warn_on_use
    Or they define it with the wrong member names or define it in <sys/time.h>
    (e.g., FreeBSD circa 1997).  Stock Mingw does not define it, but the
    pthreads-win32 library defines it in <pthread.h>.  */
-# if ! 1
+# if ! 0
 #  if 0
 #   include <sys/time.h>
-#  elif 0
+#  elif 1
 #   include <pthread.h>
 /* The pthreads-win32 <pthread.h> also defines a couple of broken macros.  */
 #   undef asctime_r
