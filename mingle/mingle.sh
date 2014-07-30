@@ -22,100 +22,6 @@ else
     exit 9999
 fi
 
-export AD_POLAR_VERSION=1.2.3
-export AD_OPENSSL_VERSION=1.0.1c
-
-export AD_LIBCURL_VERSION=7.28.1
-export AD_RAGEL_VERSION=6.8
-
-export AD_EXPAT_VERSION=2.1.0
-export AD_LIBXML2_VERSION=2.9.1
-
-export AD_CUNIT_VERSION=2.1-2
-export AD_GDB_VERSION=7.5
-
-export AD_TCL_VERSION_MAJOR=8.6
-export AD_TCL_VERSION_MINOR=.1
-export AD_TCL_VERSION=$AD_TCL_VERSION_MAJOR$AD_TCL_VERSION_MINOR
-
-export AD_TK_VERSION=8.6.1
-
-export AD_APR_VERSION=1.4.8
-export AD_APRUTIL_VERSION=1.5.2
-export AD_SERF_VERSION=1.3.1
-export AD_SVN_VERSION=1.8.3
-export AD_GIT_VERSION=
-
-export AD_LIBSIGC_PATH_VERSION=2.3
-export AD_LIBSIGC_VERSION=2.3.1
-
-export AD_BOOST_JAM_VERSION=3.1.18
-
-export AD_BOOST_MINOR_VERSION=52
-export AD_BOOST_PATH_VERSION=1."$AD_BOOST_MINOR_VERSION".0
-export AD_BOOST_VERSION=1_"$AD_BOOST_MINOR_VERSION"_0
-
-export AD_FONT_CONFIG=2.10.0
-export AD_FREETYPE_VERSION=2.4.10
-export AD_GRAPHITE2_VERSION=1.2.4
-export AD_HARFBUZZ_VERSION=0.9.25
-
-export AD_LIBPNG_MAJOR=1.6
-export AD_LIBPNG_MINOR=.2
-export AD_LIBPNG_VERSION=$AD_LIBPNG_MAJOR$AD_LIBPNG_MINOR
-export AD_LIBJPEG_VERSION=1.2.1
-export AD_TIFF_VERSION=4.0.3
-
-export AD_LIBXSLT_VERSION=1.1.27
-export AD_DOCBK_VERSION=1.76.1
-export AD_GTKDOC_VERSION=1.19
-export AD_GTK_VERSION=3.8.8
-
-export AD_PROJ_VERSION=4.8.0
-export AD_PROJ_GRIDS_VERSION=1.6RC1
-export AD_GEOTIFF_VERSION=1.4.0
-export AD_GDAL_VERSION=1.9.2
-export AD_GEOS_VERSION=3.3.6
-
-export AD_PIXMAN_VERSION=0.28.2
-export AD_CAIRO_VERSION=1.12.14
-export AD_CAIROMM_VERSION=1.10.0
-export AD_PYCAIRO_VERSION=1.10.0
-
-export AD_PYTHON_MAJOR=2.7
-export AD_PYTHON_MINOR=.3
-export AD_PYTHON_VERSION=$AD_PYTHON_MAJOR$AD_PYTHON_MINOR
-export AD_SETUPTOOLS_VERSION=0.6c11
-export AD_NOSE_VERSION=1.2.1
-export AD_WAF_VERSION=1.7.11
-export AD_SCONS_VERSION=2.3.0
-
-export AD_JSONC_VERSION=master
-
-export AD_XML_COMMONS_RESOLVER_VERSION=1.2
-export AD_DOCBOOK_XML_VERSION43=4.3
-export AD_DOCBOOK_XML_VERSION44=4.4
-export AD_DOCBOOK_XML_VERSION45=4.5
-
-export AD_SQLITE_VERSION=3071500
-export AD_BERKELEY_DB=6.0.20
-export AD_PERL_DB=0.53
-export AD_PERL_FILE_DB=1.829
-export AD_POSTGRES_VERSION=9.2.2
-export AD_POSTGIS_VERSION=2.0.3
-
-export AD_MAPNIK_VERSION=2.1.0
-
-export AD_SWIG_VERSION=2.0.10
-export AD_PERL_VERSION=5.18.0
-export AD_PERL_SHRT_VERSION=5.0
-export AD_PCRE_VERSION=8.33
-
-export AD_TEXTINFO=5.1
-
-export AD_PROTO_BUF=2.5.0
-export AD_PROTO_BUF_C=0.15
-
 #export POSTGIS_PATH=/mingw/var/lib/postgres/$AD_POSTGRES_VERSION/main
 export POSTGIS_PATH=/g/var/lib/postgres/$AD_POSTGRES_VERSION/main
 
@@ -515,8 +421,8 @@ buildInstallGLibC() {
 
 buildInstallRagel() {
     local _projectName="ragel"
-    local _version="$AD_RAGEL_VERSION"
-    local _url="http://www.complang.org/ragel/ragel-$AD_RAGEL_VERSION.tar.gz"
+    local _version="6.8"
+    local _url="http://www.complang.org/ragel/ragel-$_version.tar.gz"
     local _target=""
     local _projectSearchName="ragel-*"
     local _cleanEnv=true #true/false
@@ -581,28 +487,29 @@ buildInstallGperf() {
 # http://forums.codeblocks.org/index.php/topic,11301.0.html
 buildInstallGDB() {
     local _project="gdb-*"
+    local _version="7.5"
 
     if ad_isDateNewerThanFileModTime "2014-01-01" "/mingw/bin/gdb.exe"; then
         mingleLog "Building $_project..." true    
         
         ad_clearEnv
         
-        mingleCategoryDownload "gdb" "$AD_GDB_VERSION" "http://ftp.gnu.org/gnu/gdb/gdb-$AD_GDB_VERSION.tar.gz"
-        mingleCategoryDecompress "gdb" "$AD_GDB_VERSION" "$_project"
+        mingleCategoryDownload "gdb" "$_version" "http://ftp.gnu.org/gnu/gdb/gdb-$_version.tar.gz"
+        mingleCategoryDecompress "gdb" "$_version" "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
 
         ad_cd $_projectDir || mingleError $? "cd failed, aborting!"
         
         if [ ! -e gdb-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/gdb/$AD_GDB_VERSION/gdb-mingw.patch .
+            cp $MINGLE_BASE/patches/gdb/$_version/gdb-mingw.patch .
             ad_patch "gdb-mingw.patch"
         fi
 
 # This patch seems to regress all the py-gdb functionality.
 # Really wierd solution to getting python to work when it already does in mingw. Disabling.
 #        if [ ! -e gdb-python.patch ]; then
-#            cp $MINGLE_BUILD_DIR/patches/gdb/$AD_GDB_VERSION/gdb-python.patch .
+#            cp $MINGLE_BUILD_DIR/patches/gdb/$_version/gdb-python.patch .
 #            ad_patch "gdb-python.patch"
 #        fi
 
@@ -645,8 +552,8 @@ buildInstallGDB() {
 
 buildInstallCUnit() {    
     local _projectName="CUnit"
-    local _version="$AD_CUNIT_VERSION"
-    local _url="http://downloads.sourceforge.net/project/cunit/CUnit/$AD_CUNIT_VERSION/CUnit-$AD_CUNIT_VERSION-src.tar.bz2"
+    local _version="2.1-2"
+    local _url="http://downloads.sourceforge.net/project/cunit/CUnit/$_version/CUnit-$_version-src.tar.bz2"
     local _target=""
     local _projectSearchName="CUnit-*"
     local _cleanEnv=true #true/false
@@ -666,6 +573,9 @@ buildInstallCUnit() {
 
 buildInstallTCL() {
     local _project="tcl*"
+    local _majversion="8.6"
+    local _minversion=".1"
+    local _version="$_majversion$_minversion"
     #local _binCheck="xxx"
     local _binCheck="tclsh"
     local _exeToTest=""
@@ -675,23 +585,22 @@ buildInstallTCL() {
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleLog "Building $_project..." true
         
-        mingleCategoryDownload "tcl" "$AD_TCL_VERSION" "http://prdownloads.sourceforge.net/tcl/tcl$AD_TCL_VERSION-src.tar.gz"
+        mingleCategoryDownload "tcl" "$_version" "http://prdownloads.sourceforge.net/tcl/tcl$_version-src.tar.gz"
         
-        mingleCategoryDecompress "tcl" "$AD_TCL_VERSION" "$_project"
+        mingleCategoryDecompress "tcl" "$_version" "$_project"
 
         local _projectdir=$(ad_getDirFromWC "$_project")
 	
 	ad_cd $_projectdir
 	
 	if [ ! -e tcl-mingw.patch ]; then
-	        cp $MINGLE_BASE/patches/tcl/$AD_TCL_VERSION/tcl-mingw.patch .
+	        cp $MINGLE_BASE/patches/tcl/$_version/tcl-mingw.patch .
 	        ad_patch "tcl-mingw.patch"
         fi
         
         ad_cd win
         
         aclocal || mingleError $? "aclocal failed, aborting!"
-        
         autoconf || mingleError $? "autoconf failed, aborting!"
 
         ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --prefix=/mingw --enable-64bit --enable-shared=no
@@ -702,7 +611,7 @@ buildInstallTCL() {
 
         ad_cd /mingw/bin
         
-        local mm_ver=`echo $AD_TCL_VERSION_MAJOR|sed 's/\.//'`
+        local mm_ver=`echo $_majversion|sed 's/\.//'`
 
         ln -sf $_savedir/tclsh${mm_ver}s.exe tclsh.exe
 
@@ -730,7 +639,10 @@ buildInstallTCL() {
 }
 
 buildInstallTk() {
-    local _project="tk$AD_TCL_VERSION_MAJOR*"
+    local _majversion="8.6"
+    local _minversion=".1"
+    local _version="$_majversion$_minversion"
+    local _project="tk$_majversion*"
     local _cleanEnv=true
     local _binCheck="libtk86.a"
     local _postBuildCommand=""
@@ -743,16 +655,16 @@ buildInstallTk() {
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleLog "Building $_project..." true
         
-        mingleCategoryDownload "tk" "$AD_TK_VERSION" "http://prdownloads.sourceforge.net/tcl/tk$AD_TK_VERSION-src.tar.gz"
+        mingleCategoryDownload "tk" "$_version" "http://prdownloads.sourceforge.net/tcl/tk$_version-src.tar.gz"
 	        
-        mingleCategoryDecompress "tk" "$AD_TK_VERSION" "$_project"
+        mingleCategoryDecompress "tk" "$_version" "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
 		
 	cd $_projectDir || mingleError $? "cd 1 failed, aborting!"
 		
 	if [ ! -e tk-mingw.patch ]; then
-	    cp $MINGLE_BASE/patches/tk/$AD_TK_VERSION/tk-mingw.patch .
+	    cp $MINGLE_BASE/patches/tk/$_version/tk-mingw.patch .
 	    ad_patch "tk-mingw.patch"
         fi
 
@@ -980,12 +892,14 @@ buildInstallPkgconfig() {
 }
 
 installLibJPEG () {
+    local _version="1.2.1"
+    
     if [ ! -e /mingw/lib/libturbojpeg.a ]; then
         mingleLog "Installing libjpeg-turbo..." true
         
         ad_cd "$MINGLE_BUILD_DIR"
         
-        mingleCategoryDownload "libjpeg-turbo" "$AD_LIBJPEG_VERSION" "http://sourceforge.net/projects/libjpeg-turbo/files/$AD_LIBJPEG_VERSION/libjpeg-turbo-$AD_LIBJPEG_VERSION-gcc64.exe/download" "libjpeg-turbo-$AD_LIBJPEG_VERSION-gcc64.exe"
+        mingleCategoryDownload "libjpeg-turbo" "$_version" "http://sourceforge.net/projects/libjpeg-turbo/files/$_version/libjpeg-turbo-$_version-gcc64.exe/download" "libjpeg-turbo-$_version-gcc64.exe"
         
         STOREPATH=`pwd`
 
@@ -997,7 +911,7 @@ installLibJPEG () {
 
         DOSPATH=`cmd /c 'echo %CD%'`
         
-        ad_cd $MINGLE_CACHE/libjpeg-turbo/$AD_LIBJPEG_VERSION
+        ad_cd $MINGLE_CACHE/libjpeg-turbo/$_version
 
         EXECPATH=`pwd -W`
 
@@ -1031,11 +945,15 @@ installLibJPEG () {
 }
 
 installLibPNG() {
+    local _majorversion="1.6"
+    local _minorversion=".2"
+    local _version="$_majorversion$_minorversion"
+    
     if [ ! -e /mingw/bin/libpng*.dll ]; then
         mingleLog "Installing libPNG..." true
         
-        mingleCategoryDownload "libpng" "$AD_LIBPNG_VERSION" "ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng`echo $AD_LIBPNG_MAJOR|sed 's/\.//'`/libpng-$AD_LIBPNG_VERSION.tar.gz"
-        mingleCategoryDecompress "libpng" "$AD_LIBPNG_VERSION" "libpng-*"
+        mingleCategoryDownload "libpng" "$_version" "ftp://ftp.simplesystems.org/pub/libpng/png/src/history/libpng`echo $_majorversion|sed 's/\.//'`/libpng-$_version.tar.gz"
+        mingleCategoryDecompress "libpng" "$_version" "libpng-*"
         
         cd libpng-* || mingleError $? "cd failed, aborting!"
 
@@ -1058,8 +976,8 @@ installLibPNG() {
 
 installLibTiff() {
     local _projectName="tiff"
-    local _version="$AD_TIFF_VERSION"
-    local _url="ftp://ftp.remotesensing.org/pub/libtiff/tiff-$AD_TIFF_VERSION.tar.gz"
+    local _version="4.0.3"
+    local _url="ftp://ftp.remotesensing.org/pub/libtiff/tiff-$_version.tar.gz"
     local _target=""
     local _projectSearchName="tiff-*"
     local _cleanEnv=true #true/false
@@ -1078,15 +996,10 @@ installLibTiff() {
 }
 
 buildInstallSigc() {
-    ad_clearEnv
-    
-    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -Ofast -funroll-all-loops"
-    export "CPPFLAGS=$CFLAGS"
-    export "LDFLAGS=-L/mingw/lib"
-    
     local _projectName="libsigc"
-    local _version="$AD_LIBSIGC_VERSION"
-    local _url="http://ftp.gnome.org/pub/GNOME/sources/libsigc++/$AD_LIBSIGC_PATH_VERSION/libsigc++-$AD_LIBSIGC_VERSION.tar.xz"
+    local _version="2.3.1"
+    local _pathver="2.3"
+    local _url="http://ftp.gnome.org/pub/GNOME/sources/libsigc++/$_pathver/libsigc++-$_version.tar.xz"
     local _target=""
     local _projectSearchName="libsigc++-*"
     local _cleanEnv=false #true/false
@@ -1100,14 +1013,20 @@ buildInstallSigc() {
     local _binCheck="libsigc-2.0-0.dll"
     local _postBuildCommand=""
     local _exeToTest=""
+    
+    ad_clearEnv
+    
+    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -Ofast -funroll-all-loops"
+    export "CPPFLAGS=$CFLAGS"
+    export "LDFLAGS=-L/mingw/lib"    
 
     mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
 }
 
 buildInstallPixman() {
     local _projectName="pixman"
-    local _version="$AD_PIXMAN_VERSION"
-    local _url="http://www.cairographics.org/releases/pixman-$AD_PIXMAN_VERSION.tar.gz"
+    local _version="0.28.2"
+    local _url="http://www.cairographics.org/releases/pixman-$_version.tar.gz"
     local _target=""
     local _projectSearchName="pixman-*"
     local _cleanEnv=true #true/false
@@ -1129,8 +1048,8 @@ buildInstallCairo() {
     local _project="cairo-*"
         
     local _projectName="cairo"
-    local _version="$AD_CAIRO_VERSION"
-    local _url="http://www.cairographics.org/releases/cairo-$AD_CAIRO_VERSION.tar.xz"
+    local _version="1.12.14"
+    local _url="http://www.cairographics.org/releases/cairo-$_version.tar.xz"
     local _target=""
     local _projectSearchName="$_project"
     local _cleanEnv=true #true/false
@@ -1173,8 +1092,8 @@ buildInstallCairo() {
 
 buildInstallCairomm() {
     local _projectName="cairomm"
-    local _version="$AD_CAIROMM_VERSION"
-    local _url="http://www.cairographics.org/releases/cairomm-$AD_CAIROMM_VERSION.tar.gz"
+    local _version="1.10.0"
+    local _url="http://www.cairographics.org/releases/cairomm-$_version.tar.gz"
     local _target=""
     local _projectSearchName="cairomm-*"
     local _cleanEnv=true #true/false
@@ -1194,6 +1113,7 @@ buildInstallCairomm() {
 
 buildInstallPolarSSL() {
     local _project="polarssl-*"
+    local _version="1.2.3"
     local _additionFlags=""
     #local _binCheck="xxx"
     local _binCheck="polarssl_selftest.exe"
@@ -1208,8 +1128,8 @@ buildInstallPolarSSL() {
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
          mingleLog "Building $_project..." true
          
-        mingleCategoryDownload "polarssl" "$AD_POLAR_VERSION" "https://polarssl.org/download/polarssl-$AD_POLAR_VERSION-gpl.tgz"
-        mingleCategoryDecompress "polarssl" "$AD_POLAR_VERSION" "$_project"
+        mingleCategoryDownload "polarssl" "$_version" "https://polarssl.org/download/polarssl-$_version-gpl.tgz"
+        mingleCategoryDecompress "polarssl" "$_version" "$_project"
         
         local _projectdir=$(ad_getDirFromWC $_project)
         cd $_projectdir
@@ -1229,6 +1149,7 @@ buildInstallPolarSSL() {
 
 buildInstallLOpenSSL() {
     local _project="openssl-*"
+    local _version="1.0.1c"
     local _additionFlags=""
     local _binCheck="libssl.a"
     local _exeToTest="openssl version"
@@ -1238,8 +1159,8 @@ buildInstallLOpenSSL() {
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleLog "Building $_project..." true
          
-        mingleCategoryDownload "openssl" "$AD_OPENSSL_VERSION" "http://www.openssl.org/source/openssl-$AD_OPENSSL_VERSION.tar.gz"
-        mingleCategoryDecompress "openssl" "$AD_OPENSSL_VERSION" "$_project"        
+        mingleCategoryDownload "openssl" "$_version" "http://www.openssl.org/source/openssl-$_version.tar.gz"
+        mingleCategoryDecompress "openssl" "$_version" "$_project"        
         
         local _dir=$(ad_getDirFromWC "$_project")
         
@@ -1261,8 +1182,8 @@ buildInstallLOpenSSL() {
 
 buildInstallLibXML2() {
     local _projectName="libxml2"
-    local _version="$AD_LIBXML2_VERSION"
-    local _url="https://git.gnome.org/browse/libxml2/snapshot/libxml2-$AD_LIBXML2_VERSION.tar.gz"
+    local _version="2.9.1"
+    local _url="https://git.gnome.org/browse/libxml2/snapshot/libxml2-$_version.tar.gz"
     local _target=""
     local _projectSearchName="libxml2-*"
     local _cleanEnv=true #true/false
@@ -1303,6 +1224,7 @@ buildInstallXerces() {
 
 buildInstallLibXSLT() {
     local _project="libxslt-*"
+    local _version="1.1.27"
 
     if [ -e /mingw/bin/xsltproc ]; then
         mingleLog "$_project Already Installed." true
@@ -1316,15 +1238,15 @@ buildInstallLibXSLT() {
     export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64"
     export "CPPFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64"
  
-    mingleCategoryDownload "libxslt" "$AD_LIBXSLT_VERSION" "https://git.gnome.org/browse/libxslt/snapshot/libxslt-$AD_LIBXSLT_VERSION.tar.gz"
-    mingleCategoryDecompress "libxslt" "$AD_LIBXSLT_VERSION" "$_project"
+    mingleCategoryDownload "libxslt" "$_version" "https://git.gnome.org/browse/libxslt/snapshot/libxslt-$_version.tar.gz"
+    mingleCategoryDecompress "libxslt" "$_version" "$_project"
 
     local _projectDir=$(ad_getDirFromWC "$_project")
 
     ad_cd "$_projectDir"
 
     if [ ! -e xslt-mingw.patch ]; then
-        cp $MINGLE_BASE/patches/xslt/$AD_LIBXSLT_VERSION/xslt-mingw.patch .
+        cp $MINGLE_BASE/patches/xslt/$_version/xslt-mingw.patch .
         ad_patch "xslt-mingw.patch"
     fi
 
@@ -1335,6 +1257,7 @@ buildInstallLibXSLT() {
 
 buildInstallCurl() {
     local _project="curl-*"
+    local _version="7.28.1"
     
     if [ -e /mingw/lib/libcurl.a ]; then
         mingleLog "$_project Already Installed." true
@@ -1343,8 +1266,8 @@ buildInstallCurl() {
     
     mingleLog "Building $_project..." true
 
-    mingleCategoryDownload "curl" "$AD_LIBCURL_VERSION" "http://curl.haxx.se/download/curl-$AD_LIBCURL_VERSION.tar.bz2"
-    mingleCategoryDecompress "curl" "$AD_LIBCURL_VERSION" "$_project"   
+    mingleCategoryDownload "curl" "$_version" "http://curl.haxx.se/download/curl-$_version.tar.bz2"
+    mingleCategoryDecompress "curl" "$_version" "$_project"   
     
     local _projectDir=$(ad_getDirFromWC "$_project")
     
@@ -1363,6 +1286,7 @@ buildInstallCurl() {
 
 buildInstallAPR() {
     local _project="apr-*"
+    local _version="1.4.8"
 
     if [ -e /mingw/lib/libapr-1.a ]; then
         mingleLog "$_project Already Installed." true
@@ -1377,15 +1301,15 @@ buildInstallAPR() {
     export "LDFLAGS=-L/mingw/lib"
     export "CPPFLAGS=-I/mingw/include -D__MINGW__  -DAPU_DECLARE_STATIC"
 
-    mingleCategoryDownload "apr" "$AD_APR_VERSION" "http://archive.apache.org/dist/apr/apr-$AD_APR_VERSION.tar.gz"
-    mingleCategoryDecompress "apr" "$AD_APR_VERSION" "$_project"  
+    mingleCategoryDownload "apr" "$_version" "http://archive.apache.org/dist/apr/apr-$_version.tar.gz"
+    mingleCategoryDecompress "apr" "$_version" "$_project"  
     
     local _projectDir=$(ad_getDirFromWC "$_project")
 
     ad_cd "$_projectDir"
 
     if [ ! -e apr-mingw.patch ]; then
-        cp $MINGLE_BASE/patches/apr/$AD_APR_VERSION/apr-mingw.patch .
+        cp $MINGLE_BASE/patches/apr/$_version/apr-mingw.patch .
         ad_patch "apr-mingw.patch"
     fi
 
@@ -1400,6 +1324,7 @@ buildInstallAPR() {
 
 buildInstallAPRUtil() {
     local _project="apr-util-*"
+    local _version="1.5.2"
     local _additionFlags="--with-apr=/mingw/bin/apr-1-config --with-expat=/mingw --with-berkeley-db=/mingw/include:/mingw/lib --with-sqlite3=/mingw --with-pgsql=/mingw"
     local _binCheck="libaprutil-1.a"
     local _exeToTest="apu-1-config --version"
@@ -1413,15 +1338,15 @@ buildInstallAPRUtil() {
         export "LDFLAGS=-L/mingw/lib"
         export "CPPFLAGS=-I/mingw/include -D__MINGW__  -DAPU_DECLARE_STATIC"
         
-        mingleCategoryDownload "apr-util" "$AD_APRUTIL_VERSION" "http://archive.apache.org/dist/apr/apr-util-$AD_APRUTIL_VERSION.tar.gz"
-        mingleCategoryDecompress "apr-util" "$AD_APRUTIL_VERSION" "$_project"  
+        mingleCategoryDownload "apr-util" "$_version" "http://archive.apache.org/dist/apr/apr-util-$_version.tar.gz"
+        mingleCategoryDecompress "apr-util" "$_version" "$_project"  
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
         ad_cd "$_projectdir"    
 
         if [ ! -e apr-util-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/apr-util/$AD_APRUTIL_VERSION/apr-util-mingw.patch .
+            cp $MINGLE_BASE/patches/apr-util/$_version/apr-util-mingw.patch .
             ad_patch "apr-util-mingw.patch"
         fi
         
@@ -1435,6 +1360,7 @@ buildInstallAPRUtil() {
 
 buildInstallBerkeleyDB() {
     local _project="db-*"
+    local _version="6.0.20"
     local _additionFlags="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --enable-mingw --enable-cxx --disable-replication --enable-tcl --with-tcl=/mingw/lib --enable-stl --enable-compat185 --enable-dbm"
     local _binCheck="db_verify.exe"
     local _exeToTest="db_verify -V"
@@ -1447,15 +1373,15 @@ buildInstallBerkeleyDB() {
         
         export "LDFLAGS=$LDFLAGS -ltcl86"
 
-        mingleCategoryDownload "db" "$AD_BERKELEY_DB" "http://download.oracle.com/berkeley-db/db-$AD_BERKELEY_DB.tar.gz"
-        mingleCategoryDecompress "db" "$AD_BERKELEY_DB" "$_project" 
+        mingleCategoryDownload "db" "$_version" "http://download.oracle.com/berkeley-db/db-$_version.tar.gz"
+        mingleCategoryDecompress "db" "$_version" "$_project" 
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
         ad_cd "$_projectdir"
         
         if [ ! -e db-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/db/$AD_BERKELEY_DB/db-mingw.patch .
+            cp $MINGLE_BASE/patches/db/$_version/db-mingw.patch .
             ad_patch "db-mingw.patch"
         fi        
 
@@ -1479,6 +1405,11 @@ buildInstallBerkeleyDB() {
 
 buildInstallDocBook() {
     local _project="docbook-*"
+    local _xmlcommonsversion="1.2"
+    local _docbookversion="1.76.1"
+    local _docbook43version="4.3"
+    local _docbook44version="4.4"
+    local _docbook45version="4.5"
     local _shareDir=\$MINGLE_BASE_MX/mingw64/share
     local _shareDirVal=`eval echo "$_shareDir"`
     local _msysDir=`echo $(tr '[:upper:]' '[:lower:]' <<< ${MINGLE_BASE_MX:0:1})${MINGLE_BASE_MX:1}/msys`
@@ -1500,18 +1431,18 @@ buildInstallDocBook() {
     ad_mkdir $_shareDirVal/xml/docbook/stylesheet
     ad_mkdir $_shareDirVal/xml/docbook/stylesheet/docbook-xsl
 	    
-    mingleCategoryDownload "xml-commons-resolver" "$AD_XML_COMMONS_RESOLVER_VERSION" "http://archive.apache.org/dist/xerces/xml-commons/xml-commons-resolver-$AD_XML_COMMONS_RESOLVER_VERSION.tar.gz"
-    mingleCategoryDownload "docbook-xsl" "$AD_DOCBK_VERSION" "http://sourceforge.net/projects/docbook/files/docbook-xsl/$AD_DOCBK_VERSION/docbook-xsl-$AD_DOCBK_VERSION.tar.bz2"
+    mingleCategoryDownload "xml-commons-resolver" "$_xmlcommonsversion" "http://archive.apache.org/dist/xerces/xml-commons/xml-commons-resolver-$_xmlcommonsversion.tar.gz"
+    mingleCategoryDownload "docbook-xsl" "$_docbookversion" "http://sourceforge.net/projects/docbook/files/docbook-xsl/$_docbookversion/docbook-xsl-$_docbookversion.tar.bz2"
     
-    mingleCategoryDecompress "xml-commons-resolver" "$AD_XML_COMMONS_RESOLVER_VERSION" "xml-commons-resolver-*"
+    mingleCategoryDecompress "xml-commons-resolver" "$_xmlcommonsversion" "xml-commons-resolver-*"
 
-    if [ ! -e "$_shareDirVal/xml/xml-commons-resolver-$AD_XML_COMMONS_RESOLVER_VERSION" ]; then
-        mv xml-commons-resolver-$AD_XML_COMMONS_RESOLVER_VERSION $_shareDirVal/xml
+    if [ ! -e "$_shareDirVal/xml/xml-commons-resolver-$_xmlcommonsversion" ]; then
+        mv xml-commons-resolver-$_xmlcommonsversion $_shareDirVal/xml
     fi
 
-    export CLASSPATH=$_shareDir/xml/xml-commons-resolver-$AD_XML_COMMONS_RESOLVER_VERSION/resolver.jar
+    export CLASSPATH=$_shareDir/xml/xml-commons-resolver-$_xmlcommonsversion/resolver.jar
 
-    mingleCategoryDecompress "docbook-xsl" "$AD_DOCBK_VERSION" "docbook-xsl-*"
+    mingleCategoryDecompress "docbook-xsl" "$_docbookversion" "docbook-xsl-*"
 
     ad_cd docbook-xsl-*
 
@@ -1539,17 +1470,17 @@ buildInstallDocBook() {
 
     ad_cd "$MINGLE_BUILD_DIR"
 
-    mingleCategoryDownload "docbook-xml" "$AD_DOCBOOK_XML_VERSION43" "http://docbook.org/xml/$AD_DOCBOOK_XML_VERSION43/docbook-xml-$AD_DOCBOOK_XML_VERSION43.zip"
-    mingleCategoryDecompress "docbook-xml" "$AD_DOCBOOK_XML_VERSION43" "docbook-xml-$AD_DOCBOOK_XML_VERSION43.zip" "docbook-xml-$AD_DOCBOOK_XML_VERSION43"
-    mv docbook-xml-$AD_DOCBOOK_XML_VERSION43 $_shareDirVal/xml/docbook/schema/dtd/$AD_DOCBOOK_XML_VERSION43
+    mingleCategoryDownload "docbook-xml" "$_docbook43version" "http://docbook.org/xml/$_docbook43version/docbook-xml-$_docbook43version.zip"
+    mingleCategoryDecompress "docbook-xml" "$_docbook43version" "docbook-xml-$_docbook43version.zip" "docbook-xml-$_docbook43version"
+    mv docbook-xml-$_docbook43version $_shareDirVal/xml/docbook/schema/dtd/$_docbook43version
 
-    mingleCategoryDownload "docbook-xml" "$AD_DOCBOOK_XML_VERSION44" "http://docbook.org/xml/$AD_DOCBOOK_XML_VERSION44/docbook-xml-$AD_DOCBOOK_XML_VERSION44.zip"
-    mingleCategoryDecompress "docbook-xml" "$AD_DOCBOOK_XML_VERSION44" "docbook-xml-$AD_DOCBOOK_XML_VERSION44.zip" "docbook-xml-$AD_DOCBOOK_XML_VERSION44"
-    mv docbook-xml-$AD_DOCBOOK_XML_VERSION44 $_shareDirVal/xml/docbook/schema/dtd/$AD_DOCBOOK_XML_VERSION44
+    mingleCategoryDownload "docbook-xml" "$_docbook44version" "http://docbook.org/xml/$_docbook44version/docbook-xml-$_docbook44version.zip"
+    mingleCategoryDecompress "docbook-xml" "$_docbook44version" "docbook-xml-$_docbook44version.zip" "docbook-xml-$_docbook44version"
+    mv docbook-xml-$_docbook44version $_shareDirVal/xml/docbook/schema/dtd/$_docbook44version
 
-    mingleCategoryDownload "docbook-xml" "$AD_DOCBOOK_XML_VERSION45" "http://docbook.org/xml/$AD_DOCBOOK_XML_VERSION45/docbook-xml-$AD_DOCBOOK_XML_VERSION45.zip"
-    mingleCategoryDecompress "docbook-xml" "$AD_DOCBOOK_XML_VERSION45"  "docbook-xml-$AD_DOCBOOK_XML_VERSION45.zip" "docbook-xml-$AD_DOCBOOK_XML_VERSION45"
-    mv docbook-xml-$AD_DOCBOOK_XML_VERSION45 $_shareDirVal/xml/docbook/schema/dtd/$AD_DOCBOOK_XML_VERSION45
+    mingleCategoryDownload "docbook-xml" "$_docbook45version" "http://docbook.org/xml/$_docbook45version/docbook-xml-$_docbook45version.zip"
+    mingleCategoryDecompress "docbook-xml" "$_docbook45version"  "docbook-xml-$_docbook45version.zip" "docbook-xml-$_docbook45version"
+    mv docbook-xml-$_docbook45version $_shareDirVal/xml/docbook/schema/dtd/$_docbook45version
 
     if [ ! -e /etc/xml/docbook ]; then
         xmlcatalog --noout --create /etc/xml/docbook || mingleError $? "failed to create docbook, aborting!"
@@ -1614,6 +1545,7 @@ buildInstallDocBook() {
 
 buildInstallGTKDoc() {
     local _project="gtk-doc-*"
+    local _version="1.19"
     local _additionFlags=""
     local _binCheck="gtkdoc-check"
     local _exeToTest="gtkdoc-check --version"
@@ -1621,15 +1553,15 @@ buildInstallGTKDoc() {
     if [ ! -e "/mingw/bin/$_binCheck" ];then
         mingleLog "Building $_project..." true
     
-        mingleCategoryDownload "gtk-doc" "$AD_GTKDOC_VERSION" "https://download.gnome.org/sources/gtk-doc/$AD_GTKDOC_VERSION/gtk-doc-$AD_GTKDOC_VERSION.tar.xz"
-        mingleCategoryDecompress "gtk-doc" "$AD_GTKDOC_VERSION" "$_project"
+        mingleCategoryDownload "gtk-doc" "$_version" "https://download.gnome.org/sources/gtk-doc/$_version/gtk-doc-$_version.tar.xz"
+        mingleCategoryDecompress "gtk-doc" "$_version" "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
 
         ad_cd "$_projectdir"
 
         if [ ! -e gtk-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/gtk/$AD_GTKDOC_VERSION/gtk-mingw.patch .
+            cp $MINGLE_BASE/patches/gtk/$_version/gtk-mingw.patch .
             ad_patch "gtk-mingw.patch"
         fi
 
@@ -1738,6 +1670,94 @@ buildInstallQt() {
     fi
 }
 
+buildInstallLibqrencode() {
+    local _projectName="qrencode"
+    local _version="3.4"
+    local _url="https://github.com/fukuchi/libqrencode/archive/$_version.zip"
+    local _target="libqrencode-$_version.zip"
+    local _projectSearchName="libqrencode-*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=true #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=true #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="libqrencode.a"
+    local _postBuildCommand=""
+    local _exeToTest="qrencode.exe -V"
+
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+}
+
+buildInstallMiniupnp () {
+    local _projectName="miniupnp"
+    local _version="11"
+    local _url="https://github.com/onepremise/miniupnp/archive/master.zip"
+    local _target="miniupnp-$_version.zip"
+    local _projectSearchName="miniupnp-*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=true #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=true #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="libminiupnpc.dll.a"
+    local _postBuildCommand=""
+    local _exeToTest=""
+    
+    mingleLog "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+         mingleLog "Building $_project..." true
+        
+         ad_setDefaultEnv
+         
+         export "INSTALLPREFIX=/mingw"
+         
+         mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
+         mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
+
+         local _projectdir=$(ad_getDirFromWC $_projectSearchName)
+        
+         ad_cd "$_projectdir/miniupnpc"
+         
+         make -f Makefile.mingw init upnpc-static upnpc-shared
+         
+         cp -rf miniupnpc.lib libminiupnpc.dll.a
+         
+	     local HEADERS="bsdqueue.h miniupnpc.h miniwget.h upnpcommands.h igd_desc_parse.h upnpreplyparse.h upnperrors.h miniupnpctypes.h portlistingparse.h declspec.h"
+         local LIBRARY="libminiupnpc.a libminiupnpc.dll.a"
+         local UPNPCEXEDLL=miniupnpc.dll
+         local INSTALLDIRINC=$INSTALLPREFIX/include/miniupnpc
+         local INSTALLDIRLIB=$INSTALLPREFIX/lib
+         local INSTALLDIRBIN=$INSTALLPREFIX/bin
+         local INSTALLDIRMAN=$INSTALLPREFIX/share/man
+         
+         install -d $INSTALLDIRBIN
+         install -d $INSTALLDIRINC
+         install -d $INSTALLDIRLIB
+         install -d $INSTALLDIRMAN/man3
+         
+         install -m 644 $HEADERS $INSTALLDIRINC || mingleError $? "failed to install headers, aborting!"
+         install -m 644 $LIBRARY $INSTALLDIRLIB || mingleError $? "failed to install libraries, aborting!"
+         install -m 644 $UPNPCEXEDLL $INSTALLDIRBIN || mingleError $? "failed to install dll, aborting!"
+         install -m 755 external-ip.sh $INSTALLDIRBIN/external-ip || mingleError $? "failed to install external-ip, aborting!"
+         install man3/miniupnpc.3 $INSTALLDIRMAN/man3/miniupnpc.3 || mingleError $? "failed to install miniupnpc.3, aborting!"
+         gzip -f $INSTALLDIRMAN/man3/miniupnpc.3
+	 
+         make -f Makefile.mingw pythonmodule PYTHON=python
+
+         ad_cd "$MINGLE_BUILD_DIR"
+	 
+         ad_run_test "$_exeToTest"
+    else
+        mingleLog "$_projectName Already Installed." true
+    fi
+}
+
 buildInstallBitcoin() {
     local _projectName="bitcoin"
     local _version="master"
@@ -1750,8 +1770,8 @@ buildInstallBitcoin() {
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
     local _runConfigure=true #true/false
-    local _configureFlags="--with-gui --with-qt-incdir=/mingw/include --with-qt-libdir=/mingw/lib --with-boost=/mingw --with-incompatible-bdb --enable-shared --enable-static=no"
-    local _makeParameters=""
+    local _configureFlags="--with-gui --with-qrencode --with-miniupnpc --enable-upnp-default --with-qt-incdir=/mingw/include --with-qt-libdir=/mingw/lib --with-boost=/mingw --with-incompatible-bdb --enable-shared --enable-static=no"
+    local _makeParameters="USE_QRCODE=1 USE_UPNP=1 USE_IPV6=1"
     local _binCheck="bitcoin-qt"
     local _postBuildCommand=""
     local _exeToTest=""
@@ -1771,7 +1791,7 @@ buildInstallBitcoin() {
          export "CXXFLAGS=$CXXFLAGS -I/mingw/include/boost-1_52 -DBOOST_USE_WINDOWS_H"
          export "LDFLAGS=$LDFLAGS -lboost_program_options-48-mt-1_52"
     
-         mingleCategoryDownload "$_projectName" "$_version" "$_url"
+         mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
          mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
 
          local _projectdir=$(ad_getDirFromWC $_projectSearchName)
@@ -1791,6 +1811,7 @@ buildInstallBitcoin() {
 
 buildInstallSVN() {
     local _project="subversion-*"
+    local _version="1.8.3"
     local _additionFlags="--libdir=/mingw/lib/perl/site/lib --with-swig --with-berkeley-db --enable-bdb6 --disable-nls --with-apr-util=/mingw --with-apr=/mingw --with-serf=/mingw --enable-shared PERL=/mingw/bin/perl MAKE=dmake"
     local _binCheck="svn.exe"
     local _exeToTest="svn --version"
@@ -1806,25 +1827,25 @@ buildInstallSVN() {
         export "LDFLAGS=$LDFLAGS -L$MINGLE_BASE_MX/mingw64/x86_64-w64-mingw32/lib -lole32 -lmlang -luuid -lws2_32"
         export "LIBS=-lintl -lserf-1 -lpsapi -lversion"
         
-        mingleLog MINGLE_BASE_MX = $MINGLE_BASE_MX
+        mingleLog MINGLE_BASE_MX=$MINGLE_BASE_MX
         
-        mingleCategoryDownload "subversion" "$AD_SVN_VERSION" "http://archive.apache.org/dist/subversion/subversion-$AD_SVN_VERSION.zip"
-        mingleCategoryDecompress "subversion" "$AD_SVN_VERSION" "$_project"
+        mingleCategoryDownload "subversion" "$_version" "http://archive.apache.org/dist/subversion/subversion-$_version.zip"
+        mingleCategoryDecompress "subversion" "$_version" "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
         ad_cd "$_projectdir"
 
         if [ ! -e svn-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/svn-mingw.patch .
+            cp $MINGLE_BASE/patches/subversion/$_version/svn-mingw.patch .
             ad_patch "svn-mingw.patch"
-            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/bindings-mingw.patch .
+            cp $MINGLE_BASE/patches/subversion/$_version/bindings-mingw.patch .
             ad_patch "bindings-mingw.patch"
-            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/auth-mingw.patch .
+            cp $MINGLE_BASE/patches/subversion/$_version/auth-mingw.patch .
             ad_patch "auth-mingw.patch" 
-            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/compiler-mingw.patch .
+            cp $MINGLE_BASE/patches/subversion/$_version/compiler-mingw.patch .
             ad_patch "compiler-mingw.patch"
-            cp $MINGLE_BASE/patches/subversion/$AD_SVN_VERSION/svn-po-mingw.patch .
+            cp $MINGLE_BASE/patches/subversion/$_version/svn-po-mingw.patch .
             ad_patch "svn-po-mingw.patch"
         fi
         
@@ -1899,8 +1920,8 @@ buildInstallCABundle() {
     
     mingleLog "Building $_project..." true
     
-    mingleCategoryDownload "curl" "$AD_LIBCURL_VERSION" "http://curl.haxx.se/download/curl-$AD_LIBCURL_VERSION.tar.bz2"
-    mingleCategoryDecompress "curl" "$AD_LIBCURL_VERSION" "$_project"   
+    mingleCategoryDownload "curl" "$_version" "http://curl.haxx.se/download/curl-$_version.tar.bz2"
+    mingleCategoryDecompress "curl" "$_version" "$_project"   
     
     local _projectDir=$(ad_getDirFromWC "$_project")
     
@@ -1919,6 +1940,7 @@ buildInstallCABundle() {
 
 buildInstallFontConfig() {
     local _project="fontconfig-*"
+    local _version="2.10.0"
     local _additionFlags="--enable-libxml2 --disable-docs"
     local _binCheck="fc-list"
     local _exeToTest="fc-query --version"
@@ -1932,15 +1954,15 @@ buildInstallFontConfig() {
     
         ad_setDefaultEnv
 
-        mingleCategoryDownload "fontconfig" "$AD_FONT_CONFIG" "http://www.freedesktop.org/software/fontconfig/release/fontconfig-$AD_FONT_CONFIG.tar.gz"
-        mingleCategoryDecompress "fontconfig" "$AD_FONT_CONFIG" "$_project"
+        mingleCategoryDownload "fontconfig" "$_version" "http://www.freedesktop.org/software/fontconfig/release/fontconfig-$_version.tar.gz"
+        mingleCategoryDecompress "fontconfig" "$_version" "$_project"
 
         local _projectdir=$(ad_getDirFromWC $_project)
         
         ad_cd "$_projectdir"
         
         if [ ! -e fontconfig-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/fontconfig/$AD_FONT_CONFIG/fontconfig-mingw.patch .
+            cp $MINGLE_BASE/patches/fontconfig/$_version/fontconfig-mingw.patch .
             ad_patch "fontconfig-mingw.patch"
         fi
         
@@ -1969,14 +1991,15 @@ buildInstallFontConfig() {
 
 buildInstallFreeType() {
     local _project="freetype-*"
+    local _version="2.4.10"
     
     mingleLog "Checking $_project..." true
     
     if [ ! -e /mingw/lib/libfreetype.a ]; then
         mingleLog "Building $_project..." true
 
-        mingleCategoryDownload "freetype" "$AD_FREETYPE_VERSION" "http://ftp.igh.cnrs.fr/pub/nongnu/freetype/freetype-$AD_FREETYPE_VERSION.tar.gz"
-        mingleCategoryDecompress "freetype" "$AD_FREETYPE_VERSION" "$_project"
+        mingleCategoryDownload "freetype" "$_version" "http://ftp.igh.cnrs.fr/pub/nongnu/freetype/freetype-$_version.tar.gz"
+        mingleCategoryDecompress "freetype" "$_version" "$_project"
 
         ad_cd freetype-*
 
@@ -1997,6 +2020,7 @@ buildInstallFreeType() {
 
 buildInstallGraphite2() {
     local _project="graphite2-*"
+    local _version="1.2.4"
     local _binCheck="libgraphite2.dll"
 
     mingleLog "Checking $_project..." true
@@ -2004,8 +2028,8 @@ buildInstallGraphite2() {
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] ); then
         mingleLog "Building $_project..." true
 
-        mingleCategoryDownload "graphite2" "$AD_GRAPHITE2_VERSION" "http://sourceforge.net/projects/silgraphite/files/graphite2/graphite2-$AD_GRAPHITE2_VERSION.tgz"
-        mingleCategoryDecompress "graphite2" "$AD_GRAPHITE2_VERSION" "$_project"
+        mingleCategoryDownload "graphite2" "$_version" "http://sourceforge.net/projects/silgraphite/files/graphite2/graphite2-$_version.tgz"
+        mingleCategoryDecompress "graphite2" "$_version" "$_project"
 
         ad_cd $_project
 
@@ -2019,9 +2043,9 @@ buildInstallGraphite2() {
 
 buildInstallHarfBuzz() {
     local _projectName="harfbuzz"
-    local _version="$AD_HARFBUZZ_VERSION"
+    local _version="0.9.25"
     local _url="https://github.com/behdad/harfbuzz/archive/8fc1f7fe74a25bf8549f5edd79c7da6b720eb064.zip"
-    local _target="harfbuzz-$AD_HARFBUZZ_VERSION.zip"
+    local _target="harfbuzz-$_version.zip"
     local _projectSearchName="harfbuzz-*"
     local _cleanEnv=true #true/false
     local _runAutoGenIfExists=true #true/false
@@ -2040,8 +2064,8 @@ buildInstallHarfBuzz() {
 
 buildInstallSQLite() {
     local _projectName="sqlite"
-    local _version="$AD_SQLITE_VERSION"
-    local _url="http://www.sqlite.org/sqlite-autoconf-$AD_SQLITE_VERSION.tar.gz"
+    local _version="3071500"
+    local _url="http://www.sqlite.org/sqlite-autoconf-$_version.tar.gz"
     local _target=""
     local _projectSearchName="sqlite-*"
     local _cleanEnv=false #true/false
@@ -2192,8 +2216,8 @@ buildInstallPostgres() {
 
 buildInstallExpat() {
     local _projectName="expat"
-    local _version="$AD_EXPAT_VERSION"
-    local _url="http://sourceforge.net/projects/expat/files/expat/$AD_EXPAT_VERSION/expat-$AD_EXPAT_VERSION.tar.gz"
+    local _version="2.1.0"
+    local _url="http://sourceforge.net/projects/expat/files/expat/$_version/expat-$_version.tar.gz"
     local _target=""
     local _projectSearchName="expat-*"
     local _cleanEnv=true #true/false
@@ -2213,8 +2237,8 @@ buildInstallExpat() {
 
 buildInstallLibproj() {
     local _projectName="proj"
-    local _version="$AD_PROJ_VERSION"
-    local _url="http://download.osgeo.org/proj/proj-$AD_PROJ_VERSION.tar.gz"
+    local _version="4.8.0"
+    local _url="http://download.osgeo.org/proj/proj-$_version.tar.gz"
     local _target=""
     local _projectSearchName="proj-*"
     local _cleanEnv=true #true/false
@@ -2234,14 +2258,15 @@ buildInstallLibproj() {
 
 buildInstallProjDatumgrid() {
     local _project="proj-datumgrid*"
+    local _version="1.6RC1"
 
     mingleLog "Checking $_project..." true
     
     if [ ! -e /mingw/share/proj/ntv1_can.dat ]; then
         mingleLog "Building $_project..." true
         
-        mingleCategoryDownload "proj-datumgrid" "$AD_PROJ_GRIDS_VERSION" "http://download.osgeo.org/proj/proj-datumgrid-$AD_PROJ_GRIDS_VERSION.zip"
-        mingleCategoryDecompress "proj-datumgrid" "$AD_PROJ_GRIDS_VERSION" "$_project" "proj-datumgrid"
+        mingleCategoryDownload "proj-datumgrid" "$_version" "http://download.osgeo.org/proj/proj-datumgrid-$_version.zip"
+        mingleCategoryDecompress "proj-datumgrid" "$_version" "$_project" "proj-datumgrid"
         
         ad_cd $MINGLE_BUILD_DIR/proj-datumgrid
 
@@ -2259,8 +2284,8 @@ buildInstallProjDatumgrid() {
 
 buildInstallLibGeotiff() {
     local _projectName="libgeotiff"
-    local _version="$AD_GEOTIFF_VERSION"
-    local _url="ftp://ftp.remotesensing.org/pub/geotiff/libgeotiff/libgeotiff-$AD_GEOTIFF_VERSION.zip"
+    local _version="1.4.0"
+    local _url="ftp://ftp.remotesensing.org/pub/geotiff/libgeotiff/libgeotiff-$_version.zip"
     local _target=""
     local _projectSearchName="libgeotiff-*"
     local _cleanEnv=true #true/false
@@ -2285,8 +2310,8 @@ buildInstallLibGeotiff() {
 
 buildInstallLibgeos() {
     local _projectName="geos"
-    local _version="$AD_GEOS_VERSION"
-    local _url="http://download.osgeo.org/geos/geos-$AD_GEOS_VERSION.tar.bz2"
+    local _version="3.3.6"
+    local _url="http://download.osgeo.org/geos/geos-$_version.tar.bz2"
     local _target=""
     local _projectSearchName="geos-*"
     local _cleanEnv=true #true/false
@@ -2306,6 +2331,7 @@ buildInstallLibgeos() {
 
 buildInstallGDAL() {
     local _project="gdal-*"
+    local _version="1.9.2"
     local _configureFlags=""
     local _binCheck="libgdal-1.dll"
     local _exeToTest="gdal_grid --version"
@@ -2317,8 +2343,8 @@ buildInstallGDAL() {
     
         ad_setDefaultEnv
         
-        mingleCategoryDownload "gdal" "$AD_GDAL_VERSION" "http://download.osgeo.org/gdal/gdal-$AD_GDAL_VERSION.tar.gz"
-        mingleCategoryDecompress "gdal" "$AD_GDAL_VERSION" "$_project"
+        mingleCategoryDownload "gdal" "$_version" "http://download.osgeo.org/gdal/gdal-$_version.tar.gz"
+        mingleCategoryDecompress "gdal" "$_version" "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
   
@@ -2337,6 +2363,9 @@ buildInstallGDAL() {
 
 buildInstallPython() {
     local _project="Python-*"
+    local _majorversion="2.7"
+    local _minorversion=".3"
+    local _version="$_majorversion$_minorversion"
     local _binCheck="python.exe"
     local _exeToTest="python --version"
     
@@ -2346,8 +2375,8 @@ buildInstallPython() {
         
         ad_setDefaultEnv
         
-        mingleCategoryDownload "Python" "$AD_PYTHON_VERSION" "https://www.python.org/ftp/python/$AD_PYTHON_VERSION/Python-$AD_PYTHON_VERSION.tgz"
-        mingleCategoryDecompress "Python" "$AD_PYTHON_VERSION" "$_project"
+        mingleCategoryDownload "Python" "$_version" "https://www.python.org/ftp/python/$_version/Python-$_version.tgz"
+        mingleCategoryDecompress "Python" "$_version" "$_project"
 
         local _projectDir=$(ad_getDirFromWC "$_project")
         
@@ -2362,7 +2391,7 @@ buildInstallPython() {
             #http://bugs.python.org/issue4709
             
             #my update
-            cp $MINGLE_BASE/patches/python/$AD_PYTHON_VERSION/python-mingw.patch .
+            cp $MINGLE_BASE/patches/python/$_version/python-mingw.patch .
             ad_patch "python-mingw.patch"
         fi
 
@@ -2425,7 +2454,7 @@ buildInstallPython() {
         
         ad_make $_project
         
-        ln -s /mingw/bin/python$AD_PYTHON_MAJOR /mingw/bin/python
+        ln -s /mingw/bin/python$_majorversion /mingw/bin/python
     else
         mingleLog "Already Installed."
     fi
@@ -2454,7 +2483,7 @@ buildInstallSetupTools() {
         
         echo "[easy_install]">setup.cfg
         echo >> setup.cfg
-        echo "install_dir = `python -c "import sysconfig;print sysconfig.get_path('purelib')"`">> setup.cfg
+        echo "install_dir=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`">> setup.cfg
 
         mingleLog "Complete."
     else
@@ -2507,20 +2536,21 @@ buildInstallPyTest() {
 
 buildInstallScons() {
     local _project="scons-*"
+    local _version="2.3.0"
 
     mingleLog "Checking $_project..." true
     if [ ! -e /mingw/bin/scons.py ]; then
         mingleLog "Building $_project..." true
         
-        mingleCategoryDownload "scons" "$AD_SCONS_VERSION" "http://sourceforge.net/projects/scons/files/scons/$AD_SCONS_VERSION/scons-$AD_SCONS_VERSION.tar.gz"
-        mingleCategoryDecompress "scons" "$AD_SCONS_VERSION" "$_project"
+        mingleCategoryDownload "scons" "$_version" "http://sourceforge.net/projects/scons/files/scons/$_version/scons-$_version.tar.gz"
+        mingleCategoryDecompress "scons" "$_version" "$_project"
 
         local _projectdir=$(ad_getDirFromWC "$_project")
 
         ad_cd "$_projectdir"
         
         if [ ! -e scons-mingw.patch ]; then
-             cp $MINGLE_BASE/patches/scons/$AD_SCONS_VERSION/scons-mingw.patch . || mingleError $? "patch failed, aborting!"
+             cp $MINGLE_BASE/patches/scons/$_version/scons-mingw.patch . || mingleError $? "patch failed, aborting!"
              ad_patch "scons-mingw.patch"
         fi                
 
@@ -2534,6 +2564,7 @@ buildInstallScons() {
 
 buildInstallSerf() {
     local _project="serf-*"
+    local _version="1.3.1"
 
     mingleLog "Checking $_project..." true
     if [ ! -e /mingw/lib/libserf-1.dll.a ]; then
@@ -2541,15 +2572,15 @@ buildInstallSerf() {
         
         ad_setDefaultEnv
         
-        mingleCategoryDownload "serf" "$AD_SERF_VERSION" "https://serf.googlecode.com/files/serf-$AD_SERF_VERSION.tar.bz2"
-        mingleCategoryDecompress "serf" "$AD_SERF_VERSION" "$_project"
+        mingleCategoryDownload "serf" "$_version" "https://serf.googlecode.com/files/serf-$_version.tar.bz2"
+        mingleCategoryDecompress "serf" "$_version" "$_project"
 
         local _projectdir=$(ad_getDirFromWC "$_project")
 
         ad_cd "$_projectdir"
         
         if [ ! -e serf-mingw.patch ]; then
-             cp $MINGLE_BASE/patches/serf/$AD_SERF_VERSION/serf-mingw.patch . || mingleError $? "patch failed, aborting!"
+             cp $MINGLE_BASE/patches/serf/$_version/serf-mingw.patch . || mingleError $? "patch failed, aborting!"
              ad_patch "serf-mingw.patch"
         fi        
 
@@ -2638,20 +2669,21 @@ buildInstallNodeMapnik() {
 
 buildInstallWAF() {
     local _project="waf-*"
+    local _version="1.7.11"
 
     mingleLog "Checking $_project..." true
     if [ ! -e /mingw/bin/waf ]; then
         mingleLog "Building $_project..." true
 
-        mingleCategoryDownload "waf" "$AD_WAF_VERSION" "http://waf.googlecode.com/files/waf-$AD_WAF_VERSION.tar.bz2"
-        mingleCategoryDecompress "waf" "$AD_WAF_VERSION" "$_project"
+        mingleCategoryDownload "waf" "$_version" "http://waf.googlecode.com/files/waf-$_version.tar.bz2"
+        mingleCategoryDecompress "waf" "$_version" "$_project"
         
         local _projectdir=$(ad_getDirFromWC "$_project")
 
         ad_cd "$_projectdir"
 
         if [ ! -e waf-mingw.patch ]; then
-             cp $MINGLE_BASE/patches/waf/$AD_WAF_VERSION/waf-mingw.patch . || mingleError $? "patch failed, aborting!"
+             cp $MINGLE_BASE/patches/waf/$_version/waf-mingw.patch . || mingleError $? "patch failed, aborting!"
              ad_patch "waf-mingw.patch"
         fi
 
@@ -2671,8 +2703,8 @@ buildInstallWAF() {
 
 buildInstallBoostJam() {
     local _projectName="boost-jam"
-    local _version="$AD_BOOST_JAM_VERSION"
-    local _url="http://sourceforge.net/projects/boost/files/boost-jam/3.1.18/boost-jam-$AD_BOOST_JAM_VERSION.tgz"
+    local _version="3.1.18"
+    local _url="http://sourceforge.net/projects/boost/files/boost-jam/$_version/boost-jam-$_version.tgz"
     local _target=""
     local _projectSearchName="boost-jam*"
     local _cleanEnv=true #true/false
@@ -2692,14 +2724,17 @@ buildInstallBoostJam() {
 
 buildInstallBoost() {
     local _project="boost_*"
-    local _binCheck="boost_system-48-mt-1_$AD_BOOST_MINOR_VERSION.dll"
+    local _minorversion="52"
+    local _pathversion="1.$_minorversion.0"
+    local _version="1_$_minorversion_0"
+    local _binCheck="boost_system-48-mt-1_$_minorversion.dll"
 
     mingleLog "Checking $_project..." true
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleLog "Building $_project..." true
 
-        mingleCategoryDownload "boost" "$AD_BOOST_VERSION" "http://sourceforge.net/projects/boost/files/boost/"$AD_BOOST_PATH_VERSION"/boost_"$AD_BOOST_VERSION".7z"
-        mingleCategoryDecompress "boost" "$AD_BOOST_VERSION" "$_project"
+        mingleCategoryDownload "boost" "$_version" "http://sourceforge.net/projects/boost/files/boost/"$_pathversion"/boost_"$_version".7z"
+        mingleCategoryDecompress "boost" "$_version" "$_project"
         
         local _projectDir=$(ad_getDirFromWC "$_project")
 
@@ -2707,14 +2742,14 @@ buildInstallBoost() {
 
         if [ ! -e boost-mingw.patch ]; then
             # Apply patch for https://svn.boost.org/trac/boost/ticket/5023
-            cp $MINGLE_BASE/patches/boost/$AD_BOOST_PATH_VERSION/boost-mingw.patch .
+            cp $MINGLE_BASE/patches/boost/$_pathversion/boost-mingw.patch .
             ad_patch "boost-mingw.patch"
         fi
 
         ad_cd ".."
 
         export CPLUS_INCLUDE_PATH=/mingw/include/python2.7
-        buildInstallGeneric "boost_*" true true false "" true true "" "" "boost_system-47-mt-1_$AD_BOOST_MINOR_VERSION.dll" "" ""
+        buildInstallGeneric "$_project" true true false "" true true "" "" "$_binCheck" "" ""
         export CPLUS_INCLUDE_PATH=
 
         ad_relocate_bin_dlls "boost_"
@@ -2725,6 +2760,7 @@ buildInstallBoost() {
 
 buildInstallPyCairo() {
     local _project="py2cairo-*"
+    local _version="1.10.0"
     local _additionFlags=""
     local _binCheck="/pkgconfig/pycairo.pc"
     local _exeToTest=""
@@ -2739,8 +2775,8 @@ buildInstallPyCairo() {
         export "CFLAGS=$CFLAGS -I/mingw/include/Python2.7"
         export "LDFLAGS=$LDFLAGS -lpixman-1"
 
-        mingleCategoryDownload "py2cairo" "$AD_PYCAIRO_VERSION" "http://www.cairographics.org/releases/py2cairo-$AD_PYCAIRO_VERSION.tar.bz2"
-        mingleCategoryDecompress "py2cairo" "$AD_PYCAIRO_VERSION" "$_project"
+        mingleCategoryDownload "py2cairo" "$_version" "http://www.cairographics.org/releases/py2cairo-$_version.tar.bz2"
+        mingleCategoryDecompress "py2cairo" "$_version" "$_project"
         
         local _projectDir=$(ad_getDirFromWC "$_project")
         
@@ -2753,7 +2789,7 @@ buildInstallPyCairo() {
         cd waf-*/waflib
 
         if [ ! -e waf-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/py2cairo/$AD_PYCAIRO_VERSION/waf-mingw.patch .
+            cp $MINGLE_BASE/patches/py2cairo/$_version/waf-mingw.patch .
             ad_patch "waf-mingw.patch"
             rm Node.pyc
         fi
@@ -2789,6 +2825,7 @@ buildInstallPyCairo() {
 
 buildInstallMapnik() {
     local _project="mapnik-v*"
+    local _version="2.1.0"
 
     mingleLog "Checking $_project..." true
     if [ -e /mingw/lib/mapnik.dll ] && [ -e /mingw/lib/libmapnik.dll.a ]; then
@@ -2798,8 +2835,8 @@ buildInstallMapnik() {
     
     mingleLog "Building $_project..." true
     
-    mingleCategoryDownload "mapnik" "$AD_MAPNIK_VERSION" "https://github.com/downloads/mapnik/mapnik/mapnik-v$AD_MAPNIK_VERSION.tar.bz2"
-    mingleCategoryDecompress "mapnik" "$AD_MAPNIK_VERSION" "$_project"
+    mingleCategoryDownload "mapnik" "$_version" "https://github.com/downloads/mapnik/mapnik/mapnik-v$_version.tar.bz2"
+    mingleCategoryDecompress "mapnik" "$_version" "$_project"
 
     local _projectdir=$(ad_getDirFromWC $_project)
 
@@ -2807,7 +2844,7 @@ buildInstallMapnik() {
         
     if [ ! -e mapnik-mingw.patch ]; then
          #my update
-         cp $MINGLE_BASE/patches/mapnik/$AD_MAPNIK_VERSION/mapnik-mingw.patch .
+         cp $MINGLE_BASE/patches/mapnik/$_version/mapnik-mingw.patch .
          ad_patch "mapnik-mingw.patch"
     fi
 
@@ -2920,6 +2957,8 @@ buildInstalldMake() {
 
 buildInstallPerl() {
     local _project="perl*"
+    local _version="5.18.0"
+    local _shortversion="5.0"
 
     mingleLog "Checking $_project..." true
     if [ -e /mingw/bin/perl5.18.0 ]; then
@@ -2932,8 +2971,8 @@ buildInstallPerl() {
     
     ad_setDefaultEnv
 
-    mingleCategoryDownload "perl" "$AD_PERL_VERSION" "http://www.cpan.org/src/$AD_PERL_SHRT_VERSION/perl-$AD_PERL_VERSION.tar.gz"
-    mingleCategoryDecompress "perl" "$AD_PERL_VERSION" "$_project"
+    mingleCategoryDownload "perl" "$_version" "http://www.cpan.org/src/$_shortversion/perl-$_version.tar.gz"
+    mingleCategoryDecompress "perl" "$_version" "$_project"
     
     local _projectdir=$(ad_getDirFromWC $_project)
 
@@ -2941,7 +2980,7 @@ buildInstallPerl() {
 
     #Notes from http://sourceforge.net/projects/perlmingw/files/Compiler%20for%2064%20bit%20Windows/
     if [ ! -e perl-mingw.patch ]; then
-         cp $MINGLE_BASE/patches/perl/$AD_PERL_VERSION/perl-mingw.patch .
+         cp $MINGLE_BASE/patches/perl/$_version/perl-mingw.patch .
          ad_patch "perl-mingw.patch"
     fi
 
@@ -2966,6 +3005,7 @@ buildInstallPerl() {
 
 buildInstallPCRE() {
     local _project="pcre-*"
+    local _version="8.33"
 
     mingleLog "Checking $_project..." true
     if [ -e /mingw/bin/pcregrep ]; then
@@ -2976,15 +3016,15 @@ buildInstallPCRE() {
     
     mingleLog "Building $_project..." true
 
-    mingleCategoryDownload "pcre" "$AD_PCRE_VERSION" "http://sourceforge.net/projects/pcre/files/pcre/$AD_PCRE_VERSION/pcre-$AD_PCRE_VERSION.tar.gz/download" "pcre-$AD_PCRE_VERSION.tar.gz"
-    mingleCategoryDecompress "pcre" "$AD_PCRE_VERSION" "$_project"
+    mingleCategoryDownload "pcre" "$_version" "http://sourceforge.net/projects/pcre/files/pcre/$_version/pcre-$_version.tar.gz/download" "pcre-$AD_PCRE_VERSION.tar.gz"
+    mingleCategoryDecompress "pcre" "$_version" "$_project"
 
     local _projectdir=$(ad_getDirFromWC $_project)
 
     ad_cd $_projectdir
 
     if [ ! -e pcre-mingw.patch ]; then
-         cp $MINGLE_BASE/patches/pcre/$AD_PCRE_VERSION/pcre-mingw.patch .
+         cp $MINGLE_BASE/patches/pcre/$_version/pcre-mingw.patch .
          ad_patch "pcre-mingw.patch"
     fi
 
@@ -3034,9 +3074,10 @@ buildInstallDBPerl() {
     mingleLog "Building DBPerl..." true
     
     local _project="BerkeleyDB-*"
+    local _version="0.53"
     
-    mingleCategoryDownload "BerkeleyDB" "$AD_PERL_DB" "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/BerkeleyDB-$AD_PERL_DB.tar.gz"
-    mingleCategoryDecompress "BerkeleyDB" "$AD_PERL_DB" "$_project"
+    mingleCategoryDownload "BerkeleyDB" "$_version" "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/BerkeleyDB-$_version.tar.gz"
+    mingleCategoryDecompress "BerkeleyDB" "$_version" "$_project"
     
     local _projectdir=$(ad_getDirFromWC $_project)
     
@@ -3049,10 +3090,11 @@ buildInstallDBPerl() {
     
     ad_cd "$MINGLE_BUILD_DIR"
     
-    _project="DB_File-*"
+    local _project="DB_File-*"
+    local _version="1.829"
     
-    mingleCategoryDownload "DB_File" "$AD_PERL_FILE_DB" "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/DB_File-$AD_PERL_FILE_DB.tar.gz"
-    mingleCategoryDecompress "DB_File" "$AD_PERL_FILE_DB" "$_project"
+    mingleCategoryDownload "DB_File" "$_version" "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/DB_File-$_version.tar.gz"
+    mingleCategoryDecompress "DB_File" "$_version" "$_project"
     
     _projectdir=$(ad_getDirFromWC $_project)   
     
@@ -3094,6 +3136,7 @@ buildInstallUserAgent() {
 
 buildInstallTextInfo() {
     local _project="texinfo-*"
+    local _version="5.1"
 
     mingleLog "Checking $_project..." true
     if [ -e /mingw/bin/texi2any ]; then
@@ -3103,15 +3146,15 @@ buildInstallTextInfo() {
     
     mingleLog "Building $_project..." true
     
-    mingleCategoryDownload "texinfo" "$AD_TEXTINFO" "http://ftp.gnu.org/gnu/texinfo/texinfo-$AD_TEXTINFO.tar.gz"
-    mingleCategoryDecompress "texinfo" "$AD_TEXTINFO" "$_project"
+    mingleCategoryDownload "texinfo" "$_version" "http://ftp.gnu.org/gnu/texinfo/texinfo-$_version.tar.gz"
+    mingleCategoryDecompress "texinfo" "$_version" "$_project"
     
     local _projectdir=$(ad_getDirFromWC $_project)
 
     ad_cd $_projectdir
 
     if [ ! -e texinfo-mingw.patch ]; then
-         cp $MINGLE_BASE/patches/texinfo/$AD_TEXTINFO/texinfo-mingw.patch .
+         cp $MINGLE_BASE/patches/texinfo/$_version/texinfo-mingw.patch .
          ad_patch "texinfo-mingw.patch"
     fi
 	
@@ -3191,8 +3234,8 @@ buildInstallSwig() {
     fi
     
     local _projectName="swig"
-    local _version="$AD_SWIG_VERSION"
-    local _url="http://downloads.sourceforge.net/project/swig/swig/swig-$AD_SWIG_VERSION/swig-$AD_SWIG_VERSION.tar.gz"
+    local _version="2.0.10"
+    local _url="http://downloads.sourceforge.net/project/swig/swig/swig-$_version/swig-$_version.tar.gz"
     local _target=""
     local _projectSearchName="swig-*"
     local _cleanEnv=true #true/false
@@ -3215,9 +3258,9 @@ buildInstallSwig() {
 
 buildInstallJSONC() {   
     local _projectName="json-c"
-    local _version="$AD_JSONC_VERSION"
+    local _version="master"
     local _url="https://github.com/json-c/json-c/archive/be002fbb96c484f89aee2c843b89bdd00b0a5e46.zip"
-    local _target="json-c-$AD_JSONC_VERSION.zip"
+    local _target="json-c-$_version.zip"
     local _projectSearchName="json-c-*"
     local _cleanEnv=true #true/false
     local _runAutoGenIfExists=true #true/false
@@ -3240,21 +3283,22 @@ buildInstallJSONC() {
 
 buildInstallPostGIS () {
     local _project="postgis-*"
+    local _version="2.0.3"
 
     if [ -e /mingw/lib/postgresql/postgis-2.0.dll ]; then
         mingleLog "$_project Already Installed." true
         return
     fi
     
-    mingleCategoryDownload "postgis" "$AD_POSTGIS_VERSION" "http://download.osgeo.org/postgis/source/postgis-$AD_POSTGIS_VERSION.tar.gz"
-    mingleCategoryDecompress "postgis" "$AD_POSTGIS_VERSION" "$_project"
+    mingleCategoryDownload "postgis" "$_version" "http://download.osgeo.org/postgis/source/postgis-$_version.tar.gz"
+    mingleCategoryDecompress "postgis" "$_version" "$_project"
 
     local _projectdir=$(ad_getDirFromWC $_project)
 
     ad_cd $_projectdir
 
     if [ ! -e postgis-mingw.patch ]; then
-         cp $MINGLE_BASE/patches/postgis/$AD_POSTGIS_VERSION/postgis-mingw.patch .
+         cp $MINGLE_BASE/patches/postgis/$_version/postgis-mingw.patch .
          ad_patch "postgis-mingw.patch"
     fi
         
@@ -3267,9 +3311,9 @@ updatePostgresSqlConf() {
     local _variable=$1
     local _value=$2
     
-    mingleLog "Updating $_variable = $_value..."
+    mingleLog "Updating $_variable=$_value..."
     
-    sed -e "s/[#]*\("$_variable"\)\s*=\s*[[:alnum:]\.\_\%\'-]*/\1 = "$_value"/g" $POSTGIS_PATH/postgresql.conf>$POSTGIS_PATH/update.conf
+    sed -e "s/[#]*\("$_variable"\)\s*=\s*[[:alnum:]\.\_\%\'-]*/\1="$_value"/g" $POSTGIS_PATH/postgresql.conf>$POSTGIS_PATH/update.conf
     mv $POSTGIS_PATH/update.conf $POSTGIS_PATH/postgresql.conf    
 }
 
@@ -3281,12 +3325,12 @@ initializePostGISDB () {
     initdb -U postgres -D $POSTGIS_PATH -E 'UTF8' --lc-collate='English_United States.1252' --lc-ctype='English_United States.1252'
 
     # Tune Parameters for postgresql.conf
-    # autovacuum = off
-    # checkpoint_segments = 20
-    # shared_buffers = 512MB # min 128kB
-    # work_mem = 256MB # min 64kB
-    # maintenance_work_mem = 512MB # min 1MB
-    # synchronous_commit = off
+    # autovacuum=off
+    # checkpoint_segments=20
+    # shared_buffers=512MB # min 128kB
+    # work_mem=256MB # min 64kB
+    # maintenance_work_mem=512MB # min 1MB
+    # synchronous_commit=off
 
     mingleLog "Updating postgresql.conf..." true
     
@@ -3323,7 +3367,7 @@ initializePostGISDB () {
     mingleLog "Setting up OSM database, user, and granting permissions..."
 
     psql postgres postgres <<< "CREATE USER osm WITH PASSWORD 'osm';"
-    psql postgres postgres <<< "CREATE DATABASE osm WITH OWNER = osm ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'English_United States.1252' LC_CTYPE = 'English_United States.1252' CONNECTION LIMIT = -1;"
+    psql postgres postgres <<< "CREATE DATABASE osm WITH OWNER=osm ENCODING='UTF8' TABLESPACE=pg_default LC_COLLATE='English_United States.1252' LC_CTYPE='English_United States.1252' CONNECTION LIMIT=-1;"
     psql postgres postgres <<< "GRANT ALL PRIVILEGES ON DATABASE osm to osm;"
     psql postgres postgres <<< "ALTER USER osm WITH SUPERUSER;"
 
@@ -3429,8 +3473,8 @@ fullPostGISSetupWithImport() {
 
 buildInstalProtobuf() {
     local _projectName="protobuf"
-    local _version="$AD_PROTO_BUF"
-    local _url="http://protobuf.googlecode.com/files/protobuf-$AD_PROTO_BUF.zip"
+    local _version="2.5.0"
+    local _url="http://protobuf.googlecode.com/files/protobuf-$_version.zip"
     local _target=""
     local _projectSearchName="protobuf-*"
     local _cleanEnv=true #true/false
@@ -3489,14 +3533,7 @@ buildInstallProtobufC() {
     echo       
 }
     
-buildInstallOsm2pgsql() {
-    export "CFLAGS=-I/mingw/include -DWIN32 -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"
-    #export "LDFLAGS=-L/mingw/lib -lmingle"
-    export "LIBS=-L/mingw/lib -lmingle"
-    export "CPPFLAGS=$CFLAGS"    
-    export "CC=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
-    export "CXX=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
-    
+buildInstallOsm2pgsql() { 
     local _projectName="osm2pgsql"
     local _version="master"
     local _url="https://github.com/onepremise/osm2pgsql/archive/master.zip"
@@ -3510,9 +3547,16 @@ buildInstallOsm2pgsql() {
     local _runConfigure=true #true/false
     local _configureFlags="--with-zlib=/mingw --with-bzip2=/mingw --with-geos=/mingw/bin/geos-config --with-libxml2=/mingw/bin/xml2-config --with-proj=/mingw --with-postgresql=/mingw/bin/pg_config.exe --with-protobuf-c=/mingw"
     local _makeParameters=""
-    local _binCheck="osm2pgsql.exe"
+    local _binCheck="osm2pgsql.execxx"
     local _postBuildCommand=""
     local _exeToTest="osm2pgsql.exe --version"
+    
+    export "CFLAGS=$CFLAGS -DWIN32 -D__MINGW32__"
+    export "LIBS=-L/mingw/lib -lmingle"
+    export "CPPFLAGS=$CFLAGS"
+    export "CXXFLAGS=$CPPFLAGS"
+    export "CC=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
+    export "CXX=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
 
     mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
 }
@@ -3761,6 +3805,7 @@ suiteNetworking() {
     buildInstallCurl
     buildInstalProtobuf
     buildInstallProtobufC
+    buildInstallMiniupnp
 }
 
 suiteCABundle() {
@@ -4080,6 +4125,7 @@ suiteCryptoCurrency() {
     
     if ! $MINGLE_EXCLUDE_DEP; then
         suiteUILibraries
+        buildInstallLibqrencode
     fi
     
     buildInstallBitcoin
