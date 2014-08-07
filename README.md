@@ -98,7 +98,7 @@ The following projects are fully building in the environment setup:
 * Miniupnp
 * Bitcoin-qt
 
-This build includes python27 with the sqlite3 extention:
+This build includes python27 with the sqlite3 extension:
 
 ```
 $ python
@@ -137,7 +137,7 @@ mingle.zip: With binaries.
 Setup
 ============
 
-Extract the contents to disk. Run the setup.bat script in a command prompt with administrative priveleges. Click on the msys shortcut to open a terminal.
+Extract the contents to disk. Run the setup.bat script in a command prompt with administrative privileges. Click on the msys shortcut to open a terminal.
 
 Installing Packages
 ============
@@ -146,28 +146,59 @@ Installing Packages
 You can install more packages at anytime by running mingle in the msys terminal:
 
 ```
-$ mingle
+$ mingle --help
+Usage mingle [OPTION]
+Deployment script for setting up the development environment in 64 bit MinGW.
+
+Arguments:
+  -h, --help      Show this menu.
+  -s, --suite=key Deploy the suite specified by the selected suite below:
+  -l, --list      List suites of software to choose from.
+  -k, --lookup    Lookup suite name from key value.
+  -e, --exclude   Exclude dependency checks during build.
+  -p, --path=PATH Use alternate path for build.
+  -m              Get max suite count.
+
 Welcome to Mingle!
 
 We are going to setup your build environment. Let's get started!
 
 Please Choose from the following:
 ---------------------------------------------------------------------
- 1) Base                            15) Math Libraries
- 2) XML Libraries                   16) Graphics Libraries
- 3) Font Libraries                  17) Geospatial Libraries
- 4) Encryption Libraries            18) Manpik 2.1.0
- 5) Networking Libraries            19) Mapnik Developer Release
- 6) CA Certs                        20) Mapnik Tools
- 7) Database Tools                  21) osm2pgsql
- 8) Python Toolkit                  22) All
- 9) Perl Toolkit                    23) Create PostGIS DB
-10) Text Editors and Converters     24) Import US OSM Data
-11) Debugging and Testing           25) Full PostGIS Setup and US Data
-12) Boost Libraries                 26) Uninstall PostGIS DB
-13) SCM Tools                       27) Quit
-14) Image Libraries
-#?
+
+base)      Base
+xml)       XML Libraries
+font)      Font Libraries
+enc)       Encryption Libraries
+net)       Networking Libraries
+cert)      CA Certs
+db)        Database Tools
+py)        Python Toolkit
+perl)      Perl Toolkit
+java)      Java JDK
+text)      Text Editors and Converters
+util)      Shell Utilities
+debug)     Debugging and Testing
+boost)     Boost Libraries
+scm)       SCM Tools
+img)       Image Libraries
+math)      Math Libraries
+grafx)     Graphics Libraries
+ui)        UI Libraries
+mm)        Multimedia - codecs, encoders, converters, etc...
+geo)       Geospatial Libraries
+map)       Manpik 2.1.0
+mapdev)    Mapnik Developer Release
+maptools)  Mapnik Tools
+osm2pgsql) osm2pgsql
+all)       All
+pgisDB)    Create PostGIS DB
+usosm)     Import US OSM Data
+fullpgis)  Full PostGIS Setup and US Data
+unpgis)    Uninstall PostGIS DB
+sim)       Simulation
+cc)        Cryptocurrency
+q)         Quit
 ```
 
 Consulting
