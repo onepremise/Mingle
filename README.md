@@ -32,6 +32,7 @@ The following projects are fully building in the environment setup:
 * bzip2
 * gperf
 * libiconv
+* yasm
 * libjpeg-turbo
 * libpng
 * libtiff
@@ -89,7 +90,12 @@ The following projects are fully building in the environment setup:
 * osm2pgsql
 * Automation tasks for setting up PostgresDB and importing OSM Data
 * OpenFTA
+* FFmpeg
+* PJSIP
+* SDL
 * QT
+* qrencode
+* Miniupnp
 * Bitcoin-qt
 
 This build includes python27 with the sqlite3 extention:

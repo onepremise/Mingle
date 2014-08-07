@@ -1,0 +1,33 @@
+--- pjproject-2.2.1/aconfigure	2014-02-05 00:52:10 -0500
++++ pjproject-2.2.1/aconfigure2	2014-08-07 09:21:57 -0400
+@@ -6568,7 +6568,7 @@
+ 		  elif (sh -c "$SDL_CONFIG --version" | grep -e '^1\.3' -e '^2\.') then
+ 
+ 
+-			ac_sdl_cflags=`$SDL_CONFIG --cflags`
++			ac_sdl_cflags=`$SDL_CONFIG --cflags|sed s/-Dmain=SDL_main//`
+ 			ac_sdl_cflags="-DPJMEDIA_VIDEO_DEV_HAS_SDL=1 $ac_sdl_cflags"
+ 			ac_sdl_ldflags=`$SDL_CONFIG --libs`
+ 			LIBS="$LIBS $ac_sdl_ldflags"
+--- pjproject-2.2.1/pjmedia/src/pjmedia/ffmpeg_util.h	2011-07-18 23:42:28 -0400
++++ pjproject-2.2.1/pjmedia/src/pjmedia/ffmpeg_util2.h	2014-08-06 14:12:34 -0400
+@@ -27,6 +27,8 @@
+ 
+ #include <pjmedia/format.h>
+ 
++#define CodecID AVCodecID
++
+ #ifdef _MSC_VER
+ #   ifndef __cplusplus
+ #	define inline _inline
+--- pjproject-2.2.1/Makefile	2014-03-05 22:33:40 -0500
++++ pjproject-2.2.1/Makefile2	2014-08-07 14:05:00 -0400
+@@ -121,7 +121,7 @@
+ 		sed -e "s!@PJ_LDLIBS@!!" | \
+ 		sed -e "s!@PJ_LDXXLIBS@!$(PJ_LDXXLIBS)!" | \
+ 		sed -e "s!@PJ_INSTALL_CFLAGS@!!" | \
+-		sed -e "s!@PJ_INSTALL_CXXFLAGS@!$(PJ_INSTALL_CXXFLAGS)!" > $(DESTDIR)/$(libdir)/pkgconfig/libpjproject.pc
++		sed -e "s!@PJ_INSTALL_CXXFLAGS@!$(PJ_INSTALL_CXXFLAGS)!" > $(DESTDIR)$(libdir)/pkgconfig/libpjproject.pc
+ 
+ uninstall:
+ 	$(RM) $(DESTDIR)$(libdir)/pkgconfig/libpjproject.pc

@@ -419,6 +419,27 @@ buildInstallGLibC() {
     mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"          
 }
 
+buildInstallYasm() {
+    local _projectName="yasm"
+    local _version="1.2.0"
+    local _url="http://www.tortall.net/projects/yasm/releases/yasm-$_version.tar.gz"
+    local _target=""
+    local _projectSearchName="yasm-*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=true #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="yasm"
+    local _postBuildCommand=""
+    local _exeToTest="yasm --version"
+
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"          
+}
+
 buildInstallRagel() {
     local _projectName="ragel"
     local _version="6.8"
@@ -1577,6 +1598,97 @@ buildInstallGTK() {
     local _project="gtk-*"
 }
 
+buildInstallFFMpeg() {
+    local _projectName="ffmpeg"
+    local _version="2.3.1"
+    local _url="http://ffmpeg.org/releases/ffmpeg-$_version.tar.bz2"
+    local _target=""
+    local _projectSearchName="ffmpeg-*"
+    local _projectDir=$(ad_getDirFromWC $_projectSearchName)
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=true #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=true #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="ffmpeg"
+    local _postBuildCommand=""
+    local _exeToTest="ffmpeg -version"
+    
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+}
+
+buildInstallPJSIP() {
+    local _projectName="pjproject"
+    local _version="2.2.1"
+    local _url="http://www.pjsip.org/release/$_version/pjproject-$_version.tar.bz2"
+    local _target=""
+    local _projectSearchName="pjproject-*"
+    local _projectDir=$(ad_getDirFromWC $_projectSearchName)
+    local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=true #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=true #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="libpjsip-x86_64-w64-mingw32.a"
+    local _postBuildCommand=""
+    local _exeToTest=""
+    
+    mingleLog "Checking for binary $_binCheck..."
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
+        mingleLog "Building $_projectName..." true    
+    
+        ad_setDefaultEnv
+    
+        export "CFLAGS=$CFLAGS -fpermissive"
+        export "CPPFLAGS=$CFLAGS"
+        export "CXXFLAGS=$CFLAGS"
+    
+        mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
+        mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
+
+        local _projectdir=$(ad_getDirFromWC $_projectSearchName)
+        
+        ad_cd "$_projectdir"
+
+        if [ ! -e pjproject-mingw.patch ]; then
+            cp $MINGLE_BASE/patches/$_projectName/$_version/pjproject-mingw.patch .
+            ad_patch "pjproject-mingw.patch"    
+        fi    
+    
+        mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+    else
+        mingleLog "$_projectName Already Installed." true
+    fi
+}
+
+buildInstallSDL() {
+    local _projectName="SDL2"
+    local _version="2.0.3"
+    local _url="https://www.libsdl.org/release/SDL2-$_version.zip"
+    local _target=""
+    local _projectSearchName="SDL2-*"
+    local _projectDir=$(ad_getDirFromWC $_projectSearchName)
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=true #true/false
+    local _runACLocal=true #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=true #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="SDL2.dll"
+    local _postBuildCommand=""
+    local _exeToTest=""
+    
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+}
+
 fixQTHeaderPaths() {
     local _projectPath=$1
     local _relPath=$2
@@ -1728,7 +1840,7 @@ buildInstallMiniupnp () {
          
          cp -rf miniupnpc.lib libminiupnpc.dll.a
          
-	     local HEADERS="bsdqueue.h miniupnpc.h miniwget.h upnpcommands.h igd_desc_parse.h upnpreplyparse.h upnperrors.h miniupnpctypes.h portlistingparse.h declspec.h"
+         local HEADERS="bsdqueue.h miniupnpc.h miniwget.h upnpcommands.h igd_desc_parse.h upnpreplyparse.h upnperrors.h miniupnpctypes.h portlistingparse.h declspec.h"
          local LIBRARY="libminiupnpc.a libminiupnpc.dll.a"
          local UPNPCEXEDLL=miniupnpc.dll
          local INSTALLDIRINC=$INSTALLPREFIX/include/miniupnpc
@@ -1778,7 +1890,7 @@ buildInstallBitcoin() {
  
      mingleLog "Checking for binary $_binCheck..."
      if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
-         mingleLog "Building $_project..." true
+         mingleLog "Building $_projectName..." true
         
          ad_setDefaultEnv
     
@@ -2172,6 +2284,7 @@ buildInstallICU() {
 
 buildInstallPostgres() {
     local _project="postgresql-*"
+    local _version="9.2.2"
     
     mingleLog "Checking $_project..." true
 
@@ -2181,15 +2294,15 @@ buildInstallPostgres() {
     fi
     
     mingleLog "Building $_project..." true
-    mingleCategoryDownload "postgresql" "$AD_POSTGRES_VERSION" "http://ftp.postgresql.org/pub/source/v$AD_POSTGRES_VERSION/postgresql-$AD_POSTGRES_VERSION.tar.gz"
-    mingleCategoryDecompress "postgresql" "$AD_POSTGRES_VERSION" "$_project"
+    mingleCategoryDownload "postgresql" "$_version" "http://ftp.postgresql.org/pub/source/v$_version/postgresql-$_version.tar.gz"
+    mingleCategoryDecompress "postgresql" "$_version" "$_project"
 
     local _projectDir=$(ad_getDirFromWC "$_project")
 
     ad_cd "$_projectDir"
 
     if [ ! -e postgresql-mingw.patch ]; then
-        cp $MINGLE_BASE/patches/postgresql/$AD_POSTGRES_VERSION/postgresql-mingw.patch .
+        cp $MINGLE_BASE/patches/postgresql/$_version/postgresql-mingw.patch .
         ad_patch "postgresql-mingw.patch"
     fi
 
@@ -2465,9 +2578,12 @@ buildInstallPython() {
 buildInstallSetupTools() {
     local _savedir=`pwd`
     local _project="setuptools-*"
+    local _majorversion="2.7"
+    local _minorversion=".3"
+    local _version="$_majorversion$_minorversion"    
     
     mingleLog "Checking $_project..." true
-    if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/easy_install.exe ]; then
+    if [ ! -e /mingw/lib/python$_majorversion/site-packages/easy_install.exe ]; then
         mingleLog "Downloading and configuring Python SetupTools..." true
         
         mingleCategoryDownload "Python" "0.6c11" "https://pypi.python.org/packages/source/s/setuptools/setuptools-0.6c11.tar.gz"
@@ -2479,7 +2595,7 @@ buildInstallSetupTools() {
 
         setup.py install --install-purelib `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --install-scripts `python -c "import sysconfig;print sysconfig.get_path('purelib')"` --exec-prefix=`python -c "import sysconfig;print sysconfig.get_path('purelib')"`
 
-        ad_cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+        ad_cd /mingw/lib/python$_majorversion/site-packages
         
         echo "[easy_install]">setup.cfg
         echo >> setup.cfg
@@ -2495,13 +2611,14 @@ buildInstallSetupTools() {
 
 buildInstallNose() {
     local _savedir=`pwd`
-
+    local _majorversion="2.7"
+    
     mingleLog "Checking Nose..." true
     
-    if [ ! -e /mingw/lib/python$AD_PYTHON_MAJOR/site-packages/nosetests.exe ]; then
+    if [ ! -e /mingw/lib/python$_majorversion/site-packages/nosetests.exe ]; then
         mingleLog "Downloading and configuring Nose..." true
         
-        cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+        cd /mingw/lib/python$_majorversion/site-packages
         easy_install --install-dir=. nose
     else
         echo "Already Installed."
@@ -2514,8 +2631,9 @@ buildInstallWerkzeug() {
     mingleLog "Downloading and configuring Werkzeug..." true
 
     local _savedir=`pwd`
+    local _majorversion="2.7"
 
-    ad_cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+    ad_cd /mingw/lib/python$_majorversion/site-packages
     
     easy_install --install-dir=. Werkzeug
 
@@ -2526,8 +2644,9 @@ buildInstallPyTest() {
     mingleLog "Downloading and configuring PyTest..." true
 
     local _savedir=`pwd`
+    local _majorversion="2.7"
 
-    ad_cd /mingw/lib/python$AD_PYTHON_MAJOR/site-packages
+    ad_cd /mingw/lib/python$_majorversion/site-packages
     
     easy_install --install-dir=. pytest
 
@@ -2537,6 +2656,7 @@ buildInstallPyTest() {
 buildInstallScons() {
     local _project="scons-*"
     local _version="2.3.0"
+    local _pymajorversion="2.7"
 
     mingleLog "Checking $_project..." true
     if [ ! -e /mingw/bin/scons.py ]; then
@@ -2554,7 +2674,7 @@ buildInstallScons() {
              ad_patch "scons-mingw.patch"
         fi                
 
-        python setup.py install --install-lib "/mingw/lib/python2.7/site-packages" --install-scripts "/mingw/bin" --no-install-bat --standard-lib
+        python setup.py install --install-lib "/mingw/lib/python$_pymajorversion/site-packages" --install-scripts "/mingw/bin" --no-install-bat --standard-lib
         
         ad_cd ".."
     else
@@ -3662,39 +3782,31 @@ buildInstallOpenFTA() {
     fi
 }
 
-MINGLE_SUITE_BASE=false
-MINGLE_SUITE_XML=false
-MINGLE_SUITE_FONTS=false
-MINGLE_SUITE_ENCYPT=false
-MINGLE_SUITE_NETWORK=false
-MINGLE_SUITE_CA=false
-MINGLE_SUITE_DB=false
-MINGLE_SUITE_PERL=false
-MINGLE_SUITE_TEXT=false
-MINGLE_SUITE_UTIL=false
-MINGLE_SUITE_SWIG=false
-MINGLE_SUITE_PYTHON=false
-MINGLE_SUITE_JAVA=false
-MINGLE_SUITE_DEBUG=false
-MINGLE_SUITE_BOOST=false
-MINGLE_SUITE_IMAGE_TOOLS=false
-MINGLE_SUITE_MATH=false
-MINGLE_SUITE_SCM=false
-MINGLE_SUITE_GRAPHICS=false
-MINGLE_SUITE_UI=false
-MINGLE_SUITE_CRYPTOCURRENCY=false
-MINGLE_SUITE_GEO_SPATIAL=false
-MINGLE_MAPNIK=false
-MINGLE_MAPNIK_TOOLS=false
-MINGLE_SIMULATION=false
-MINGLE_OSM2PGSQL=false
+MINGLE_SUITE_HISTORY=()
+
+suiteHasBuilt() {
+    local _key=$1
+    
+    if array_contains MINGLE_SUITE_HISTORY "$_key"; then
+        return 0
+    fi
+    
+    suiteAddToHistory "$_key"
+    
+    return 1
+}
+
+suiteAddToHistory() {
+    local _key=$1
+    
+    MINGLE_SUITE_HISTORY+=($_key)
+}
+
 MINGLE_EXCLUDE_DEP=false
 
 suiteBase() {
-    if [ $SUITE_BASE ]; then
+    if suiteHasBuilt 'base'; then
         return;
-    else
-        SUITE_BASE=true
     fi
 
     updateFindCommand
@@ -3724,6 +3836,7 @@ suiteBase() {
     buildInstallBzip2
     buildInstallLibiconv
     buildInstallBinutils
+    buildInstallYasm
     buildInstallTCL
     buildInstallTk
     buildInstallSigc
@@ -3740,10 +3853,8 @@ suiteBase() {
 }
 
 suiteXML() {
-    if $MINGLE_SUITE_XML ; then
+    if suiteHasBuilt 'xml'; then
         return;
-    else
-        MINGLE_SUITE_XML=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3760,10 +3871,8 @@ suiteXML() {
 }
 
 suiteFonts() {
-    if $MINGLE_SUITE_FONTS ; then
+    if suiteHasBuilt 'fonts'; then
         return;
-    else
-        MINGLE_SUITE_FONTS=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3777,10 +3886,8 @@ suiteFonts() {
 }
 
 suiteEncryption() {
-    if $MINGLE_SUITE_ENCYPT ; then
+    if suiteHasBuilt 'enc'; then
         return;
-    else
-        MINGLE_SUITE_ENCYPT=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3792,10 +3899,8 @@ suiteEncryption() {
 }
 
 suiteNetworking() {
-    if $MINGLE_SUITE_NETWORK ; then
+    if suiteHasBuilt 'net'; then
         return;
-    else
-        MINGLE_SUITE_NETWORK=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3809,10 +3914,8 @@ suiteNetworking() {
 }
 
 suiteCABundle() {
-    if $MINGLE_SUITE_CA ; then
+    if suiteHasBuilt 'ca'; then
         return;
-    else
-        MINGLE_SUITE_CA=true
     fi
     
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3824,10 +3927,8 @@ suiteCABundle() {
 }
 
 suiteDatabase() {
-    if $MINGLE_SUITE_DB ; then
+    if suiteHasBuilt 'db'; then
         return;
-    else
-        MINGLE_SUITE_DB=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3844,10 +3945,8 @@ suiteDatabase() {
 }
 
 suitePython() {
-    if $MINGLE_SUITE_PYTHON ; then
+    if suiteHasBuilt 'py'; then
         return;
-    else
-        MINGLE_SUITE_PYTHON=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3868,10 +3967,8 @@ suitePython() {
 }
 
 suitePerl() {
-    if $MINGLE_SUITE_PERL ; then
+    if suiteHasBuilt 'perl'; then
         return;
-    else
-        MINGLE_SUITE_PERL=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3893,10 +3990,8 @@ suitePerl() {
 }
 
 suiteTextEditorsConvertors() {
-    if $MINGLE_SUITE_TEXT ; then
+    if suiteHasBuilt 'txt'; then
         return;
-    else
-        MINGLE_SUITE_TEXT=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3915,10 +4010,8 @@ suiteTextEditorsConvertors() {
 }
 
 suiteUtilities() {
-    if $MINGLE_SUITE_UTIL ; then
+    if suiteHasBuilt 'utils'; then
         return;
-    else
-        MINGLE_SUITE_UTIL=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3935,10 +4028,8 @@ suiteUtilities() {
 }
 
 suiteJava() {
-    if $MINGLE_SUITE_JAVA ; then
+    if suiteHasBuilt 'java'; then
         return;
-    else
-        MINGLE_SUITE_JAVA=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3955,10 +4046,8 @@ suiteJava() {
 }
 
 suiteSwig() {
-    if $MINGLE_SUITE_SWIG ; then
+    if suiteHasBuilt 'swig'; then
         return;
-    else
-        MINGLE_SUITE_SWIG=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3976,10 +4065,8 @@ suiteSwig() {
 }
 
 suiteDebugTest() {
-    if $MINGLE_SUITE_DEBUG ; then
+    if suiteHasBuilt 'dbg'; then
         return;
-    else
-        MINGLE_SUITE_DEBUG=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -3997,10 +4084,8 @@ suiteDebugTest() {
 }
 
 suiteBoost() {
-    if $MINGLE_SUITE_BOOST ; then
+    if suiteHasBuilt 'boost'; then
         return;
-    else
-        MINGLE_SUITE_BOOST=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4019,10 +4104,8 @@ suiteBoost() {
 }
 
 suiteSCMTools() {
-    if $MINGLE_SUITE_SCM ; then
+    if suiteHasBuilt 'scm'; then
         return;
-    else
-        MINGLE_SUITE_SCM=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4049,10 +4132,8 @@ suiteSCMTools() {
 }
 
 suiteImageTools() {
-    if $MINGLE_SUITE_IMAGE_TOOLS ; then
+    if suiteHasBuilt 'img'; then
         return;
-    else
-        MINGLE_SUITE_IMAGE_TOOLS=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4073,10 +4154,8 @@ suiteImageTools() {
 }
 
 suiteUILibraries() {
-    if $MINGLE_SUITE_UI ; then
+    if suiteHasBuilt 'ui'; then
         return;
-    else
-        MINGLE_SUITE_UI=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4092,15 +4171,29 @@ suiteUILibraries() {
         suiteImageTools
     fi
 
+    buildInstallSDL
     buildInstallGTK
     buildInstallQt
 }
 
-suiteMathLibraries() {
-    if $MINGLE_SUITE_MATH ; then
+suiteMultimedia() {
+    if suiteHasBuilt 'mm'; then
         return;
-    else
-        MINGLE_SUITE_MATH=true
+    fi
+    
+    if ! $MINGLE_EXCLUDE_DEP; then
+        suiteBase
+        suiteTextEditorsConvertors
+        suiteSCMTools
+    fi
+    
+    buildInstallFFMpeg
+    buildInstallPJSIP
+}
+
+suiteMathLibraries() {
+    if suiteHasBuilt 'math'; then
+        return;
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4117,10 +4210,8 @@ suiteMathLibraries() {
 }
 
 suiteCryptoCurrency() {
-    if $MINGLE_SUITE_CRYPTOCURRENCY ; then
+    if suiteHasBuilt 'cc'; then
         return;
-    else
-        MINGLE_SUITE_CRYPTOCURRENCY=true
     fi
     
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4132,10 +4223,8 @@ suiteCryptoCurrency() {
 }
 
 suiteGrpahicLibraries() {
-    if $MINGLE_SUITE_GRAPHICS ; then
+    if suiteHasBuilt 'grafx'; then
         return;
-    else
-        MINGLE_SUITE_GRAPHICS=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4162,10 +4251,8 @@ suiteGrpahicLibraries() {
 }
 
 suiteGeoSpatialLibraries() {
-    if $MINGLE_SUITE_GEO_SPATIAL ; then
+    if suiteHasBuilt 'geo'; then
         return;
-    else
-        MINGLE_SUITE_GEO_SPATIAL=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4191,10 +4278,8 @@ suiteGeoSpatialLibraries() {
 suiteMapnik() {
     local _useDev=$1
 
-    if $MINGLE_MAPNIK ; then
+    if suiteHasBuilt 'map'; then
         return;
-    else
-        MINGLE_MAPNIK=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4221,10 +4306,8 @@ suiteMapnik() {
 }
 
 suiteMapnikTools() {
-    if $MINGLE_MAPNIK_TOOLS; then
+    if suiteHasBuilt 'maptools'; then
         return;
-    else
-        MINGLE_MAPNIK_TOOLS=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4252,10 +4335,8 @@ suiteMapnikTools() {
 }
 
 suiteSimulation() {
-    if $MINGLE_SIMULATION; then
+    if suiteHasBuilt 'sim'; then
         return;
-    else
-        MINGLE_SIMULATION=true
     fi
 
     if ! $MINGLE_EXCLUDE_DEP; then
@@ -4266,10 +4347,8 @@ suiteSimulation() {
 }
 
 suiteOSM2PTSQL() {
-    if $MINGLE_OSM2PGSQL; then
+    if suiteHasBuilt 'osm2pgsql'; then
         return;
-    else
-        MINGLE_OSM2PGSQL=true
     fi
     
     if ! $MINGLE_EXCLUDE_DEP; then

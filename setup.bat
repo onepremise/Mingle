@@ -218,7 +218,7 @@ MOVE /Y mingw64\bin\mingle.sh mingw64\bin\mingle
 REM ===========================================================================
 REM PROCESS ARGUMENTS
 REM ===========================================================================
-SET "MINGLE_SUITE=0"
+SET "MINGLE_SUITE="
 
 :Loop
 
@@ -264,13 +264,13 @@ ECHO development environment. Please select from one of the following options:
 ECHO.
 ECHO Usage: setup.bat [-s NUM]
 ECHO.
-ECHO   -p PATH Use alternate path for build.
-ECHO   -b Use a substitue drive to reduce path length. Msys has a max path length 
-ECHO      of 256, any further and bash configure scripts may crash, causing 
-ECHO      stackdumps which are difficult to determine origin.
-ECHO   -c Open a console with a subst drive for dev purposes.
-ECHO   -u Update configuration.
-ECHO   -s NUM Specify a reference number from one of the suites listed below.
+ECHO   -p     PATH Use alternate path for build.
+ECHO   -b     Use a substitue drive to reduce path length. Msys has a max path 
+ECHO          length of 256, any further and bash configure scripts may crash, 
+ECHO          causing stackdumps which are difficult to determine origin.
+ECHO   -c     Open a console with a subst drive for dev purposes.
+ECHO   -u     Update configuration.
+ECHO   -s key Specify a key from one of the suites listed below.
 ECHO.
 
 msys\bin\bash -l -c "/mingw/bin/mingle -l"
@@ -431,15 +431,15 @@ GOTO EXIT
 REM ===========================================================================
 REM USE SUITE IF PROVIDED
 REM ===========================================================================
-IF %MINGLE_SUITE% NEQ 0 (
+IF DEFINED MINGLE_SUITE (
   ECHO.
   ECHO.
   ECHO "Deploying selected development environment (%MINGLE_SUITE%):"
   ECHO.
 
-  msys\bin\bash -l -c "/mingw/bin/mingle -m"
+  msys\bin\bash -l -c "/mingw/bin/mingle -k %MINGLE_SUITE%"
 
-  IF %MINGLE_SUITE% GTR !ERRORLEVEL! (
+  IF !ERRORLEVEL! EQU 1 (
     ECHO.
     ECHO "Invalid selection^! You can only choose from one of the following:"
     ECHO.
@@ -448,7 +448,6 @@ IF %MINGLE_SUITE% NEQ 0 (
     GOTO EXIT
   )
 
-  msys\bin\bash -l -c "/mingw/bin/mingle -k %MINGLE_SUITE%"
   ECHO.
 )
 
@@ -474,7 +473,7 @@ if not exist "msys%MINGLE_BUILD_DIR%" (
     mkdir "msys%MINGLE_BUILD_DIR%"
 )
 
-IF %MINGLE_SUITE% EQU 0 (
+IF NOT DEFINED MINGLE_SUITE (
     msys\bin\mintty -e msys/bin/bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% 2>&1 | tee %MINGLE_BUILD_DIR%/build.log"
 ) ELSE (
     msys\bin\bash -l -c "/mingw/bin/mingle %MINGLE_PATH_OPTION% --suite=%MINGLE_SUITE% 2>&1 | tee %MINGLE_BUILD_DIR%/build.log"

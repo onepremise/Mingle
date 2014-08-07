@@ -1,57 +1,209 @@
+if [ -e $MINGLE_BASE/mingle/mingle/api/mingle-api.sh ]; then
+    source $MINGLE_BASE/mingle/mingle/api/mingle-util.sh
+elif [ -e /mingw/lib/mingle/api/mingle-util.sh ]; then
+    source /mingw/lib/mingle/api/mingle-util.sh
+else
+    echo
+    echo ERROR: Unable to find mingle-util, required to build and install packages!
+    echo
+    exit 9999
+fi
+
 OPTIONS=
 
+mingleInitSelections() {
+    OPTIONS=(\
+    "base|Base|suiteBase" \
+    "xml|XML Libraries|suiteXML" \
+    "font|Font Libraries|suiteFonts" \
+    "enc|Encryption Libraries|suiteEncryption" \
+    "net|Networking Libraries|suiteNetworking" \
+    "cert|CA Certs|suiteCABundle" \
+    "db|Database Tools|suiteDatabase" \
+    "py|Python Toolkit|suitePython" \
+    "perl|Perl Toolkit|suitePerl" \
+    "java|Java JDK|suiteJava" \
+    "text|Text Editors and Converters|suiteTextEditorsConvertors" \
+    "util|Shell Utilities|suiteUtilities" \
+    "debug|Debugging and Testing|suiteDebugTest" \
+    "boost|Boost Libraries|suiteBoost" \
+    "scm|SCM Tools|suiteSCMTools" \
+    "img|Image Libraries|suiteImageTools" \
+    "math|Math Libraries|suiteMathLibraries" \
+    "grafx|Graphics Libraries|suiteGrpahicLibraries" \
+    "ui|UI Libraries|suiteUILibraries" \
+    "mm|Multimedia - codecs, encoders, converters, etc...|suiteMultimedia" \
+    "geo|Geospatial Libraries|suiteGeoSpatialLibraries" \
+    "map|Manpik 2.1.0|suiteMapnik" \
+    "mapdev|Mapnik Developer Release|suiteMapnik true" \
+    "maptools|Mapnik Tools|suiteMapnikTools" \
+    "osm2pgsql|osm2pgsql|suiteOSM2PTSQL" \
+    "all|All|suiteAll" \
+    "pgisDB|Create PostGIS DB|initializePostGISDB" \
+    "usosm|Import US OSM Data|importOSMUSData" \
+    "fullpgis|Full PostGIS Setup and US Data|fullPostGISSetupWithImport" \
+    "unpgis|Uninstall PostGIS DB|uninstallPostgresql" \
+    "sim|Simulation|suiteSimulation" \
+    "cc|Cryptocurrency|suiteCryptoCurrency" \
+    "q|Quit")
+}
+
+mingleGetDescByKey() {
+    local _keyToFind=$1
+    local addr=''
+    local _i=0
+    local _j=0
+    
+    mingleInitSelections
+
+    # get length of an array
+    tLen=${#OPTIONS[@]}
+     
+    # use for loop read all options
+    for (( _i=0; _i<${tLen}; _i++ ));
+    do
+      IFS='|'
+      read -ra addr <<< "${OPTIONS[$_i]}"
+      local _key="${addr[0]}"
+      local _value="${addr[1]}"
+      IFS=' '
+      
+      if [ "$_keyToFind" == "$_key" ]; then
+          echo "$_value"
+          break
+      fi
+    done
+}
+
+mingleGetFuncFromKey() {
+    local _keyToFind=$1
+    local addr=''
+    local _i=0
+    local _j=0
+    
+    mingleInitSelections
+
+    # get length of an array
+    tLen=${#OPTIONS[@]}
+     
+    # use for loop read all options
+    for (( _i=0; _i<${tLen}; _i++ ));
+    do
+      IFS='|'
+      read -ra addr <<< "${OPTIONS[$_i]}"
+      local _key="${addr[0]}"
+      local _value="${addr[2]}"
+      IFS=' '
+      
+      if [ $_keyToFind == $_key ]; then
+          echo "$_value"
+          break
+      fi
+    done
+}
+
 mingleGetSelections() {
-    OPTIONS=("Base" "XML Libraries" "Font Libraries" "Encryption Libraries" "Networking Libraries" "CA Certs" "Database Tools" "Python Toolkit" "Perl Toolkit" "Java JDK" "Text Editors and Converters" "Shell Utilities" "Debugging and Testing" "Boost Libraries" "SCM Tools" "Image Libraries" "Math Libraries" "Graphics Libraries" "Geospatial Libraries" "Manpik 2.1.0" "Mapnik Developer Release" "Mapnik Tools" "osm2pgsql" "All" "Create PostGIS DB" "Import US OSM Data" "Full PostGIS Setup and US Data" "Uninstall PostGIS DB" "Simulation" "Cryptocurrency" "Quit")
+    local _keysonly=''
+    local addr=''
+    
+    # get length of an array
+    tLen=${#OPTIONS[@]}
+     
+    # use for loop read all options
+    for (( _i=0; _i<${tLen}; _i++ ));
+    do
+      IFS='|'
+      read -ra addr <<< "${OPTIONS[$_i]}"
+      _keysonly="$_keysonly ${addr[0]}"
+      IFS=' '
+    done
+    
+    echo $_keysonly
 }
 
 mingleGetMaxSetting() {
-    mingleGetSelections
+    mingleInitSelections
     tLen=${#OPTIONS[@]}
     exit $tLen
 }
 
 minglePrintSelection() {
     local _selection=$1
-    mingleGetSelections
-
-    echo ${OPTIONS[$((_selection-1))]}
+    local _desc=''
+    
+    _desc=$(mingleGetDescByKey $_selection)
+    
+    if [ -z "$_desc" ]; then
+       return 1
+    fi
+    
+    echo $_desc
+    
+    return 0
 }
 
 minglePrintSelections() {
     local _i=0
-    mingleGetSelections
+    local _j=0
+    local addr=''
+    local key=''
+    local value=''
+    
+    mingleInitSelections
+    
     echo
-    #printf -- '- %s\n' "${OPTIONS[@]}"
 
     # get length of an array
     tLen=${#OPTIONS[@]}
-
+     
     # use for loop read all options
     for (( _i=0; _i<${tLen}; _i++ ));
     do
-      echo "$((_i+1))) ${OPTIONS[$_i]}"
+      IFS='|'
+      read -ra addr <<< "${OPTIONS[$_i]}"
+      local _key="${addr[0]}"
+      local _value="${addr[1]}"
+      IFS=' '
+      
+      #echo "$((_i+1))) ${OPTIONS[$_i]}"
+      printf "%-10s %s\n" "$_key)" "$_value"
     done
 
     echo
 }
 
 mingleProcessSelectionNum() {
-    local _selection=$1
-    local _len=0
+    local _s=$1
 
-    mingleGetSelections
+    mingleInitSelections
+    
+    local _selections=$(mingleGetSelections)
 
-    _len=${#OPTIONS[@]}
-
-    if [ $_selection -lt 1 ] || [ $_selection -gt $_len ]; then
-        echo NONE
-        mingleProcessSelection "NONE"
-        return 1
+    if array_contains _selections "$_s"; then
+        mingleProcessSelection "$_s"
+    elif [ -z "$_s" ]; then
+        echo
+        echo "Please Choose from the following:"
+        echo "---------------------------------------------------------------------"
+        minglePrintSelections
     else
-        mingleProcessSelection "${OPTIONS[$((_selection-1))]}"
+        echo "Invalid selection, $_s. Please Choose from the following:"
+        echo "---------------------------------------------------------------------"
+        minglePrintSelections
+        return 1
     fi
 
     return 0
+}
+
+mingle_print_welcome() {
+    echo
+    echo "Welcome to Mingle!"
+    echo
+    echo "We are going to setup your build environment. Let's get started!"
+    echo
+    echo "Please Choose from the following:"
+    echo "---------------------------------------------------------------------"
 }
 
 mingle_show_help() {
@@ -60,161 +212,55 @@ mingle_show_help() {
     echo
     echo "Arguments:"
     echo "  -h, --help      Show this menu."
-    echo "  -s, --suite=NUM Deploy the suite specified by the selected suite below:"
+    echo "  -s, --suite=key Deploy the suite specified by the selected suite below:"
     echo "  -l, --list      List suites of software to choose from."
-    echo "  -d, --download  Download software only."
-    echo "  -k, --lookup    Lookup suite name from numerical value."
+    echo "  -k, --lookup    Lookup suite name from key value."
     echo "  -e, --exclude   Exclude dependency checks during build."
     echo "  -p, --path=PATH Use alternate path for build."
     echo "  -m              Get max suite count."
 
+    mingle_print_welcome
     minglePrintSelections
 }
 
 mingleMenu() {
     local _s
 
-    echo
-    echo "Welcome to Mingle!"
-    echo
-    echo "We are going to setup your build environment. Let's get started!"
-    echo
-    echo "Please Choose from the following:"
-    echo "---------------------------------------------------------------------"
-    mingleGetSelections
-
-    select _s in "${OPTIONS[@]}"; do
-        mingleProcessSelection "$_s"
+    mingle_print_welcome
+    mingleInitSelections
+    minglePrintSelections
+    
+    while true; do
+      read -p "#?" _s
+      mingleProcessSelectionNum $_s
     done
 }
 
 mingleProcessSelection() {
     local _suite="$1"
+    local _selections=$(mingleGetSelections)
 
-    if [ "$_suite" != "Quit" ]; then
-        mingleInitialize
-
-        echo
-        echo "Preparing suite $_suite..."
-        echo
+    if [ "$_suite" != "q" ]; then
+        if array_contains _selections "$_suite"; then
+            mingleInitialize
+            echo
+            echo "Preparing suite $_suite..."
+            echo
+            local _function=$(mingleGetFuncFromKey $_suite)
+            
+            eval ${_function}
+        else
+            echo
+	    echo "Invalid option. Try another one."
+            minglePrintSelections
+        fi
+    else
+        exit 0
     fi
 
-    case "$_suite" in
-    "Quit")
-        break
-        ;;
-    "Base")
-        suiteBase
-        ;;
-    "XML Libraries")
-        suiteXML
-        ;;
-    "Font Libraries")
-        suiteFonts
-        ;;
-    "Encryption Libraries")
-        suiteEncryption
-        ;;
-    "Networking Libraries")
-        suiteNetworking
-        ;;
-    "CA Certs")
-        suiteCABundle
-        ;;
-    "Database Tools")
-        suiteDatabase
-        ;;
-    "Python Toolkit")
-        suitePython
-        ;;
-    "Perl Toolkit")
-        suitePerl
-        ;;
-    "Java JDK")
-        suiteJava
-        ;;
-    "Debugging and Testing")
-        suiteDebugTest
-        ;;
-    "Boost Libraries")
-        suiteBoost
-        ;;
-    "Text Editors and Converters")
-        suiteTextEditorsConvertors
-        ;; 
-    "Shell Utilities")
-        suiteUtilities
-        ;;         
-    "SCM Tools")
-        suiteSCMTools
-        ;;
-    "Image Libraries")
-        suiteImageTools
-        ;;
-    "Math Libraries")
-        suiteMathLibraries
-        ;;
-    "Graphics Libraries")
-        suiteGrpahicLibraries
-        ;;
-    "Geospatial Libraries")
-        suiteGeoSpatialLibraries
-        ;;
-    "Manpik 2.1.0")
-        suiteMapnik
-        ;;
-    "Mapnik Developer Release")
-        suiteMapnik true
-        ;;
-    "Mapnik Tools")
-        suiteMapnikTools
-        ;;
-    "osm2pgsql")
-        suiteOSM2PTSQL
-        ;;
-    "All")
-        suiteAll
-        break
-        ;;
-    "Create PostGIS DB")
-        initializePostGISDB
-        #installPostgresqlService
-        break
-        ;;
-    "Import US OSM Data")
-        importOSMUSData
-        break
-        ;;
-    "Full PostGIS Setup and US Data")
-        fullPostGISSetupWithImport
-        break
-        ;;
-    "Uninstall PostGIS DB")
-        uninstallPostgresql
-        break
-        ;;
-    "Simulation")
-        suiteSimulation
-        ;;
-    "Cryptocurrency")
-        suiteCryptoCurrency
-        ;;
-    "Quit")
-        break
-        ;;
-    *)
-        echo
-        echo "Invalid option. Try another one."
-        minglePrintSelections
-        break
-        ;;  
-    esac
-
-    if [ ! -z "$_suite" ] && [ "$_suite" != "NONE" ] && [ "$_suite" != "Quit" ]; then
+    if [ ! -z "$_suite" ] && [ "$_suite" != "NONE" ] && [ "$_suite" != "q" ]; then
         mingleCleanup
     fi
-
-    minglePrintSelections
 }
 
 if [ -n "$MINGLE_SYNTAX_CHECK" ]; then
@@ -246,13 +292,9 @@ do
         minglePrintSelections
         exit 0
         ;;
-    -d | --download)
-        mingleDownloadPackages
-        exit 0
-        ;;
     -k | --lookup)
         minglePrintSelection $2
-        exit 0
+        exit $?
         ;;
     -m)
         mingleGetMaxSetting
