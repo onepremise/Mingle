@@ -18,10 +18,16 @@
 
 /* Written by Jim Meyering.  */
 
+#if defined __cplusplus
+# define _GL_EXTERN_C extern "C"
+#else
+# define _GL_EXTERN_C extern
+#endif
+
 #if GNULIB_FILENAMECAT
-char *file_name_concat (char const *dir, char const *base,
+_GL_EXTERN_C char *file_name_concat (char const *dir, char const *base,
                         char **base_in_result);
 #endif
 
-char *mfile_name_concat (char const *dir, char const *base,
+_GL_EXTERN_C char *mfile_name_concat (char const *dir, char const *base,
                          char **base_in_result);

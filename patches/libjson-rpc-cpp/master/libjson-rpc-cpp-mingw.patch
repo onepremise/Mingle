@@ -1,0 +1,51 @@
+--- libjson-rpc-cpp-master/src/stubgenerator/Makefile.am	2014-07-15 09:26:34 -0400
++++ libjson-rpc-cpp-master/src/stubgenerator/Makefile2.am	2014-08-08 15:33:54 -0400
+@@ -4,7 +4,7 @@
+ 	-Wall \
+ 	-I$(top_srcdir)/src 
+    
+-appldflags = -rdynamic
++appldflags = 
+ 
+ appldadd = \
+   @CURL_LIBS@ \
+--- libjson-rpc-cpp-eaca2481e2889d5a5b748383fb02b1d395969cd4/src/jsonrpc/clientconnector.h	2014-10-04 18:32:44 -0400
++++ libjson-rpc-cpp-eaca2481e2889d5a5b748383fb02b1d395969cd4/src/jsonrpc/clientconnector2.h	2014-10-10 13:53:17 -0400
+@@ -13,8 +13,7 @@
+ #include <string>
+ #include "exception.h"
+ 
+-
+-#ifdef _WINUSER_
++#if defined(_WINUSER_) || defined(__MINGW__)
+   // WinUser.h has a preprocessor macro to replace SendMessage with SendMessageW or SendMessageA
+   // We need to undef this macro to be sure that our AbstractClientConnector::SendMessage methods are not
+   // modified by this preprocessor macro
+--- libjson-rpc-cpp-eaca2481e2889d5a5b748383fb02b1d395969cd4/src/jsonrpc/connectors/httpclient.cpp	2014-10-04 18:32:44 -0400
++++ libjson-rpc-cpp-eaca2481e2889d5a5b748383fb02b1d395969cd4/src/jsonrpc/connectors/httpclient2.cpp	2014-10-10 13:52:18 -0400
+@@ -17,6 +17,16 @@
+ 
+ using namespace std;
+ 
++#if defined(_WINUSER_) || defined(__MINGW__)
++  // WinUser.h has a preprocessor macro to replace SendMessage with SendMessageW or SendMessageA
++  // We need to undef this macro to be sure that our AbstractClientConnector::SendMessage methods are not
++  // modified by this preprocessor macro
++  #ifdef SendMessage
++  #undef SendMessage
++  #endif
++#endif
++
++
+ namespace jsonrpc
+ {
+     /**
+@@ -90,7 +100,7 @@
+         //headers = curl_slist_append(headers, "Accept: application/json");
+         for (std::map<std::string, std::string>::iterator header = this->headers.begin(); header != this->headers.end(); ++header) {
+             headers = curl_slist_append(headers, (header->first + ": " + header->second).c_str());
+-		}
++        }
+ 
+         headers = curl_slist_append(headers, "Content-Type: application/json");
+         headers = curl_slist_append(headers, "charsets: utf-8");

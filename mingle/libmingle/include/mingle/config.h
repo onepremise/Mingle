@@ -4080,7 +4080,7 @@
 
 /* Define if vfprintf is overridden by a POSIX compliant gnulib
    implementation. */
-#define REPLACE_VFPRINTF_POSIX 1
+//#define REPLACE_VFPRINTF_POSIX 1
 
 /* Define if vprintf is overridden by a POSIX compliant gnulib implementation.
    */
@@ -4103,9 +4103,9 @@
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
    automatically deduced at runtime.
-	STACK_DIRECTION > 0 => grows toward higher addresses
-	STACK_DIRECTION < 0 => grows toward lower addresses
-	STACK_DIRECTION = 0 => direction of growth unknown */
+    STACK_DIRECTION > 0 => grows toward higher addresses
+    STACK_DIRECTION < 0 => grows toward lower addresses
+    STACK_DIRECTION = 0 => direction of growth unknown */
 /* #undef STACK_DIRECTION */
 
 /* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */

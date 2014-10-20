@@ -1,0 +1,172 @@
+--- boost_1_56_0/tools/build/src/tools/python.jam	2014-06-19 13:15:38 -0400
++++ boost_1_56_0/tools/build/src/tools/python2.jam	2014-08-11 09:44:20 -0400
+@@ -506,44 +506,9 @@
+ {
+     exec-prefix ?= $(prefix) ;
+ 
+-    if $(target-os) = windows
+-    {
+-        # The exec_prefix is where you're supposed to look for machine-specific
+-        # libraries.
+-        local default-library-path = $(exec-prefix)\\libs ;
+-        local default-include-path = $(:E=Include:R=$(prefix)) ;
+-
+-        # If the interpreter was found in a directory called "PCBuild" or
+-        # "PCBuild8," assume we're looking at a Python built from the source
+-        # distro, and go up one additional level to the default root. Otherwise,
+-        # the default root is the directory where the interpreter was found.
+-
+-        # We ask Python itself what the executable path is in case of
+-        # intermediate symlinks or shell scripts.
+-        local executable-dir = $(sys.executable:D) ;
+-
+-        if [ MATCH ^(PCBuild) : $(executable-dir:D=) ]
+-        {
+-            debug-message "This Python appears to reside in a source distribution;" ;
+-            debug-message "prepending \""$(executable-dir)"\" to default library search path" ;
+-
+-            default-library-path = $(executable-dir) $(default-library-path) ;
+-
+-            default-include-path = $(:E=PC:R=$(executable-dir:D)) $(default-include-path) ;
+-
+-            debug-message "and \""$(default-include-path[1])"\" to default #include path" ;
+-        }
+-
+-        libraries ?= $(default-library-path) ;
+-        includes ?= $(default-include-path) ;
+-    }
+-    else
+-    {
+-        includes ?= $(prefix)/include/python$(version) ;
+-
+-        local lib = $(exec-prefix)/lib ;
+-        libraries ?= $(lib)/python$(version)/config $(lib) ;
+-    }
++    includes ?= $(prefix)/include/python$(version) ;
++    local lib = $(exec-prefix)/lib ;
++    libraries ?= $(lib)/python$(version)/config $(lib) ;
+ }
+ 
+ # The version of the python interpreter to use.
+@@ -661,7 +626,7 @@
+     if <target-os>windows in $(requirements)
+     {
+         local major-minor = [ split-version $(version) ] ;
+-        lib-version = $(major-minor:J="") ;
++        lib-version = $(major-minor:J=".") ;
+         if <python-debugging>on in $(requirements)
+         {
+             lib-version = $(lib-version)_d ;
+--- boost_1_56_0/boost/program_options/detail/config_file.hpp	2013-12-04 00:17:17 -0500
++++ boost_1_56_0/boost/program_options/detail/config_file2.hpp	2014-08-11 09:18:03 -0400
+@@ -38,7 +38,7 @@
+         for(; i !=e; ++i) {
+             *i;
+         }
+-        
++
+         Syntax conventions:
+ 
+         - config file can not contain positional options
+@@ -47,10 +47,10 @@
+         - variable assignments are in the form
+           name '=' value.
+           spaces around '=' are trimmed.
+-        - Section names are given in brackets. 
++        - Section names are given in brackets.
+ 
+          The actual option name is constructed by combining current section
+-         name and specified option name, with dot between. If section_name 
++         name and specified option name, with dot between. If section_name
+          already contains dot at the end, new dot is not inserted. For example:
+          @verbatim
+          [gui.accessibility]
+@@ -61,8 +61,8 @@
+ 
+          TODO: maybe, we should just accept a pointer to options_description
+          class.
+-     */    
+-    class common_config_file_iterator 
++     */
++    class BOOST_PROGRAM_OPTIONS_DECL common_config_file_iterator
+         : public eof_iterator<common_config_file_iterator, option>
+     {
+     public:
+@@ -74,9 +74,9 @@
+         virtual ~common_config_file_iterator() {}
+ 
+     public: // Method required by eof_iterator
+-        
++
+         void get();
+-        
++
+     protected: // Stubs for derived classes
+ 
+         // Obtains next line from the config file
+@@ -85,7 +85,7 @@
+         // constructor of this class, but to avoid templating this class
+         // we'd need polymorphic iterator, which does not exist yet.
+         virtual bool getline(std::string&) { return false; }
+-        
++
+     private:
+         /** Adds another allowed option. If the 'name' ends with
+             '*', then all options with the same prefix are
+@@ -94,7 +94,7 @@
+         void add_option(const char* name);
+ 
+         // Returns true if 's' is a registered option name.
+-        bool allowed_option(const std::string& s) const; 
++        bool allowed_option(const std::string& s) const;
+ 
+         // That's probably too much data for iterator, since
+         // it will be copied, but let's not bother for now.
+@@ -113,11 +113,11 @@
+             found_eof();
+         }
+ 
+-        /** Creates a config file parser for the specified stream.            
++        /** Creates a config file parser for the specified stream.
+         */
+-        basic_config_file_iterator(std::basic_istream<charT>& is, 
++        basic_config_file_iterator(std::basic_istream<charT>& is,
+                                    const std::set<std::string>& allowed_options,
+-                                   bool allow_unregistered = false); 
++                                   bool allow_unregistered = false);
+ 
+     private: // base overrides
+ 
+@@ -126,7 +126,7 @@
+     private: // internal data
+         shared_ptr<std::basic_istream<charT> > is;
+     };
+-    
++
+     typedef basic_config_file_iterator<char> config_file_iterator;
+     typedef basic_config_file_iterator<wchar_t> wconfig_file_iterator;
+ 
+@@ -139,12 +139,12 @@
+ 
+     template<class charT>
+     basic_config_file_iterator<charT>::
+-    basic_config_file_iterator(std::basic_istream<charT>& is, 
++    basic_config_file_iterator(std::basic_istream<charT>& is,
+                                const std::set<std::string>& allowed_options,
+                                bool allow_unregistered)
+     : common_config_file_iterator(allowed_options, allow_unregistered)
+     {
+-        this->is.reset(&is, null_deleter());                 
++        this->is.reset(&is, null_deleter());
+         get();
+     }
+ 
+@@ -173,7 +173,7 @@
+     basic_config_file_iterator<wchar_t>::getline(std::string& s);
+ #endif
+ 
+-    
++
+ 
+ }}}
+ 

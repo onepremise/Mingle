@@ -99,7 +99,7 @@ testExampleBuild() {
         cp -rf $MINGLE_BASE/mingle/libmingle .
     fi
 
-    buildInstallGeneric "libmingle" false false false "" false false "" "" "ignorexxxx" "" ""
+    buildInstallGeneric "libmingle" false false false false "" false false "" "" "ignorexxxx" "" ""
     
     if [ -e "/mingw/lib/libmingle.a" ]; then
         mingleLog "Test pass."

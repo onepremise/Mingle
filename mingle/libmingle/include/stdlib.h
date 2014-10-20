@@ -1051,7 +1051,7 @@ _GL_WARN_ON_USE (realloc, "realloc is not POSIX compliant everywhere - "
 #endif
 
 #if 1
-# if 0
+# if 1
 #  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
 #   define realpath rpl_realpath
 #  endif
@@ -1059,7 +1059,7 @@ _GL_FUNCDECL_RPL (realpath, char *, (const char *name, char *resolved)
                                     _GL_ARG_NONNULL ((1)));
 _GL_CXXALIAS_RPL (realpath, char *, (const char *name, char *resolved));
 # else
-#  if !0
+#  if !1
 _GL_FUNCDECL_SYS (realpath, char *, (const char *name, char *resolved)
                                     _GL_ARG_NONNULL ((1)));
 #  endif

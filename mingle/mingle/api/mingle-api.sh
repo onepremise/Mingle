@@ -24,11 +24,19 @@ ad_mkdir() {
     fi
 }
 
+ad_rm() {
+    local _file=$1
+
+    if [ -e $_file ]; then
+        rm -f $_file || mingleError $? "rm failed for $_file, aborting!"
+    fi
+}
+
 ad_rmdir() {
     local _dir=$1
 
     if [ -e $_dir ]; then
-        rm -rf $_dir || mingleError $? "mkdir failed for $_dir, aborting!"
+        rm -rf $_dir || mingleError $? "rmdir failed for $_dir, aborting!"
     fi
 }
 
@@ -287,9 +295,10 @@ ad_setDefaultEnv() {
     # -D_POSIX_TIMEOUTS -D_GLIBCXX__PTHREADS -D_GLIBCXX_HAS_GTHREADS
     export "PKG_CONFIG_PATH=/mingw/lib/pkgconfig"
     #for debugging: CFLAGS=-g -fno-inline -fno-strict-aliasing
-    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -Ofast -funroll-all-loops"
-    export "LDFLAGS=-L/mingw/lib"
-    export "CPPFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -O2 -funroll-all-loops"
+    export "CFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -Ofast"
+    export "LDFLAGS=-L/mingw/lib -Wl,--enable-auto-image-base"
+    #export "LDFLAGS=-L/mingw/lib"
+    export "CPPFLAGS=-I/mingw/include -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -O2"
     export "CXXFLAGS=$CPPFLAGS"
     export "CRYPTO=POLARSSL"
     export "CC=x86_64-w64-mingw32-gcc"
@@ -340,18 +349,46 @@ ad_patch() {
     patch --ignore-whitespace -f -p1 < $_patchFile
 }
 
+ad_remove_old_prefix_if_new() {
+    local _value="$1"
+    local _checkforprefix="$2"
+    
+    if [[ $_checkforprefix == *--prefix* ]]
+    then
+      local _split=(${_value// / })
+      local _after=${_split[@]:1}
+      echo "${_split[@]:1}"
+    else
+      echo "${_value}" 
+    fi
+}
+
+ad_get_config_options() {
+    local _options="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32"
+    
+    echo "$_options"
+}
+
 ad_configure() {
     local _project=$1
     local _runAutoGenIfExists=$2 #true/false
-    local _runACLocal=$3 #true/false
-    local _aclocalFlags=$4
-    local _runAutoconf=$5 #true/false
-    local _options="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32"
-    local _additionFlags=$6
+    local _runAutoreconf=$3
+    local _runACLocal=$4 #true/false
+    local _aclocalFlags=$5
+    local _runAutoconf=$6 #true/false
+    local _options=$(ad_get_config_options)
+    local _additionFlags=$7
+    local _argCount=7
     
     mingleLog "Configuring..." true
     
+    if [ "$#" -ne "$_argCount" ]; then
+        mingleError 9999 "ad_configure supplied invalid, $#, arguments. Expected $_argCount arguments, aborting!"
+    fi
+    
     local _projectDir=$(ad_getDirFromWC "$_project")
+    
+    _options=$(ad_remove_old_prefix_if_new "$_options" "$_additionFlags")
 
     ad_cd $_projectDir
     
@@ -369,23 +406,27 @@ ad_configure() {
         fi
     elif [ -e "configure.ac" ] || [ -e "configure.in" ]; then
         if [ -e "/mingw/bin/autoconf" ];then
-            if $_runACLocal; then
-                mingleLog "Executing aclocal $_aclocalFlags..." true
+            if $_runAutoreconf; then
+                autoreconf --force --install --verbose
+            else
+                if $_runACLocal; then
+                    mingleLog "Executing aclocal $_aclocalFlags..." true
                 
-                if [ -n "$_aclocalFlags" ]; then
-                    aclocal $_aclocalFlags || mingleError $? "ad_configure aclocal failed, aborting!"
-                else
-                    aclocal || mingleError $? "ad_configure aclocal failed, aborting!"
+                    if [ -n "$_aclocalFlags" ]; then
+                        aclocal $_aclocalFlags || mingleError $? "ad_configure aclocal failed, aborting!"
+                    else
+                        aclocal || mingleError $? "ad_configure aclocal failed, aborting!"
+                    fi
                 fi
-            fi
 
-            if $_runAutoconf; then
-                mingleLog "Executing autoconf..." true
-                autoconf || mingleError $? "ad_configure autoconf failed, aborting!"
+                if $_runAutoconf; then
+                    mingleLog "Executing autoconf..." true
+                    autoconf || mingleError $? "ad_configure autoconf failed, aborting!"
                 
-                mingleLog "Executing autoheader..." true
-                autoheader               
-            fi
+                    mingleLog "Executing autoheader..." true
+                    autoheader               
+                fi
+           fi
         fi
     fi
         
@@ -396,7 +437,7 @@ ad_configure() {
     
         mingleLog
         mingleLog "Using CC: $CC"
-	mingleLog "Using CXX: $CXX"
+    mingleLog "Using CXX: $CXX"
         mingleLog "Using CFLAGS: $CFLAGS"
         mingleLog "Using CPPFLAGS: $CPPFLAGS"
         mingleLog "Using CXXFLAGS: $CXXFLAGS"
@@ -432,7 +473,7 @@ ad_configure() {
             
             _test="${_test%\.}"
             _test="${_test%\"}"
-	    _test="${_test#\"}"
+        _test="${_test#\"}"
 
             if $_configFailed; then
                 cat out.txt
@@ -486,7 +527,7 @@ ad_make() {
     local _makeParameters="$2"
     
     local _projectDir=$(ad_getDirFromWC "$_project")
-	
+    
     ad_cd $_projectDir
 
     mingleLog "GCC Version Information:" true
@@ -500,11 +541,11 @@ ad_make() {
         IFS=' '
         make "${_args[@]}" || mingleError $? "make failed, aborting!"
         mingleLog "Executing make install $_makeParameters..." true
-        make install "${_args[@]}" || mingleError $? "make install failed, aborting"
+        make install "${_args[@]}" || mingleError $? "make install failed, aborting!"
     else
         make || mingleError $? "make failed, aborting!"
         mingleLog "Executing make install $_makeParameters..." true
-        make install || mingleError $? "make install failed, aborting"
+        make install || mingleError $? "make install failed, aborting!"
     fi
 
     ad_cd ".."
@@ -517,10 +558,14 @@ ad_boost_jam() {
     cd $_projectDir || mingleError $? "ad_boost_jam cd failed, aborting!"
     
     #this is needed for boost https://svn.boost.org/trac/boost/ticket/6350
-    cp $MINGLE_BASE/mingle/mingw.jam tools/build/v2/tools || mingleError $? "ad_boost_jam mingw.jam copy failed, aborting!"
-
     
-   ./bootstrap.sh --with-icu --prefix=/mingw --with-toolset=mingw || mingleError $? "ad_boost_jam boostrap failed, aborting"
+    if [ -e tools/build/v2/tools ]; then
+        cp $MINGLE_BASE/mingle/mingw.jam tools/build/v2/tools || mingleError $? "ad_boost_jam mingw.jam copy failed, aborting!"
+    elif [ -e tools/build/src/tools ]; then
+        cp $MINGLE_BASE/mingle/mingw.jam tools/build/src/tools || mingleError $? "ad_boost_jam mingw.jam copy failed, aborting!"
+    fi
+    
+   ./bootstrap.sh --with-icu=/mingw --prefix=/mingw --with-toolset=mingw || mingleError $? "ad_boost_jam boostrap failed, aborting"
    
     bjam --prefix=/mingw -sICU_PATH=/mingw -sICONV_PATH=/mingw toolset=mingw address-model=64 threadapi=win32 variant=debug,release link=static,shared threading=multi define=MS_WIN64 define=BOOST_USE_WINDOWS_H --define=__MINGW32__ --define=_WIN64 --define=MS_WIN64 install || mingleError $? "ad_boost_jam bjam failed, aborting"
     
@@ -533,7 +578,19 @@ ad_build() {
     local _projectDir=$(ad_getDirFromWC "$_project")
     cd $_projectDir || mingleError $? "cd failed, aborting"
     
-    ./build.sh  || mingleError $? "ad_build build.sh failed, aborting"
+    ./build.sh  || mingleError $? "ad_build build.sh failed, aborting!"
+    
+    ad_cd ".."
+}
+
+ad_scons() {
+    local _project=$1
+    local _makeParameters="$2"
+    
+    local _projectDir=$(ad_getDirFromWC "$_project")
+    cd $_projectDir || mingleError $? "cd failed, aborting"
+    
+    scons.py $_makeParameters  || mingleError $? "ad_scons SConstruct failed, aborting!"
     
     ad_cd ".."
 }
@@ -542,12 +599,16 @@ ad_exec_script() {
     local _project="$1"
     local _postBuildCommand="$2"
     
+    echo "_project=$_project"
+    
     local _projectDir=$(ad_getDirFromWC "$_project")
-    cd $_projectDir || mingleError $? "cd failed, aborting"
+    ad_cd $_projectDir || mingleError $? "cd failed, aborting"
+    
+    echo "_projectDir=$_projectDir"
         
     if [ ! -z "$_postBuildCommand" ]; then
         mingleLog "Executing post command: '$_postBuildCommand'" true
-        `$_postBuildCommand`
+        eval "$_postBuildCommand || mingleError $? 'ad_exec_script failed, aborting!'"
     fi
         
     ad_cd ".."
@@ -585,22 +646,23 @@ mingleAutoBuild() {
     local _projectSearchName="$5"
     local _cleanEnv=$6 #true/false
     local _runAutoGenIfExists=$7 #true/false
-    local _runACLocal=$8 #true/false
-    local _aclocalFlags="$9"
-    local _runAutoconf=${10} #true/false
-    local _runConfigure=${11} #true/false
-    local _configureFlags="${12}"
-    local _makeParameters="${13}"
-    local _binCheck="${14}"
-    local _postBuildCommand="${15}"
-    local _exeToTest="${16}"
+    local _runAutoreconf=$8 #true/false
+    local _runACLocal=$9 #true/false
+    local _aclocalFlags="${10}"
+    local _runAutoconf=${11} #true/false
+    local _runConfigure=${12} #true/false
+    local _configureFlags="${13}"
+    local _makeParameters="${14}"
+    local _binCheck="${15}"
+    local _postBuildCommand="${16}"
+    local _exeToTest="${17}"
     
     mingleLog "Auto-check for binary $_binCheck..." true
     
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] );then
         mingleCategoryDownload $_projectName $_version $_url $_target
         mingleCategoryDecompress $_projectName $_version "$_projectSearchName"
-        buildInstallGeneric "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+        buildInstallGeneric "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
     fi
 }
 
@@ -608,33 +670,40 @@ buildInstallGeneric() {
     local _project="$1"
     local _cleanEnv=$2 #true/false
     local _runAutoGenIfExists=$3 #true/false
-    local _runACLocal=$4 #true/false
-    local _aclocalFlags="$5"
-    local _runAutoconf=$6 #true/false
-    local _runConfigure=$7 #true/false
-    local _configureFlags="$8"
-    local _makeParameters="$9"
-    local _binCheck="${10}"
-    local _postBuildCommand="${11}"
-    local _exeToTest="${12}"
+    local _runAutoreconf=$4 #true/false
+    local _runACLocal=$5 #true/false
+    local _aclocalFlags="$6"
+    local _runAutoconf=$7 #true/false
+    local _runConfigure=$8 #true/false
+    local _configureFlags="$9"
+    local _makeParameters="${10}"
+    local _binCheck="${11}"
+    local _postBuildCommand="${12}"
+    local _exeToTest="${13}"
+
+    if [ "$#" -ne "13" ]; then
+        mingleError 9999 "buildInstallGeneric supplied invalid, $#, arguments. Expected 13 arguments, aborting!"
+    fi
 
     ad_cd $MINGLE_BUILD_DIR
 
     mingleLog
     mingleLog "Generic Build Initiated:"
-    mingleLog "  _project:          $_project"
-    mingleLog "  _cleanEnv:         $_cleanEnv"
-    mingleLog "  _runACLocal:       $_runACLocal"
-    mingleLog "  _aclocalFlags:     $_aclocalFlags"
-    mingleLog "  _runAutoconf:      $_runAutoconf"
-    mingleLog "  _runConfigure:     $_runConfigure"
-    mingleLog "  _configureFlags:   $_configureFlags"
-    mingleLog "  _makeParameters:   $_makeParameters"
-    mingleLog "  _binCheck:         $_binCheck"
-    mingleLog "  _postBuildCommand: $_postBuildCommand"
-    mingleLog "  _exeToTest:        $_exeToTest"
-    mingleLog "Checking for binary $_binCheck..." true
+    mingleLog "  _project:            $_project"
+    mingleLog "  _cleanEnv:           $_cleanEnv"
+    mingleLog "  _runAutoGenIfExists: $_runAutoGenIfExists"
+    mingleLog "  _runAutoreconf:      $_runAutoreconf"
+    mingleLog "  _runACLocal:         $_runACLocal"
+    mingleLog "  _aclocalFlags:       $_aclocalFlags"
+    mingleLog "  _runAutoconf:        $_runAutoconf"
+    mingleLog "  _runConfigure:       $_runConfigure"
+    mingleLog "  _configureFlags:     $_configureFlags"
+    mingleLog "  _makeParameters:     $_makeParameters"
+    mingleLog "  _binCheck:           $_binCheck"
+    mingleLog "  _postBuildCommand:   $_postBuildCommand"
+    mingleLog "  _exeToTest:          $_exeToTest"
     
+    mingleLog "Checking for binary $_binCheck..." true
     if ! ( [ -f "/mingw/lib/$_binCheck" ] || [ -f "/mingw/bin/$_binCheck" ] );then
         mingleLog "Building $_project..." true
 
@@ -647,7 +716,7 @@ buildInstallGeneric() {
         local _projectDir=$(ad_getDirFromWC "$_project")
 
         if $_runConfigure; then
-            ad_configure "$_project" $_runAutoGenIfExists $_runACLocal "$_aclocalFlags" $_runAutoconf "$_configureFlags"
+            ad_configure "$_project" $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf "$_configureFlags"
         fi
 
         local _jamCheck=`grep -i BJAM "$_projectDir/bootstrap.sh"`
@@ -656,6 +725,10 @@ buildInstallGeneric() {
             ad_boost_jam "$_project"
         elif [ -e "$_projectDir/build.sh" ]; then
             ad_build "$_project"
+        elif [ -e "$_projectDir/makefile" ] || [ -e "$_projectDir/Makefile" ]; then
+            ad_make "$_project" "$_makeParameters"
+        elif [ -e "$_projectDir/SConstruct" ]; then
+            ad_scons "$_project" "$_makeParameters"
         else
             ad_make "$_project" "$_makeParameters"
         fi
@@ -676,7 +749,7 @@ buildInstallGeneric() {
 
         ad_cd $MINGLE_BUILD_DIR
     else
-        mingleLog "Already Installed."
+        mingleLog "$_project Already Installed."
     fi
     
     ad_run_test "$_exeToTest"
@@ -950,7 +1023,7 @@ mingleDecompress() {
             fi
             
             if [ -d "$_targetdircheck" ]; then
-	        mingleLog "$_targetdircheck already decompressed. Using..." true
+            mingleLog "$_targetdircheck already decompressed. Using..." true
                 return
             fi
         fi
@@ -973,7 +1046,7 @@ mingleDecompress() {
         elif [ ${_decompFile: -4} == ".zip" ]; then
             unzip -q -n "$_decompFile"
             local _result=$?
-	    if ! ( [ "$_result" == 0 ] || [ "$_result" == 3 ] );then
+        if ! ( [ "$_result" == 0 ] || [ "$_result" == 3 ] );then
                 echo _result=$_result
                 mingleError $? "Decompression failed for $_decompFile, aborting!"
             fi

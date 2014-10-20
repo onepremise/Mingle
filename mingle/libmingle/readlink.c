@@ -25,6 +25,8 @@
 
 #if !HAVE_READLINK
 
+extern char* realpath (const char *name, char *resolved);
+
 /* readlink() substitute for systems that don't have a readlink() function,
    such as DJGPP 2.03 and mingw32.  */
 
@@ -33,6 +35,25 @@ readlink (const char *name, char *buf _GL_UNUSED,
           size_t bufsize _GL_UNUSED)
 {
   struct stat statbuf;
+
+#ifdef __MINGW32__
+  if (strcmp(name,"/proc/self/exe")==0) {
+      char *rpath = NULL;
+      rpath = malloc (bufsize);
+      if (rpath == NULL) {
+         /* It's easier to set errno to ENOMEM than to rely on the
+            'malloc-posix' gnulib module.  */
+         errno = ENOMEM;
+         return -1;
+      }
+
+      GetModuleFileName(NULL, rpath, bufsize);
+
+      if (realpath(rpath,buf)) {
+          return strlen(buf);
+      }
+  } else
+#endif
 
   /* In general we should use lstat() here, not stat().  But on platforms
      without symbolic links, lstat() - if it exists - would be equivalent to

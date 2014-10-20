@@ -11,3 +11,788 @@
  /* Specification.  */
  #include "msvc-inval.h"
  
+--- texinfo-5.1/info/pcterm.c	2013-02-22 19:11:26 -0500
++++ texinfo-5.1/info/pcterm2.c	2014-10-12 13:36:30 -0400
+@@ -53,7 +53,7 @@
+     SHORT curx;
+     SHORT cury;
+     COORD bufsize;
+-    unsigned char currmode;	/* unused and unsupported for Windows */
++    unsigned char currmode; /* unused and unsupported for Windows */
+ };
+ 
+ struct termios {
+@@ -72,7 +72,7 @@
+ 
+ #include "variables.h"
+ 
+-extern int speech_friendly;	/* defined in info.c */
++extern int speech_friendly; /* defined in info.c */
+ 
+ /* **************************************************************** */
+ /*                                                                  */
+@@ -143,8 +143,8 @@
+   hstdin = GetStdHandle (STD_INPUT_HANDLE);
+   hstdout = GetStdHandle (STD_OUTPUT_HANDLE);
+   hinfo = CreateConsoleScreenBuffer (GENERIC_READ | GENERIC_WRITE,
+-				     FILE_SHARE_READ | FILE_SHARE_WRITE,
+-				     NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
++                     FILE_SHARE_READ | FILE_SHARE_WRITE,
++                     NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+ 
+   if (hstdin != INVALID_HANDLE_VALUE
+       && hstdout != INVALID_HANDLE_VALUE
+@@ -171,10 +171,10 @@
+       DWORD error_no = GetLastError ();
+ 
+       if (!FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+-			  error_no,
+-			  0, /* choose most suitable language */
+-			  errbuf, sizeof (errbuf), NULL))
+-	sprintf (errbuf, "w32 error %u", error_no);
++              error_no,
++              0, /* choose most suitable language */
++              errbuf, sizeof (errbuf), NULL))
++    sprintf (errbuf, "w32 error %u", error_no);
+       CloseHandle (hinfo);
+       info_error (_("Terminal cannot be initialized: %s\n"), errbuf, NULL);
+       exit (1);
+@@ -239,7 +239,7 @@
+   nchars = csbi.dwSize.X - start_pos.X;
+ 
+   FillConsoleOutputAttribute (hscreen, current_attr, nchars, start_pos,
+-			      &written);
++                  &written);
+   FillConsoleOutputCharacter (hscreen, ' ', nchars, start_pos, &written);
+ }
+ 
+@@ -355,12 +355,12 @@
+ 
+ /* Translate a Windows key event into the equivalent sequence of bytes
+    to be submitted to Info dispatcher.  */
+-#define define_seq(p,s1,s2)					\
+-  do {								\
+-    if ((ctl & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0)	\
+-      memcpy (p, s1, sizeof (s1)), p += sizeof (s1) - 1;	\
+-    else							\
+-      memcpy (p, s2, sizeof (s2)), p += sizeof (s2) - 1;	\
++#define define_seq(p,s1,s2)                 \
++  do {                              \
++    if ((ctl & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0)  \
++      memcpy (p, s1, sizeof (s1)), p += sizeof (s1) - 1;    \
++    else                            \
++      memcpy (p, s2, sizeof (s2)), p += sizeof (s2) - 1;    \
+   } while (0)
+ 
+ static int
+@@ -371,82 +371,82 @@
+   switch (ascii_ch)
+     {
+       case '\0':
+-	/* Keys with no ASCII code are extended keys, like arrows.  */
+-	switch (vkey)
+-	  {
+-	    case VK_PRIOR:
+-	      define_seq (p, "\033\061p", "\033v");
+-	      break;
+-	    case VK_NEXT:
+-	      define_seq (p, "\033\061n", "\026");
+-	      break;
+-	    case VK_END:
+-	      define_seq (p, "\033>", "\033>");
+-	      break;
+-	    case VK_HOME:
+-	      define_seq (p, "\033<", "\033<");
+-	      break;
+-	    case VK_LEFT:
+-	      define_seq (p, "\033b", "\033[D");
+-	      break;
+-	    case VK_UP:
+-	      define_seq (p, "\033\061u", "\033[A");
+-	      break;
+-	    case VK_RIGHT:
+-	      define_seq (p, "\033f", "\033[C");
+-	      break;
+-	    case VK_DOWN:
+-	      define_seq (p, "\033\061m", "\033[B");
+-	      break;
+-	    case VK_INSERT:
+-	      define_seq (p, "\033[L", "\033[L");
+-	      break;
+-	    case VK_DELETE:	/* Delete => Ctrl-d, Alt-Delete => ESC d */
+-	      if ((ctl & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0)
+-		define_seq (p, "\033d", "\033d");
+-	      else
+-		define_seq (p, "\033d", "\004");
+-	      break;
+-	    case VK_HELP:	/* F1 => Ctrl-h */
+-	    case VK_F1:
+-	      *p++ = '\010';
+-	      break;
+-	    case 50:		/* Ctrl-@ => '\0' */
+-	      if ((ctl & SHIFT_PRESSED) != 0)
+-		*p++ = '\0';
+-	      break;
+-	    default:
+-	      if (0x41 <= vkey && vkey <= 0x5a)
+-		{
+-		  /* Alt-Ctrl-a, Alt-Ctrl-b, etc.  */
+-		  *p++ = '\033';
+-		  *p++ = '\001' + vkey - 0x41;
+-		}
+-	  }
+-	break;
+-      case ' ':			/* Ctrl-SPC => '\0' */
+-	if ((ctl & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0)
+-	  ascii_ch = '\0';
+-	*p++ = ascii_ch;
+-	break;
+-      case '\t':		/* Shift-TAB/Alt-TAB => Esc-TAB */
+-	if ((ctl & (SHIFT_PRESSED | LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0)
+-	  {
+-	    memcpy (p, "\033\011", sizeof ("\033\011"));
+-	    p += sizeof ("\033\011") - 1;
+-	  }
+-	else
+-	  *p++ = '\t';
+-	break;
++    /* Keys with no ASCII code are extended keys, like arrows.  */
++    switch (vkey)
++      {
++        case VK_PRIOR:
++          define_seq (p, "\033\061p", "\033v");
++          break;
++        case VK_NEXT:
++          define_seq (p, "\033\061n", "\026");
++          break;
++        case VK_END:
++          define_seq (p, "\033>", "\033>");
++          break;
++        case VK_HOME:
++          define_seq (p, "\033<", "\033<");
++          break;
++        case VK_LEFT:
++          define_seq (p, "\033b", "\033[D");
++          break;
++        case VK_UP:
++          define_seq (p, "\033\061u", "\033[A");
++          break;
++        case VK_RIGHT:
++          define_seq (p, "\033f", "\033[C");
++          break;
++        case VK_DOWN:
++          define_seq (p, "\033\061m", "\033[B");
++          break;
++        case VK_INSERT:
++          define_seq (p, "\033[L", "\033[L");
++          break;
++        case VK_DELETE: /* Delete => Ctrl-d, Alt-Delete => ESC d */
++          if ((ctl & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0)
++        define_seq (p, "\033d", "\033d");
++          else
++        define_seq (p, "\033d", "\004");
++          break;
++        case VK_HELP:   /* F1 => Ctrl-h */
++        case VK_F1:
++          *p++ = '\010';
++          break;
++        case 50:        /* Ctrl-@ => '\0' */
++          if ((ctl & SHIFT_PRESSED) != 0)
++        *p++ = '\0';
++          break;
++        default:
++          if (0x41 <= vkey && vkey <= 0x5a)
++        {
++          /* Alt-Ctrl-a, Alt-Ctrl-b, etc.  */
++          *p++ = '\033';
++          *p++ = '\001' + vkey - 0x41;
++        }
++      }
++    break;
++      case ' ':         /* Ctrl-SPC => '\0' */
++    if ((ctl & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0)
++      ascii_ch = '\0';
++    *p++ = ascii_ch;
++    break;
++      case '\t':        /* Shift-TAB/Alt-TAB => Esc-TAB */
++    if ((ctl & (SHIFT_PRESSED | LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0)
++      {
++        memcpy (p, "\033\011", sizeof ("\033\011"));
++        p += sizeof ("\033\011") - 1;
++      }
++    else
++      *p++ = '\t';
++    break;
+       case '\b':
+-	/* Backspace => DEL.  */
+-	ascii_ch = '\177';
+-	/* FALLTHROUGH */
++    /* Backspace => DEL.  */
++    ascii_ch = '\177';
++    /* FALLTHROUGH */
+       default:
+-	if ((ctl & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0)
+-	  *p++ = '\033';
+-	*p++ = ascii_ch;
+-	break;
++    if ((ctl & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0)
++      *p++ = '\033';
++    *p++ = ascii_ch;
++    break;
+     }
+   return p - seq;
+ }
+@@ -467,96 +467,96 @@
+     /* Stuff any unread buffered characters.  */
+     while (buf_head < buf_tail && n > 0)
+       {
+-	*inbuf++ = buffered_chars[buf_head++];
+-	nret++;
+-	n--;
++    *inbuf++ = buffered_chars[buf_head++];
++    nret++;
++    n--;
+       }
+     if (n <= 0)
+       break;
+ 
+     /* Wait for input.  */
+     while (GetNumberOfConsoleInputEvents (hstdin, &nevents)
+-	   && nevents < 1)
++       && nevents < 1)
+       Sleep (20);
+ 
+     while (nevents-- && n > 0)
+       {
+-	if (!ReadConsoleInput (hstdin, &inrec, 1, &nread))
+-	  return -1;
++    if (!ReadConsoleInput (hstdin, &inrec, 1, &nread))
++      return -1;
+ 
+-	if (nread > 0)
+-	  {
+-	    switch (inrec.EventType)
+-	      {
+-		case KEY_EVENT:
+-		  if (inrec.Event.KeyEvent.bKeyDown == TRUE
+-		      && !(inrec.Event.KeyEvent.wVirtualScanCode == 0
+-			   || inrec.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT
+-			   || inrec.Event.KeyEvent.wVirtualKeyCode == VK_CONTROL
+-			   || inrec.Event.KeyEvent.wVirtualKeyCode == VK_MENU))
+-		    {
+-		      unsigned char keyseq[10];
+-		      int count = inrec.Event.KeyEvent.wRepeatCount;
+-		      unsigned char ch = inrec.Event.KeyEvent.uChar.AsciiChar;
+-		      WORD vkey = inrec.Event.KeyEvent.wVirtualKeyCode;
+-		      DWORD ctl_state = inrec.Event.KeyEvent.dwControlKeyState;
+-		      int nbytes = w32keyseq (ch, vkey, ctl_state, keyseq);
+-
+-		      /* Supply up to N characters to the caller.  */
+-		      while (count && n >= nbytes)
+-			{
+-			  if (nbytes == 1 && keyseq[0] == '\032')
+-			    {
+-			      terminal_goto_xy (0, screenheight - 1);
+-			      terminal_clear_to_eol ();
+-			      fflush (stdout);
+-			      terminal_unprep_terminal ();
+-			      kill (getpid (), 0);
+-			      terminal_prep_terminal ();
+-			      reset_info_window_sizes ();
+-			    }
+-			  else
+-			    {
+-			      memcpy (&inbuf[nret], keyseq, nbytes);
+-			      nret += nbytes;
+-			      n -= nbytes;
+-			    }
+-			  count--;
+-			}
+-		      /* Buffer the rest.  */
+-		      if (count > 0)
+-			{
+-			  buf_head = buf_tail = 0;
+-			  while (count--
+-				 && buf_tail < sizeof(buffered_chars) - nbytes)
+-			    {
+-			      memcpy (&buffered_chars[buf_tail], keyseq, nbytes);
+-			      buf_tail += nbytes;
+-			    }
+-			}
+-		    }
+-		  break;
+-		case WINDOW_BUFFER_SIZE_EVENT:
+-		  {
+-		    int rows, cols;
+-
+-		    /* Note: this event is only sent when the console
+-		       window's _screen_buffer_ size is changed via
+-		       the Properties->Layout dialog.  */
+-		    cols = inrec.Event.WindowBufferSizeEvent.dwSize.X;
+-		    rows = inrec.Event.WindowBufferSizeEvent.dwSize.Y;
+-		    screenwidth = cols;
+-		    screenheight = rows;
+-		    w32_set_screen_dimensions (cols, rows);
+-		    display_initialize_display (screenwidth, screenheight);
+-		    window_new_screen_size (screenwidth, screenheight);
+-		    redisplay_after_signal ();
+-		  }
+-		  break;
+-		default:
+-		  break;
+-	      }
+-	  }
++    if (nread > 0)
++      {
++        switch (inrec.EventType)
++          {
++        case KEY_EVENT:
++          if (inrec.Event.KeyEvent.bKeyDown == TRUE
++              && !(inrec.Event.KeyEvent.wVirtualScanCode == 0
++               || inrec.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT
++               || inrec.Event.KeyEvent.wVirtualKeyCode == VK_CONTROL
++               || inrec.Event.KeyEvent.wVirtualKeyCode == VK_MENU))
++            {
++              unsigned char keyseq[10];
++              int count = inrec.Event.KeyEvent.wRepeatCount;
++              unsigned char ch = inrec.Event.KeyEvent.uChar.AsciiChar;
++              WORD vkey = inrec.Event.KeyEvent.wVirtualKeyCode;
++              DWORD ctl_state = inrec.Event.KeyEvent.dwControlKeyState;
++              int nbytes = w32keyseq (ch, vkey, ctl_state, keyseq);
++
++              /* Supply up to N characters to the caller.  */
++              while (count && n >= nbytes)
++            {
++              if (nbytes == 1 && keyseq[0] == '\032')
++                {
++                  terminal_goto_xy (0, screenheight - 1);
++                  terminal_clear_to_eol ();
++                  fflush (stdout);
++                  terminal_unprep_terminal ();
++                  kill (getpid (), 0);
++                  terminal_prep_terminal ();
++                  reset_info_window_sizes ();
++                }
++              else
++                {
++                  memcpy (&inbuf[nret], keyseq, nbytes);
++                  nret += nbytes;
++                  n -= nbytes;
++                }
++              count--;
++            }
++              /* Buffer the rest.  */
++              if (count > 0)
++            {
++              buf_head = buf_tail = 0;
++              while (count--
++                 && buf_tail < sizeof(buffered_chars) - nbytes)
++                {
++                  memcpy (&buffered_chars[buf_tail], keyseq, nbytes);
++                  buf_tail += nbytes;
++                }
++            }
++            }
++          break;
++        case WINDOW_BUFFER_SIZE_EVENT:
++          {
++            int rows, cols;
++
++            /* Note: this event is only sent when the console
++               window's _screen_buffer_ size is changed via
++               the Properties->Layout dialog.  */
++            cols = inrec.Event.WindowBufferSizeEvent.dwSize.X;
++            rows = inrec.Event.WindowBufferSizeEvent.dwSize.Y;
++            screenwidth = cols;
++            screenheight = rows;
++            w32_set_screen_dimensions (cols, rows);
++            display_initialize_display (screenwidth, screenheight);
++            window_new_screen_size (screenwidth, screenheight);
++            redisplay_after_signal ();
++          }
++          break;
++        default:
++          break;
++          }
++      }
+       }
+   } while (n > 0);
+   return nret;
+@@ -572,9 +572,9 @@
+       struct stat st;
+ 
+       if (fstat (fd, &st) < 0)
+-	return 1;
++    return 1;
+       else
+-	return st.st_size;
++    return st.st_size;
+     }
+ }
+ 
+@@ -587,7 +587,7 @@
+     return _read (fd, buf, n);
+ }
+ 
+-#endif	/* _WIN32 */
++#endif  /* _WIN32 */
+ 
+ /* Turn on reverse video. */
+ static void
+@@ -640,7 +640,7 @@
+ pc_get_screen_size(void)
+ {
+   /* Current screen dimensions are the default.  */
+-  if (!outside_info.screenheight)	/* paranoia */
++  if (!outside_info.screenheight)   /* paranoia */
+     gettextinfo (&outside_info);
+   screenwidth  = outside_info.screenwidth;
+   screenheight = outside_info.screenheight;
+@@ -755,7 +755,7 @@
+   tty = fileno (stdin);
+ #ifdef __DJGPP__
+   setmode (tty, O_BINARY);
+-  __djgpp_set_ctrl_c (1);	/* re-enable SIGINT generation by Ctrl-C */
++  __djgpp_set_ctrl_c (1);   /* re-enable SIGINT generation by Ctrl-C */
+ #endif
+ }
+ 
+@@ -781,7 +781,7 @@
+     }
+ #ifdef __MSDOS__
+   else
+-    pc_clear_to_eol ();	/* for text attributes to really take effect */
++    pc_clear_to_eol (); /* for text attributes to really take effect */
+ #endif
+ #ifdef _WIN32
+   SetConsoleScreenBufferSize (hstdout, outside_info.bufsize);
+@@ -811,10 +811,10 @@
+       term_name = getenv ("TERM");
+       if (!term_name)
+ #ifdef __MSDOS__
+-	term_name = "pc-dos";	/* ``what's in a name?'' */
++    term_name = "pc-dos";   /* ``what's in a name?'' */
+ #endif
+ #ifdef _WIN32
+-	term_name = "w32console";
++    term_name = "w32console";
+ #endif
+     }
+ 
+@@ -832,27 +832,27 @@
+   if ((info_colors != (char *)0) && !speech_friendly)
+     {
+       /* Decode a color from a string descriptor.
+-	 The descriptor string is a sequence of color specifiers separated
+-	 by a non-numeric character.  Each color specifier should represent
+-	 a small integer which fits into an unsigned char, and can be given
+-	 in any base supported by strtoul.  Examples of valid descriptors:
+-
+-		"10 31"
+-		"0x13/0x45"
+-		"007.077"
++     The descriptor string is a sequence of color specifiers separated
++     by a non-numeric character.  Each color specifier should represent
++     a small integer which fits into an unsigned char, and can be given
++     in any base supported by strtoul.  Examples of valid descriptors:
++
++        "10 31"
++        "0x13/0x45"
++        "007.077"
+ 
+-	The separator between two color specifiers can be any character which
+-	cannot be used in a printed representation of an integer number.  */
++    The separator between two color specifiers can be any character which
++    cannot be used in a printed representation of an integer number.  */
+       char *endp;
+       unsigned long color_desc = strtoul (info_colors, &endp, 0);
+ 
+       if (color_desc <= UCHAR_MAX)
+-	{
+-	  norm_attr = (unsigned char)color_desc;
+-	  color_desc = strtoul (endp + 1, &endp, 0);
+-	  if (color_desc <= UCHAR_MAX)
+-	    inv_attr = (unsigned char)color_desc;
+-	}
++    {
++      norm_attr = (unsigned char)color_desc;
++      color_desc = strtoul (endp + 1, &endp, 0);
++      if (color_desc <= UCHAR_MAX)
++        inv_attr = (unsigned char)color_desc;
++    }
+     }
+ 
+   /* We can scroll.  */
+@@ -886,7 +886,7 @@
+   term_ki = (char *)find_sequence (K_Insert);
+   term_kx = (char *)find_sequence (K_Delete);
+ #endif
+-#endif	/* __MSDOS__ */
++#endif  /* __MSDOS__ */
+ 
+   /* Set all the hooks to our PC-specific functions.  */
+   terminal_begin_inverse_hook       = pc_begin_inverse;
+@@ -933,7 +933,7 @@
+ {
+   int inkey;
+   unsigned char const * const sequence;
+-} DJGPP_keytab[] = {		   /* these are for moving between nodes... */
++} DJGPP_keytab[] = {           /* these are for moving between nodes... */
+   {K_Control_PageDown,  "\033\061n"},
+   {K_Control_PageUp,    "\033\061p"},
+   {K_Control_Up,        "\033\061u"},
+@@ -1064,7 +1064,7 @@
+   __dpmi_regs r;
+   int retval;
+ 
+-  r.h.ah = 0x11;	/* Get enhanced keyboard status */
++  r.h.ah = 0x11;    /* Get enhanced keyboard status */
+   __dpmi_int (0x16, &r);
+ 
+   /* If the keyboard buffer is empty, the Zero Flag will be set.  */
+@@ -1109,7 +1109,7 @@
+ 
+   /* Is this call for us?  */
+   if (func != __FSEXT_read || !isatty (fd))
+-    return 0;	/* and the usual DOS call will be issued */
++    return 0;   /* and the usual DOS call will be issued */
+ 
+   buf = va_arg (rest_args, unsigned char *);
+   nbytes = va_arg (rest_args, size_t);
+@@ -1132,53 +1132,53 @@
+       int key;
+ 
+       /* If any ``buffered characters'' are left, return as much
+-	 of them as the caller wanted.  */
++     of them as the caller wanted.  */
+       while (buffered[buf_idx] && nbytes)
+-	{
+-	  *buf++ = buffered[buf_idx++];
+-	  nread++;
+-	  nbytes--;
+-	}
++    {
++      *buf++ = buffered[buf_idx++];
++      nread++;
++      nbytes--;
++    }
+ 
+       if (nbytes <= 0)
+-	break;
++    break;
+ 
+       /* Wait for another key.
+-	 We do that in a busy-waiting loop so we don't get parked
+-	 inside a BIOS call, which will effectively disable signals.
++     We do that in a busy-waiting loop so we don't get parked
++     inside a BIOS call, which will effectively disable signals.
+          While we wait for them to type something, we repeatedly
+          release the rest of our time slice, so that other programs
+          in a multitasking environment, such as Windows, get more cycles.  */
+       while (kbd_buffer_empty ())
+-	__dpmi_yield ();
++    __dpmi_yield ();
+ 
+       key = getxkey ();
+ 
+       /* Translate the key if necessary.
+-	 Untranslated non-ASCII keys are silently ignored.  */
++     Untranslated non-ASCII keys are silently ignored.  */
+       if ((key & 0x300) != 0)
+-	{
+-	  unsigned char const * key_sequence = find_sequence (key);
++    {
++      unsigned char const * key_sequence = find_sequence (key);
+ 
+-	  if (key_sequence != NULL)
+-	    {
+-	      strcpy (buffered, key_sequence);
+-	      buf_idx = 0;
+-	    }
+-	}
++      if (key_sequence != NULL)
++        {
++          strcpy (buffered, key_sequence);
++          buf_idx = 0;
++        }
++    }
+       else if (key == K_Control_Z)
+-	raise (SIGUSR1);	/* we don't have SIGTSTP, so simulate it */
++    raise (SIGUSR1);    /* we don't have SIGTSTP, so simulate it */
+       else if (key <= 0xff)
+-	{
+-	  *buf++ = key;
+-	  nbytes--;
+-	  nread++;
+-	}
++    {
++      *buf++ = key;
++      nbytes--;
++      nread++;
++    }
+     }
+   while (nbytes > 0);
+ 
+   *retval = nread;
+-  return 1;	/* meaning that we handled the call */
++  return 1; /* meaning that we handled the call */
+ }
+ 
+ /* Install our keyboard handler.
+@@ -1232,66 +1232,66 @@
+       || pid == -getpid ())
+     {
+       switch (sig)
+-	{
+-	RETSIGTYPE (*old_INT)(int), (*old_QUIT)(int);
++    {
++    RETSIGTYPE (*old_INT)(int), (*old_QUIT)(int);
+ 
+-	case SIGINT:
++    case SIGINT:
+ #ifdef __DJGPP__
+-	  /* If SIGINT was generated by a readable key, we want to remove
+-	     it from the PC keyboard buffer, so that DOS and other
+-	     programs never see it.  DJGPP signal-handling mechanism
+-	     doesn't remove the INT key from the keyboard buffer.  */
+-	  if (!kbd_buffer_empty ())
+-	    getxkey ();
++      /* If SIGINT was generated by a readable key, we want to remove
++         it from the PC keyboard buffer, so that DOS and other
++         programs never see it.  DJGPP signal-handling mechanism
++         doesn't remove the INT key from the keyboard buffer.  */
++      if (!kbd_buffer_empty ())
++        getxkey ();
+ #endif
+-	  pc_write_chars (interrupted_msg, sizeof (interrupted_msg) - 1);
+-	  exit (EXIT_FAILURE);
+-	case SIGUSR1:
+-	  /* Simulate SIGTSTP by invoking a subsidiary shell.  */
++      pc_write_chars (interrupted_msg, sizeof (interrupted_msg) - 1);
++      exit (EXIT_FAILURE);
++    case SIGUSR1:
++      /* Simulate SIGTSTP by invoking a subsidiary shell.  */
+ #ifndef _WIN32
+-	  pc_goto_xy (0, outside_info.screenheight - 1);
+-	  pc_clear_to_eol ();
+-	  pc_write_chars (stopped_msg, sizeof (stopped_msg) - 1);
++      pc_goto_xy (0, outside_info.screenheight - 1);
++      pc_clear_to_eol ();
++      pc_write_chars (stopped_msg, sizeof (stopped_msg) - 1);
+ #endif
+ 
+-	  /* The child shell can change the working directory, so
+-	     we need to save and restore it, since it is global.  */
+-	  if (!getcwd (cwd, PATH_MAX)) /* should never happen */
+-	    cwd[0] = '\0';
+-
+-	  /* We don't want to get fatal signals while the subshell runs.  */
+-	  old_INT = signal (SIGINT, SIG_IGN);
+-	  old_QUIT = signal (SIGQUIT, SIG_IGN);
++      /* The child shell can change the working directory, so
++         we need to save and restore it, since it is global.  */
++      if (!getcwd (cwd, PATH_MAX)) /* should never happen */
++        cwd[0] = '\0';
++
++      /* We don't want to get fatal signals while the subshell runs.  */
++      old_INT = signal (SIGINT, SIG_IGN);
++      old_QUIT = signal (SIGQUIT, SIG_IGN);
+ #ifdef _WIN32
+-	  {
+-	    const char *argv[2];
+-	    const char *shell = NULL;
+-
+-	    argv[0] = NULL;
+-	    shell = getenv ("SHELL");
+-	    if (!shell)
+-	      {
+-		shell = getenv ("COMSPEC");
+-		if (!shell)
+-		  return -1;
+-		argv[0] = " /k";
+-	      }
+-	    argv[1] = NULL;
+-	    _spawnvp (_P_WAIT, shell, argv);
+-	  }
++      {
++        const char *argv[2];
++        const char *shell = NULL;
++
++        argv[0] = NULL;
++        shell = getenv ("SHELL");
++        if (!shell)
++          {
++        shell = getenv ("COMSPEC");
++        if (!shell)
++          return -1;
++        argv[0] = " /k";
++          }
++        argv[1] = NULL;
++        _spawnvp (_P_WAIT, shell, argv);
++      }
+ #else
+-	  system ("");
++      system ("");
+ #endif
+-	  if (*cwd)
+-	    chdir (cwd);
+-	  signal (SIGINT, old_INT);
+-	  signal (SIGQUIT, old_QUIT);
+-	  break;
+-	default:
+-	  if (sig)
+-	    raise (sig);
+-	  break;
+-	}
++      if (*cwd)
++        chdir (cwd);
++      signal (SIGINT, old_INT);
++      signal (SIGQUIT, old_QUIT);
++      break;
++    default:
++      if (sig)
++        raise (sig);
++      break;
++    }
+       return 0;
+     }
+   else
+@@ -1299,7 +1299,7 @@
+ }
+ 
+ /* These should never be called, but they make the linker happy.  */
+-
++#ifndef __MINGW32__
+ int       tputs (const char *a, int b, int (*c)(int))
+ {
+   perror ("tputs"); return 0; /* here and below, added dummy retvals */
+@@ -1330,12 +1330,13 @@
+   perror ("tgetent"); return 0;
+ }
+ 
+-int	tcgetattr(int fildes, struct termios *termios_p)
++int tcgetattr(int fildes, struct termios *termios_p)
+ {
+   perror ("tcgetattr"); return 0;
+ }
+ 
+-int	tcsetattr(int fd, int opt_actions, const struct termios *termios_p)
++int tcsetattr(int fd, int opt_actions, const struct termios *termios_p)
+ {
+   perror ("tcsetattr"); return 0;
+ }
++#endif
+\ No newline at end of file
+--- texinfo-5.1/info/info.h	2013-02-22 19:11:26 -0500
++++ texinfo-5.1/info/info2.h	2014-10-12 13:47:29 -0400
+@@ -47,6 +47,10 @@
+ #include "mbiter.h"
+ #include "mbchar.h"
+ 
++#ifdef __MINGW32__
++#include "sys/select.h"
++#endif
++
+ #define info_toupper(x) (islower (x) ? toupper (x) : x)
+ #define info_tolower(x) (isupper (x) ? tolower (x) : x)
+ 

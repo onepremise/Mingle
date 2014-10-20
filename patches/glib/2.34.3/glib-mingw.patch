@@ -1,0 +1,60 @@
+--- glib-2.34.3/gobject/tests/signals.c	2012-11-26 11:52:48 -0500
++++ glib-2.34.3/gobject/tests/signals2.c	2014-10-16 16:40:20 -0400
+@@ -1,6 +1,57 @@
+ #include <glib-object.h>
+ #include "marshalers.h"
+ 
++void
++test_UINT__VOID (GClosure     *closure,
++                 GValue       *return_value G_GNUC_UNUSED,
++                 guint         n_param_values,
++                 const GValue *param_values,
++                 gpointer      invocation_hint G_GNUC_UNUSED,
++                 gpointer      marshal_data);
++
++void
++test_UINT__VOIDv (GClosure     *closure,
++                 GValue       *return_value,
++                 gpointer      instance,
++                 va_list       args,
++                 gpointer      marshal_data,
++                 int           n_params,
++                 GType        *param_types);
++
++void
++test_INT__VOID (GClosure     *closure,
++                GValue       *return_value G_GNUC_UNUSED,
++                guint         n_param_values,
++                const GValue *param_values,
++                gpointer      invocation_hint G_GNUC_UNUSED,
++                gpointer      marshal_data);
++
++void
++test_INT__VOIDv (GClosure     *closure,
++                 GValue       *return_value,
++                 gpointer      instance,
++                 va_list       args,
++                 gpointer      marshal_data,
++                 int           n_params,
++                 GType        *param_types);
++
++void
++test_VOID__INT_BOOLEAN_CHAR_UCHAR_UINT_LONG_ULONG_ENUM_FLAGS_FLOAT_DOUBLE_STRING_PARAM_BOXED_POINTER_OBJECT_VARIANT_INT64_UINT64 (GClosure     *closure,
++                                                                                                                                  GValue       *return_value G_GNUC_UNUSED,
++                                                                                                                                  guint         n_param_values,
++                                                                                                                                  const GValue *param_values,
++                                                                                                                                  gpointer      invocation_hint G_GNUC_UNUSED,
++                                                                                                                                  gpointer      marshal_data);
++
++void
++test_VOID__INT_BOOLEAN_CHAR_UCHAR_UINT_LONG_ULONG_ENUM_FLAGS_FLOAT_DOUBLE_STRING_PARAM_BOXED_POINTER_OBJECT_VARIANT_INT64_UINT64v (GClosure     *closure,
++                                                                                                                                   GValue       *return_value,
++                                                                                                                                   gpointer      instance,
++                                                                                                                                   va_list       args,
++                                                                                                                                   gpointer      marshal_data,
++                                                                                                                                   int           n_params,
++                                                                                                                                   GType        *param_types);
++
+ typedef enum {
+   TEST_ENUM_NEGATIVE = -30,
+   TEST_ENUM_NONE = 0,

@@ -395,12 +395,13 @@ typedef int rpl_sig_atomic_t;
 # endif
 #endif
 
-/* A set or mask of signals.  */
-#if !0
-# if !GNULIB_defined_sigset_t
-typedef unsigned int sigset_t;
-#  define GNULIB_defined_sigset_t 1
-# endif
+#ifndef sigset_t
+#ifdef _WIN64
+typedef unsigned long long _sigset_t;
+#else
+typedef unsigned long   _sigset_t;
+#endif
+typedef _sigset_t   sigset_t;
 #endif
 
 /* Define sighandler_t, the type of signal handlers.  A GNU extension.  */

@@ -796,8 +796,7 @@ _GL_WARN_ON_USE (lstat, "lstat is unportable - "
 # endif
 #endif
 
-
-#if 1
+#if 0
 # if !(defined __cplusplus && defined GNULIB_NAMESPACE)
 #  undef mkdir
 #  define mkdir rpl_mkdir

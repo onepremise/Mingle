@@ -9,6 +9,8 @@
 //#include <stddef.h>
 //#include <stdio.h>
 #include <winsock.h>
+#include <filename.h>
+#include <dosname.h>
 
 #ifndef DOUBLE_SLASH_IS_DISTINCT_ROOT
 # define DOUBLE_SLASH_IS_DISTINCT_ROOT 0

@@ -51272,385 +51272,6 @@ diff -ruN Python-2.7.3//PC/_winreg.c _Python-2.7.3/PC/_winreg.c
  }
  
  static PyObject *
-diff -ruN Python-2.7.3//PC/getpathp.c _Python-2.7.3/PC/getpathp.c
---- Python-2.7.3//PC/getpathp.c	2012-04-09 19:07:36 -0400
-+++ _Python-2.7.3/PC/getpathp.c	2013-01-21 11:39:48 -0500
-@@ -72,6 +72,8 @@
- 
- #include <string.h>
- 
-+#define MIN(x, y) ((x) < (y) ? (x) : (y))
-+
- /* Search in some common locations for the associated Python libraries.
-  *
-  * Py_GetPath() tries to return a sensible Python module search path.
-@@ -88,6 +90,7 @@
- static char prefix[MAXPATHLEN+1];
- static char progpath[MAXPATHLEN+1];
- static char dllpath[MAXPATHLEN+1];
-+static char mingw_dynload_path[MAXPATHLEN+1];
- static char *module_search_path = NULL;
- 
- 
-@@ -200,6 +203,75 @@
-     return 0;
- }
- 
-+size_t search_for_lib(int countOnly, char* pythonhome, char* buf)
-+{
-+    char *p = PYTHONPATH;
-+    char *q = NULL;
-+    size_t n=0;
-+    size_t length=0;
-+    char *result = NULL;
-+    char *newalloc = NULL;
-+
-+    if (pythonhome)
-+        length=MIN(strlen(pythonhome), MAXPATHLEN);
-+
-+    for (;;) {
-+        q = strchr(p, DELIM);
-+
-+        if (q == NULL)
-+            n = strlen(p);
-+        else
-+            n = q-p;
-+        if (p[0] == '.' && is_sep(p[1])) {
-+            p++;
-+            n--;
-+        }
-+
-+        size_t resize=MIN(length+n+1,MAXPATHLEN);
-+
-+        if (result==NULL) {
-+            newalloc=(char*)calloc(resize, sizeof(char*));
-+        } else {
-+            resize+=strlen(result);
-+            newalloc=(char*)realloc(result,resize);
-+            //memset(newalloc+length, '\0', (resize-length));
-+        }
-+
-+        if (newalloc) {
-+			result=newalloc;
-+
-+			if (pythonhome)
-+                strcat(result, pythonhome);
-+
-+            strncat(result, p,n);
-+
-+            length=strlen(result);
-+            result[length]=DELIM;
-+            result[length+1]='\0';
-+            length=resize;
-+        } else {
-+			result=NULL;
-+            fprintf(stderr,"Error allocating memory!");
-+            return 0;
-+        }
-+
-+        if (q == NULL)
-+            break;
-+
-+        p = q+1;
-+    }
-+
-+    length=strlen(result);
-+
-+    if (buf!=NULL && !countOnly) {
-+        strcpy(buf, result);
-+    }
-+
-+    free(result);
-+
-+    return length;
-+}
-+
- #ifdef MS_WINDOWS
- #ifdef Py_ENABLE_SHARED
- 
-@@ -237,6 +309,8 @@
-     TCHAR *keyBufPtr;
-     TCHAR **ppPaths = NULL;
- 
-+    return retval;
-+
-     /* Tried to use sysget("winver") but here is too early :-( */
-     versionLen = _tcslen(PyWin_DLLVersionString);
-     /* Space for all the chars, plus one \0 */
-@@ -459,6 +533,118 @@
-         progpath[0] = '\0';
- }
- 
-+// Threadsafe mingw path conversion call
-+// Returns true if path found and converted.
-+int mingw_posix2win_path(char *mingwpath, char *destination, int size)
-+{
-+    FILE *fp;
-+    int status;
-+    char cmd[MAXPATHLEN+32]={0};
-+    char results[MAXPATHLEN+1]={0};
-+    char mingw_lib64_path[MAXPATHLEN+1]={0};
-+
-+    // not quite sure yet why swprintf with size fails. will have
-+    // to use default swprintf for now.
-+    sprintf(cmd, "bash -c \"cd %s 2>&1 && pwd -W\"", mingwpath);
-+
-+    /* Open the command for reading. */
-+    fp = popen(cmd, "r");
-+
-+    if (fp == NULL) {
-+      return 0;
-+    } else {
-+        /* Read the output a line at a time - output it. */
-+        while (fgets(results, sizeof(results)-1, fp) != NULL) {
-+            if (strstr(results, "No such file")==NULL) {
-+                results[strlen(results)-1]='\0';
-+                strncat(destination, results, size);
-+            } else {
-+                return 0;
-+            }
-+        }
-+
-+        /* close */
-+        pclose(fp);
-+    }
-+
-+    return 1;
-+}
-+
-+void get_mingw_path(char *destination, int size)
-+{
-+    static char mingw_path[MAXPATHLEN+1]={0};
-+
-+    //mingw64 path is mounted under /mingw in msys
-+    if (strlen(mingw_path)==0)
-+        if (!mingw_posix2win_path("/mingw", mingw_path, sizeof(mingw_path)))
-+            mingw_posix2win_path("/", mingw_path, sizeof(mingw_path));
-+
-+    if (strlen(mingw_path)>=0) {
-+        strncat(destination, mingw_path, size);
-+    }
-+}
-+
-+void get_mingw_lib_path(char *destination, int size)
-+{
-+    static char mingw_base_path[MAXPATHLEN+1]={0};
-+
-+    if (wcslen(mingw_base_path)==0) {
-+        get_mingw_path(mingw_base_path, sizeof(mingw_base_path));
-+    }
-+
-+    if (strlen(mingw_base_path)>=0) {
-+        strncpy(destination, mingw_base_path, size);
-+        strncat(destination, "/lib", size);
-+    }
-+}
-+
-+void get_mingw_os_test_path(char *destination, int size)
-+{
-+    static char mingw_py_path[MAXPATHLEN+1]={0};
-+
-+    if (strlen(mingw_py_path)==0) {
-+        sprintf(mingw_py_path, "lib/python%d.%d/", PY_MAJOR_VERSION,PY_MINOR_VERSION);
-+    }
-+
-+    strncpy(destination, mingw_py_path, size);
-+    strncat(destination, "os.py", size);
-+}
-+
-+void get_mingw_python_path(char *destination, int size)
-+{
-+    char mingw_lib_path[MAXPATHLEN+1]={0};
-+    char mingw_py_path[MAXPATHLEN+1]={0};
-+
-+    get_mingw_lib_path(mingw_lib_path, sizeof(mingw_lib_path));
-+
-+    sprintf(mingw_py_path, "/python%d.%d", PY_MAJOR_VERSION,PY_MINOR_VERSION);
-+
-+    if (strlen(mingw_lib_path)>=0) {
-+        strncpy(destination, mingw_lib_path, size);
-+        strncat(destination, mingw_py_path, size);
-+    }
-+}
-+
-+void get_mingw_libdynload_path(char *destination, int size)
-+{
-+    char mingw_lib_path[MAXPATHLEN+1]={0};
-+
-+    get_mingw_python_path(mingw_lib_path, sizeof(mingw_lib_path));
-+
-+    if (wcslen(mingw_lib_path)>=0) {
-+        strncpy(destination, mingw_lib_path, size);
-+        strncat(destination, "/lib-dynload", size);
-+    }
-+}
-+
-+void get_build_dir(char *destination, int size, char *parentdir)
-+{
-+    char build_dir[MAXPATHLEN+1]={0};
-+    sprintf(build_dir, "\\build\\lib.win32-%d.%d", PY_MAJOR_VERSION,PY_MINOR_VERSION);
-+    strcpy(destination, parentdir);
-+    strcat(destination, build_dir);
-+}
-+
- static void
- calculate_path(void)
- {
-@@ -467,6 +653,7 @@
-     size_t bufsz;
-     char *pythonhome = Py_GetPythonHome();
-     char *envpath = Py_GETENV("PYTHONPATH");
-+    int  prefixFound=0;
- 
- #ifdef MS_WINDOWS
-     int skiphome, skipdefault;
-@@ -480,8 +667,11 @@
-     /* progpath guaranteed \0 terminated in MAXPATH+1 bytes. */
-     strcpy(argv0_path, progpath);
-     reduce(argv0_path);
-+
-+    prefixFound=search_for_prefix(argv0_path, LANDMARK);
-+
-     if (pythonhome == NULL || *pythonhome == '\0') {
--        if (search_for_prefix(argv0_path, LANDMARK))
-+        if (prefixFound)
-             pythonhome = prefix;
-         else
-             pythonhome = NULL;
-@@ -511,6 +701,20 @@
-     }
- 
-     skiphome = pythonhome==NULL ? 0 : 1;
-+
-+#ifdef __MINGW32__
-+    char mingw_lib_path[MAXPATHLEN+1]={0};
-+    get_mingw_lib_path(mingw_lib_path, sizeof(mingw_lib_path));
-+
-+    char mingw_python_path[MAXPATHLEN+1]={0};
-+    get_mingw_python_path(mingw_python_path, sizeof(mingw_python_path));
-+
-+    get_mingw_libdynload_path(mingw_dynload_path, sizeof(mingw_dynload_path));
-+#  endif
-+
-+    char build_dir[MAXPATHLEN+1]={0};
-+    get_build_dir(build_dir, sizeof(build_dir), argv0_path);
-+
- #ifdef Py_ENABLE_SHARED
-     machinepath = getpythonregpath(HKEY_LOCAL_MACHINE, skiphome);
-     userpath = getpythonregpath(HKEY_CURRENT_USER, skiphome);
-@@ -518,7 +722,8 @@
-     /* We only use the default relative PYTHONPATH if we havent
-        anything better to use! */
-     skipdefault = envpath!=NULL || pythonhome!=NULL || \
--                  machinepath!=NULL || userpath!=NULL;
-+                  machinepath!=NULL || userpath!=NULL || \
-+                  (strlen(mingw_lib_path)>=0);
- #endif
- 
-     /* We need to construct a path from the following parts.
-@@ -555,9 +760,21 @@
-         bufsz += strlen(machinepath) + 1;
-     bufsz += strlen(zip_path) + 1;
- #endif
-+
-+#ifdef __MINGW32__
-+    if (strlen(mingw_lib_path)>=0)
-+        bufsz += strlen(mingw_lib_path) + 1;
-+    if (strlen(mingw_python_path)>=0)
-+        bufsz += strlen(mingw_python_path) + 1;
-+    if (strlen(mingw_dynload_path)>=0)
-+        bufsz += strlen(mingw_dynload_path) + 1;
-+#endif
-+
-     if (envpath != NULL)
-         bufsz += strlen(envpath) + 1;
- 
-+    bufsz += search_for_lib(1,pythonhome,NULL);
-+
-     module_search_path = buf = malloc(bufsz);
-     if (buf == NULL) {
-         /* We can't exit, so print a warning and limp along */
-@@ -608,6 +825,35 @@
-             buf = strchr(buf, '\0');
-         }
-     }
-+#  ifdef __MINGW32__
-+    if (prefixFound==0) {
-+        if (strlen(mingw_lib_path)>0) {
-+            strcpy(buf, mingw_lib_path);
-+            buf = strchr(buf, '\0');
-+            *buf++ = DELIM;
-+        }
-+
-+        if (strlen(mingw_python_path)>0) {
-+            strcpy(buf, mingw_python_path);
-+            buf = strchr(buf, '\0');
-+            *buf++ = DELIM;
-+        }
-+
-+        if (strlen(mingw_dynload_path)>0) {
-+            strcpy(buf, mingw_dynload_path);
-+            buf = strchr(buf, '\0');
-+            *buf++ = DELIM;
-+        }
-+
-+        char mingw_path[MAXPATHLEN+1]={0};
-+        char os_test_path[MAXPATHLEN+1]={0};
-+
-+        get_mingw_path(mingw_path, sizeof(mingw_path));
-+        get_mingw_os_test_path(os_test_path, sizeof(os_test_path));
-+
-+        search_for_prefix(mingw_path, os_test_path);
-+    }
-+#  endif
- #else
-     if (pythonhome == NULL) {
-         strcpy(buf, PYTHONPATH);
-@@ -615,27 +861,15 @@
-     }
- #endif /* MS_WINDOWS */
-     else {
--        char *p = PYTHONPATH;
--        char *q;
--        size_t n;
--        for (;;) {
--            q = strchr(p, DELIM);
--            if (q == NULL)
--                n = strlen(p);
--            else
--                n = q-p;
--            if (p[0] == '.' && is_sep(p[1])) {
--                strcpy(buf, pythonhome);
--                buf = strchr(buf, '\0');
--                p++;
--                n--;
--            }
--            strncpy(buf, p, n);
--            buf += n;
--            if (q == NULL)
--                break;
-+        //Really don't like how strings are being maintained in
-+        //this file. However, I don't have time to refactor all.
-+        search_for_lib(0,pythonhome,buf);
-+        buf = strchr(buf, '\0');
-+
-+        if (exists(build_dir)) {
-+            strcpy(buf, build_dir);
-+            buf = strchr(buf, '\0');
-             *buf++ = DELIM;
--            p = q+1;
-         }
-     }
-     if (argv0_path) {
-@@ -702,6 +936,8 @@
- char *
- Py_GetExecPrefix(void)
- {
-+    if (strlen(mingw_dynload_path)>0)
-+        return mingw_dynload_path;
-     return Py_GetPrefix();
- }
- 
 diff -ruN Python-2.7.3//PC/msvcrtmodule.c _Python-2.7.3/PC/msvcrtmodule.c
 --- Python-2.7.3//PC/msvcrtmodule.c	2012-04-09 19:07:36 -0400
 +++ _Python-2.7.3/PC/msvcrtmodule.c	2013-01-15 13:57:28 -0500
@@ -57533,3 +57154,346 @@ diff -ruN Python-2.7.3/Lib/traceback.py Python-2.7.3/Lib/tracebackb.py
      if f is None:
          try:
              raise ZeroDivisionError
+--- Python-2.7.3/PC/getpathp.c	2012-04-09 19:07:36 -0400
++++ Python-2.7.3/PC/getpathp2.c	2014-10-10 15:32:29 -0400
+@@ -72,6 +72,10 @@
+ 
+ #include <string.h>
+ 
++#include <mingw-path.h>
++
++#define MIN(x, y) ((x) < (y) ? (x) : (y))
++
+ /* Search in some common locations for the associated Python libraries.
+  *
+  * Py_GetPath() tries to return a sensible Python module search path.
+@@ -88,6 +92,7 @@
+ static char prefix[MAXPATHLEN+1];
+ static char progpath[MAXPATHLEN+1];
+ static char dllpath[MAXPATHLEN+1];
++static char mingw_dynload_path[MAXPATHLEN+1];
+ static char *module_search_path = NULL;
+ 
+ 
+@@ -200,6 +205,75 @@
+     return 0;
+ }
+ 
++size_t search_for_lib(int countOnly, char* pythonhome, char* buf)
++{
++    char *p = PYTHONPATH;
++    char *q = NULL;
++    size_t n=0;
++    size_t length=0;
++    char *result = NULL;
++    char *newalloc = NULL;
++
++    if (pythonhome)
++        length=MIN(strlen(pythonhome), MAXPATHLEN);
++
++    for (;;) {
++        q = strchr(p, DELIM);
++
++        if (q == NULL)
++            n = strlen(p);
++        else
++            n = q-p;
++        if (p[0] == '.' && is_sep(p[1])) {
++            p++;
++            n--;
++        }
++
++        size_t resize=MIN(length+n+1,MAXPATHLEN);
++
++        if (result==NULL) {
++            newalloc=(char*)calloc(resize, sizeof(char*));
++        } else {
++            resize+=strlen(result);
++            newalloc=(char*)realloc(result,resize);
++            //memset(newalloc+length, '\0', (resize-length));
++        }
++
++        if (newalloc) {
++            result=newalloc;
++
++            if (pythonhome)
++                strcat(result, pythonhome);
++
++            strncat(result, p,n);
++
++            length=strlen(result);
++            result[length]=DELIM;
++            result[length+1]='\0';
++            length=resize;
++        } else {
++            result=NULL;
++            fprintf(stderr,"Error allocating memory!");
++            return 0;
++        }
++
++        if (q == NULL)
++            break;
++
++        p = q+1;
++    }
++
++    length=strlen(result);
++
++    if (buf!=NULL && !countOnly) {
++        strcpy(buf, result);
++    }
++
++    free(result);
++
++    return length;
++}
++
+ #ifdef MS_WINDOWS
+ #ifdef Py_ENABLE_SHARED
+ 
+@@ -237,6 +311,8 @@
+     TCHAR *keyBufPtr;
+     TCHAR **ppPaths = NULL;
+ 
++    return retval;
++
+     /* Tried to use sysget("winver") but here is too early :-( */
+     versionLen = _tcslen(PyWin_DLLVersionString);
+     /* Space for all the chars, plus one \0 */
+@@ -459,6 +535,81 @@
+         progpath[0] = '\0';
+ }
+ 
++void get_mingw_path(char *destination, int size)
++{
++    static char mingw_path[MAXPATHLEN+1]={0};
++
++    //mingw64 path is mounted under /mingw in msys
++    if (strlen(mingw_path)==0)
++        if (!mingw_posx2winpath("/mingw", mingw_path, sizeof(mingw_path)))
++            mingw_posx2winpath("/", mingw_path, sizeof(mingw_path));
++
++    if (strlen(mingw_path)>=0) {
++        strncat(destination, mingw_path, size);
++    }
++}
++
++void get_mingw_lib_path(char *destination, int size)
++{
++    static char mingw_base_path[MAXPATHLEN+1]={0};
++
++    if (wcslen(mingw_base_path)==0) {
++        get_mingw_path(mingw_base_path, sizeof(mingw_base_path));
++    }
++
++    if (strlen(mingw_base_path)>=0) {
++        strncpy(destination, mingw_base_path, size);
++        strncat(destination, "/lib", size);
++    }
++}
++
++void get_mingw_os_test_path(char *destination, int size)
++{
++    static char mingw_py_path[MAXPATHLEN+1]={0};
++
++    if (strlen(mingw_py_path)==0) {
++        sprintf(mingw_py_path, "lib/python%d.%d/", PY_MAJOR_VERSION,PY_MINOR_VERSION);
++    }
++
++    strncpy(destination, mingw_py_path, size);
++    strncat(destination, "os.py", size);
++}
++
++void get_mingw_python_path(char *destination, int size)
++{
++    char mingw_lib_path[MAXPATHLEN+1]={0};
++    char mingw_py_path[MAXPATHLEN+1]={0};
++
++    get_mingw_lib_path(mingw_lib_path, sizeof(mingw_lib_path));
++
++    sprintf(mingw_py_path, "/python%d.%d", PY_MAJOR_VERSION,PY_MINOR_VERSION);
++
++    if (strlen(mingw_lib_path)>=0) {
++        strncpy(destination, mingw_lib_path, size);
++        strncat(destination, mingw_py_path, size);
++    }
++}
++
++void get_mingw_libdynload_path(char *destination, int size)
++{
++    char mingw_lib_path[MAXPATHLEN+1]={0};
++
++    get_mingw_python_path(mingw_lib_path, sizeof(mingw_lib_path));
++
++    if (wcslen(mingw_lib_path)>=0) {
++        strncpy(destination, mingw_lib_path, size);
++        strncat(destination, "/lib-dynload", size);
++    }
++}
++
++void get_build_dir(char *destination, int size, char *parentdir)
++{
++    char build_dir[MAXPATHLEN+1]={0};
++    sprintf(build_dir, "\\build\\lib.win32-%d.%d", PY_MAJOR_VERSION,PY_MINOR_VERSION);
++    strcpy(destination, parentdir);
++    strcat(destination, build_dir);
++}
++
+ static void
+ calculate_path(void)
+ {
+@@ -467,6 +618,7 @@
+     size_t bufsz;
+     char *pythonhome = Py_GetPythonHome();
+     char *envpath = Py_GETENV("PYTHONPATH");
++    int  prefixFound=0;
+ 
+ #ifdef MS_WINDOWS
+     int skiphome, skipdefault;
+@@ -480,8 +632,11 @@
+     /* progpath guaranteed \0 terminated in MAXPATH+1 bytes. */
+     strcpy(argv0_path, progpath);
+     reduce(argv0_path);
++
++    prefixFound=search_for_prefix(argv0_path, LANDMARK);
++
+     if (pythonhome == NULL || *pythonhome == '\0') {
+-        if (search_for_prefix(argv0_path, LANDMARK))
++        if (prefixFound)
+             pythonhome = prefix;
+         else
+             pythonhome = NULL;
+@@ -511,6 +666,20 @@
+     }
+ 
+     skiphome = pythonhome==NULL ? 0 : 1;
++
++#ifdef __MINGW32__
++    char mingw_lib_path[MAXPATHLEN+1]={0};
++    get_mingw_lib_path(mingw_lib_path, sizeof(mingw_lib_path));
++
++    char mingw_python_path[MAXPATHLEN+1]={0};
++    get_mingw_python_path(mingw_python_path, sizeof(mingw_python_path));
++
++    get_mingw_libdynload_path(mingw_dynload_path, sizeof(mingw_dynload_path));
++#  endif
++
++    char build_dir[MAXPATHLEN+1]={0};
++    get_build_dir(build_dir, sizeof(build_dir), argv0_path);
++
+ #ifdef Py_ENABLE_SHARED
+     machinepath = getpythonregpath(HKEY_LOCAL_MACHINE, skiphome);
+     userpath = getpythonregpath(HKEY_CURRENT_USER, skiphome);
+@@ -518,7 +687,8 @@
+     /* We only use the default relative PYTHONPATH if we havent
+        anything better to use! */
+     skipdefault = envpath!=NULL || pythonhome!=NULL || \
+-                  machinepath!=NULL || userpath!=NULL;
++                  machinepath!=NULL || userpath!=NULL || \
++                  (strlen(mingw_lib_path)>=0);
+ #endif
+ 
+     /* We need to construct a path from the following parts.
+@@ -555,9 +725,21 @@
+         bufsz += strlen(machinepath) + 1;
+     bufsz += strlen(zip_path) + 1;
+ #endif
++
++#ifdef __MINGW32__
++    if (strlen(mingw_lib_path)>=0)
++        bufsz += strlen(mingw_lib_path) + 1;
++    if (strlen(mingw_python_path)>=0)
++        bufsz += strlen(mingw_python_path) + 1;
++    if (strlen(mingw_dynload_path)>=0)
++        bufsz += strlen(mingw_dynload_path) + 1;
++#endif
++
+     if (envpath != NULL)
+         bufsz += strlen(envpath) + 1;
+ 
++    bufsz += search_for_lib(1,pythonhome,NULL);
++
+     module_search_path = buf = malloc(bufsz);
+     if (buf == NULL) {
+         /* We can't exit, so print a warning and limp along */
+@@ -608,6 +790,35 @@
+             buf = strchr(buf, '\0');
+         }
+     }
++#  ifdef __MINGW32__
++    if (prefixFound==0) {
++        if (strlen(mingw_lib_path)>0) {
++            strcpy(buf, mingw_lib_path);
++            buf = strchr(buf, '\0');
++            *buf++ = DELIM;
++        }
++
++        if (strlen(mingw_python_path)>0) {
++            strcpy(buf, mingw_python_path);
++            buf = strchr(buf, '\0');
++            *buf++ = DELIM;
++        }
++
++        if (strlen(mingw_dynload_path)>0) {
++            strcpy(buf, mingw_dynload_path);
++            buf = strchr(buf, '\0');
++            *buf++ = DELIM;
++        }
++
++        char mingw_path[MAXPATHLEN+1]={0};
++        char os_test_path[MAXPATHLEN+1]={0};
++
++        get_mingw_path(mingw_path, sizeof(mingw_path));
++        get_mingw_os_test_path(os_test_path, sizeof(os_test_path));
++
++        search_for_prefix(mingw_path, os_test_path);
++    }
++#  endif
+ #else
+     if (pythonhome == NULL) {
+         strcpy(buf, PYTHONPATH);
+@@ -615,27 +826,15 @@
+     }
+ #endif /* MS_WINDOWS */
+     else {
+-        char *p = PYTHONPATH;
+-        char *q;
+-        size_t n;
+-        for (;;) {
+-            q = strchr(p, DELIM);
+-            if (q == NULL)
+-                n = strlen(p);
+-            else
+-                n = q-p;
+-            if (p[0] == '.' && is_sep(p[1])) {
+-                strcpy(buf, pythonhome);
+-                buf = strchr(buf, '\0');
+-                p++;
+-                n--;
+-            }
+-            strncpy(buf, p, n);
+-            buf += n;
+-            if (q == NULL)
+-                break;
++        //Really don't like how strings are being maintained in
++        //this file. However, I don't have time to refactor all.
++        search_for_lib(0,pythonhome,buf);
++        buf = strchr(buf, '\0');
++
++        if (exists(build_dir)) {
++            strcpy(buf, build_dir);
++            buf = strchr(buf, '\0');
+             *buf++ = DELIM;
+-            p = q+1;
+         }
+     }
+     if (argv0_path) {
+@@ -702,6 +901,8 @@
+ char *
+ Py_GetExecPrefix(void)
+ {
++    if (strlen(mingw_dynload_path)>0)
++        return mingw_dynload_path;
+     return Py_GetPrefix();
+ }
+ 
