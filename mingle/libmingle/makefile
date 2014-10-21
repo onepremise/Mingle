@@ -54,7 +54,7 @@ clean:
 	cd .libs ; rm -f $(OBJ) $(MINGLELIB).* *.dll
 	cd test ; make clean
 	
-install:
+install: default
 	if [ -a /mingw/include/mingle ]; then rm -rf /mingw/mingle; fi;
 	mkdir -p /mingw/include/mingle
 	cp -rf include/* /mingw/include/mingle

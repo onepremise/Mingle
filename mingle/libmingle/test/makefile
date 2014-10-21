@@ -28,8 +28,8 @@ debug: $(MAIN)
 test-%.exe: test-%.o
 	x86_64-w64-mingw32-gcc  $(CFLAGS) -o $@ $< $(LIBS) $(LFLAGS) -lws2_32 -liconv
 
-progname.o: progname.c
-	gcc $(INCLUDES) $(CFLAGS) $(OPTIMISATIONS) -c $< -o $@
+progname.o:
+	gcc $(INCLUDES) $(CFLAGS) $(OPTIMISATIONS) -c progname.c -o $@
 	
 test-filenamecat.exe: test-filenamecat.o progname.o
 	x86_64-w64-mingw32-gcc  $(CFLAGS) -o $@ $< progname.o $(LIBS) $(LFLAGS) -lws2_32 -liconv

@@ -1258,7 +1258,7 @@ _GL_WARN_ON_USE (remove, "remove cannot handle directories on some platforms - "
 #endif
 
 #if 1
-# if 1
+# if 0
 #  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
 #   undef rename
 #   define rename rpl_rename
@@ -1604,8 +1604,9 @@ _GL_CXXALIASWARN (vscanf);
 #endif
 
 #if 1
-# if 1
+# if 0
 #  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
+#   undef vsnprintf
 #   define vsnprintf rpl_vsnprintf
 #  endif
 _GL_FUNCDECL_RPL (vsnprintf, int,
@@ -1615,7 +1616,7 @@ _GL_FUNCDECL_RPL (vsnprintf, int,
 _GL_CXXALIAS_RPL (vsnprintf, int,
                   (char *str, size_t size, const char *format, va_list args));
 # else
-#  if !1
+#  if !0
 _GL_FUNCDECL_SYS (vsnprintf, int,
                   (char *str, size_t size, const char *format, va_list args)
                   _GL_ATTRIBUTE_FORMAT_PRINTF (3, 0)
