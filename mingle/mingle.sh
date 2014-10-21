@@ -47,12 +47,6 @@ updateGCC() {
         mv unknwn.h /mingw/x86_64-w64-mingw32/include/unknwn.h || mingleError $? "Failed to update GCC, aborting!"
 
         ad_cd "$MINGLE_BUILD_DIR"
-        
-        if [ ! -e "/mingw/lib/libmingle.a" ]; then
-            mingleLog "Supplementing GCC with libmingle..."
-            cp -rf $MINGLE_BASE/mingle/libmingle .
-            buildInstallGeneric "libmingle" false true false false "" false false "" "" "libmingle.a" "" ""
-        fi
     fi
 }
 
@@ -111,6 +105,16 @@ updateMake() {
 
     #cp -rf $_project/bin_amd64/m* /bin
     cp -rf $_project/bin_ix86 /bin
+}
+
+buildInstallLibMingle() {
+    ad_cd "$MINGLE_BUILD_DIR"
+    mingleLog "Checking for binary libmingle.a..." true
+    if [ ! -e "/mingw/lib/libmingle.a" ]; then
+        mingleLog "Installing libmingle..."
+        cp -rf $MINGLE_BASE/mingle/libmingle .
+        buildInstallGeneric "libmingle" false true false false "" false false "" "" "libmingle.a" "" ""
+    fi
 }
 
 buildInstallDLFCN() {
@@ -4662,6 +4666,7 @@ suiteBase() {
     buildInstallAutoMake
     buildInstallLibtool
     buildInstallPkgconfig
+    buildInstallLibMingle
     
     buildInstallGMP
     buildInstallMPFR
