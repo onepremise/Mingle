@@ -29,8 +29,9 @@ INCLUDES = -Iinclude
 OPTIMISATIONS = -g
 CFLAGS = -Wall -D__MINGW32__ -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO 
 LDFLAGS = -Wl,--enable-auto-image-base -Wl,-lws2_32
+DEPDIR = .deps
 
-default: $(MINGLEDLL)
+default: $(DEPDIR)/ $(MINGLEDLL)
 
 debug: OPTIMISATIONS = -g
 debug: $(MINGLEDLL)
@@ -44,6 +45,9 @@ check: $(MINGLEDLL)
 $(MINGLEDLL): $(OBJ)
 	libtool -v --tag=CC --mode=link x86_64-w64-mingw32-gcc -no-undefined -version-info 1:1:1 -o libmingle.la -rpath /mingw/lib $(OBJ:.o=.lo) $(LDFLAGS)
 
+$(DEPDIR)/:
+	mkdir $@
+	
 clean:
 	rm -f $(OBJ) $(OBJ:.o=.lo) $(MINGLELIB)
 	cd .deps ; rm -f $(OBJ:.o=.Tpo)
