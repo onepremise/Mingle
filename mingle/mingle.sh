@@ -4438,7 +4438,7 @@ buildInstalProtobuf() {
     local _target=""
     local _projectSearchName="protobuf-*"
     local _cleanEnv=true #true/false
-    local _runAutoGenIfExists=true #true/false
+    local _runAutoGenIfExists=false #true/false
     local _runAutoreconf=false #true/false
     local _runACLocal=true #true/false
     local _aclocalFlags="-I m4"
