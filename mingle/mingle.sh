@@ -4470,9 +4470,11 @@ buildInstallProtobufC() {
  
         ad_clearEnv
  
-        export "CFLAGS=-I/mingw/include/mingle -I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"
+        export "CC=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
+        export "CXX=x86_64-w64-mingw32-gcc -I/mingw/include/mingle"
+        export "CFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__MINGW32__"
         export "LDFLAGS=-L/mingw/lib -lmingle -lws2_32"
-        export "CPPFLAGS=-I/mingw/include/mingle -I/mingw/include -D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"
+        export "CPPFLAGS=-I/mingw/include -D_WIN64 -DMS_WIN64 -D__MINGW32__"
         
         ad_cd $_projectDir
         
