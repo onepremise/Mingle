@@ -4482,11 +4482,9 @@ buildInstallProtobufC() {
         
         ./autogen.sh --prefix=/mingw
         
-        #CFLAGS are not needed for generating protobuf-c libtool wrapper
-        sed 's/^LTCFLAGS=.*/LTCFLAGS="-D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"/g' libtool>libtool2
-        mv -f libtool2 libtool
+        ad_adjust_libtool
         
-        ad_cd ".."
+        ad_cd $MINGLE_BUILD_DIR
 
         ad_make "$_project"
     else

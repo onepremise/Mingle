@@ -363,6 +363,15 @@ ad_remove_old_prefix_if_new() {
     fi
 }
 
+ad_adjust_libtool() {
+    if [ -e "./libtool" ]; then
+        echo
+        echo "Adjusting libtool LTCC setting"
+        sed -e 's/\(LTC[CFLAGS]*=.*\)\s\-I.mingw.include.mingle/\1/g' -e 's/^LTCFLAGS=.*/LTCFLAGS="-D_WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -D__MINGW32__"/g' ./libtool>libtool2
+        mv -f libtool2 libtool
+    fi
+}
+
 ad_get_config_options() {
     local _options="--prefix=/mingw --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32"
     
@@ -497,12 +506,7 @@ ad_configure() {
         fi
     fi
     
-    if [ -e "./libtool" ]; then
-        echo
-        echo "Adjusting libtool LTCC setting"
-        sed 's/\(LTC[CFLAGS]*=.*\)\s\-I.mingw.include.mingle/\1/g' ./libtool>libtool2
-        mv -f libtool2 libtool
-    fi
+    ad_adjust_libtool
         
     ad_cd $MINGLE_BUILD_DIR
 }
