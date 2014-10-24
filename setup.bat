@@ -1,3 +1,5 @@
+REM Setup script for mingle.
+REM
 @ECHO off
 
 set ORIGINAL_PATH=%CD%

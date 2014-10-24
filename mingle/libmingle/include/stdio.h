@@ -1603,6 +1603,7 @@ _GL_CXXALIAS_SYS (vscanf, int, (const char *format, va_list args));
 _GL_CXXALIASWARN (vscanf);
 #endif
 
+/*
 #if 1
 # if 0
 #  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
@@ -1633,6 +1634,7 @@ _GL_WARN_ON_USE (vsnprintf, "vsnprintf is unportable - "
                  "use gnulib module vsnprintf for portability");
 # endif
 #endif
+*/
 
 #if 1
 # if 1

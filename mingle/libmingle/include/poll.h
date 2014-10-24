@@ -3,6 +3,12 @@
 
 #include <mingle/config.h>
 
+#if defined __cplusplus
+# define _GL_EXTERN_C extern "C"
+#else
+# define _GL_EXTERN_C extern
+#endif
+
 # define POLLIN      0x0001      /* any readable data available   */
 # define POLLPRI     0x0002      /* OOB/Urgent readable data      */
 # define POLLOUT     0x0004      /* file descriptor is writable   */
@@ -25,6 +31,6 @@ typedef unsigned long nfds_t;
 
 #define GNULIB_defined_poll_types 1
 
-int poll (struct pollfd *pfd, nfds_t nfd, int timeout);
+_GL_EXTERN_C int poll (struct pollfd *pfd, nfds_t nfd, int timeout);
 
 #endif
