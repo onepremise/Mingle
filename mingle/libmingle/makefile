@@ -16,7 +16,7 @@ SRC = error.c uname.c msvc-inval.c msvc-nothrow.c fcntl.c writev.c stat.c \
 	  random_r.c regex.c isatty.c ftruncate.c lock.c threadlib.c tls.c \
 	  mktime.c gethostname.c getsockname.c shutdown.c send.c sendto.c recv.c \
 	  recvfrom.c pathconversion.c c-ctype.c c-string-manip.c nl_langinfo.c \
-	  fdopen.c fflush.c fprintf.c fpurge.c freading.c fseterr.c stdio-read.c \
+	  fdopen.c freopen.c fflush.c fprintf.c fpurge.c freading.c fseterr.c stdio-read.c \
 	  stdio-write.c perror.c printf.c sprintf.c snprintf.c fopen.c fclose.c memrchr.c \
 	  fd-safer.c vasnprintf.c printf-args.c printf-frexp.c printf-frexpl.c \
 	  printf-parse.c isnan.c isnanf.c isnanl.c dup-safer.c strerror-override.c \
