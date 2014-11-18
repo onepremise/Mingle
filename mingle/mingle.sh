@@ -1684,7 +1684,7 @@ buildInstallPolarSSL() {
 
 buildInstallLOpenSSL() {
     local _project="openssl-*"
-    local _version="1.0.1c"
+    local _version="1.0.1j"
     local _additionFlags=""
     local _binCheck="libssl.a"
     local _exeToTest="openssl version"
@@ -2335,7 +2335,6 @@ buildInstallQt() {
     local _url="http://download.qt-project.org/archive/qt/5.3/5.3.0/single/qt-everywhere-opensource-src-5.3.0.tar.gz"
     local _target="qt-$_version.tar.gz"
     local _projectSearchName="qt-*"
-    local _projectDir=$(ad_getDirFromWC $_projectSearchName)
     local _cleanEnv=false #true/false
     local _runAutoGenIfExists=true #true/false
     local _runAutoreconf=false #true/false
@@ -2343,7 +2342,6 @@ buildInstallQt() {
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
     local _runConfigure=true #true/false
-    local _configureFlags="-prefix /mingw -shared -opensource -confirm-license -platform win32-g++ -developer-build -c++11 -fontconfig -system-zlib -system-freetype -iconv -icu -system-harfbuzz -system-libpng -system-libjpeg -opengl desktop -openssl -plugin-sql-odbc -plugin-sql-sqlite -qt-pcre -qt-sql-psql -nomake tests -I /mingw/include -L $_projectDir/dependencies -L /mingw/lib -lfontconfig -lfreetype -v"
     local _makeParameters=""
     local _binCheck="qtdiag.exe"
     local _postBuildCommand=""
@@ -2366,6 +2364,8 @@ buildInstallQt() {
         local _projectDir=$(ad_getDirFromWC $_projectSearchName)
         
         ad_cd "$_projectDir"
+        
+        local _configureFlags="-prefix /mingw -shared -opensource -confirm-license -platform win32-g++ -developer-build -c++11 -fontconfig -system-zlib -system-freetype -iconv -icu -system-harfbuzz -system-libpng -system-libjpeg -opengl desktop -openssl -plugin-sql-odbc -plugin-sql-sqlite -qt-pcre -qt-sql-psql -nomake tests -I /mingw/include -L $_projectDir/dependencies -L /mingw/lib -lfontconfig -lfreetype -v"
 
         fixQTHeaderPaths "$_projectDir" "qtactiveqt/include"
         fixQTHeaderPaths "$_projectDir" "qtbase/include"
@@ -2393,6 +2393,8 @@ buildInstallQt() {
         ad_cd "$_projectDir"
 
         export "PATH=$PATH:$(ad_cwd)/qtbase/lib"
+        export QT_PLUGIN_PATH=/mingw/plugins
+        echo "export QT_PLUGIN_PATH=/mingw/plugins">>/etc/profile
 
         mingleLog "PATH=$PATH" true
     
@@ -2403,9 +2405,6 @@ buildInstallQt() {
         cp /mingw/lib/libicudata.dll.a dependencies/libicudt.dll.a || mingleError $? "cp failed, aborting!"
         
         mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
-
-        export QT_PLUGIN_PATH=/mingw/plugins
-        echo "export QT_PLUGIN_PATH=/mingw/plugins">>/etc/profile
     else
         mingleLog "$_projectName Already Installed." true
     fi
