@@ -12,3 +12,37 @@
  
  #include <set>
  #include "rpcclient.h"
+--- bitcoin-master/src/bitcoin-cli.cpp	2014-12-30 08:36:30 -0500
++++ bitcoin-master/src/bitcoin-cli2.cpp	2014-12-30 18:08:17 -0500
+@@ -3,10 +3,10 @@
+ // Distributed under the MIT software license, see the accompanying
+ // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+ 
++#include "rpcprotocol.h"
+ #include "chainparamsbase.h"
+ #include "clientversion.h"
+ #include "rpcclient.h"
+-#include "rpcprotocol.h"
+ #include "util.h"
+ #include "utilstrencodings.h"
+ 
+--- bitcoin-master/configure.ac	2014-12-30 08:36:30 -0500
++++ bitcoin-master/configure2.ac	2014-12-23 10:14:14 -0500
+@@ -203,7 +203,7 @@
+ 
+      # -static is interpreted by libtool, where it has a different meaning.
+      # In libtool-speak, it's -all-static.
+-     AX_CHECK_LINK_FLAG([[-static]],[LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"])
++     # AX_CHECK_LINK_FLAG([[-static]],[LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"])
+ 
+      AC_PATH_PROG([MAKENSIS], [makensis], none)
+      if test x$MAKENSIS = xnone; then
+@@ -232,7 +232,7 @@
+      dnl its command here, with the predeps/postdeps removed, and -static inserted. Postdeps are
+      dnl also overridden to prevent their insertion later.
+      dnl This should only affect dll's.
+-     archive_cmds_CXX="\$CC -shared \$libobjs \$deplibs \$compiler_flags -static -o \$output_objdir/\$soname \${wl}--enable-auto-image-base -Xlinker --out-implib -Xlinker \$lib"
++     archive_cmds_CXX="\$CC -shared \$libobjs \$deplibs \$compiler_flags -o \$output_objdir/\$soname \${wl}--enable-auto-image-base -Xlinker --out-implib -Xlinker \$lib"
+      postdeps_CXX=
+ 
+      ;;

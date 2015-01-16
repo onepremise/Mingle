@@ -97,14 +97,21 @@ install7Zip() {
 updateMake() {
     mingleLog "Updating Make..." true
 
-    local _project="make-$MAKE*"
-    
-    mingleDownload "http://sourceforge.net/projects/mingw-w64/files/External%20binary%20packages%20%28Win64%20hosted%29/make/make-$MAKE.zip/download" "make-$MAKE.zip"
+    local _projectName="make"
+    local _version="3.82.90-20111115"
+    local _projectSearchName="make-$_version*"
+    local _url="ftp://www.mirrorservice.org/sites/downloads.sourceforge.net/m/mi/mingw-w64/External%20binary%20packages%20(Win64%20hosted)/make/make-$_version.zip"
+    local _target="make-$_version.zip"
 
-    mingleDecompress "$_project"
-
-    #cp -rf $_project/bin_amd64/m* /bin
-    cp -rf $_project/bin_ix86 /bin
+    if ad_isDateNewerThanFileModTime "2014-01-01" "/bin/make.exe"; then
+        mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
+        mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
+        
+        cp -rf $_projectSearchName/bin_amd64/* /mingw/bin
+        #cp -rf $_project/bin_ix86 /bin
+    else
+        mingleLog "Make is up to date." true
+    fi 
 }
 
 buildInstallLibMingle() {
@@ -1421,6 +1428,32 @@ buildInstallReadline() {
     fi
 }
 
+buildInstallNcurses() {
+    local _projectName="ncurses"
+    local _version="5.9-20150110"
+    local _url="ftp://invisible-island.net/ncurses/current/ncurses-$_version.tgz"
+    local _target=""
+    local _projectSearchName="ncurses-*"
+    local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=false #true/false
+    local _runAutoreconf=false #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags="--with-shared --with-cxx-shared --with-normal --disable-relink --disable-rpath --without-ada --enable-warnings  --disable-home-terminfo --enable-database  --disable-home-terminfo --enable-sp-funcs --disable-sigwinch --enable-term-driver --enable-interop --disable-termcap --with-progs --with-libtool --enable-pc-files --mandir=/mingw/share/man"
+    local _makeParameters=""
+    local _binCheck="libncurses++.a"
+    local _postBuildCommand=""
+    local _exeToTest=""
+    
+    ad_setDefaultEnv
+    
+    export CFLAGS="$CFLAGS -I../progs -I../include"
+
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"       
+}
+
 installLibJPEG () {
     local _version="1.2.1"
     
@@ -2353,11 +2386,6 @@ buildInstallQt() {
         
         ad_setDefaultEnv
 
-        # -fno-strict-aliasing
-        export "CFLAGS=-I/mingw/include -I/mingw/include/freetype2 -D__MINGW__ -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -Wno-error=switch -Wno-error=strict-aliasing -Wno-error=sign-compare"
-        export "CPPFLAGS=$CFLAGS"
-        export "CXXFLAGS=$CFLAGS"
-
         mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
         mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
         
@@ -2365,7 +2393,17 @@ buildInstallQt() {
         
         ad_cd "$_projectDir"
         
-        local _configureFlags="-prefix /mingw -shared -opensource -confirm-license -platform win32-g++ -developer-build -c++11 -fontconfig -system-zlib -system-freetype -iconv -icu -system-harfbuzz -system-libpng -system-libjpeg -opengl desktop -openssl -plugin-sql-odbc -plugin-sql-sqlite -qt-pcre -qt-sql-psql -nomake tests -I /mingw/include -L $_projectDir/dependencies -L /mingw/lib -lfontconfig -lfreetype -v"
+        local _qtbase=`pwd`
+        
+        mingleLog "_qtbase = $_qtbase..." true
+
+        # -fno-strict-aliasing
+        export "CFLAGS=-D__MINGW__ -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -Wno-error=switch -Wno-error=strict-aliasing -Wno-error=sign-compare"
+        export "CPPFLAGS=$CFLAGS"
+        export "CXXFLAGS=$CFLAGS"
+        export "LDFLAGS=$LDFLAGS" 
+        
+        local _configureFlags="-extprefix $MINGLE_BASE_MX/mingw64 -shared -opensource -confirm-license -platform win32-g++ -developer-build -c++11 -fontconfig -system-zlib -system-freetype -iconv -icu -system-harfbuzz -system-libpng -system-libjpeg -opengl desktop -openssl -plugin-sql-odbc -plugin-sql-sqlite -qt-pcre -qt-sql-psql -nomake tests -D__MINGW__ -D_WIN64 -D__WIN64 -DMS_WIN64 -D__USE_MINGW_ANSI_STDIO -I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/freetype2 -I$_qtbase/qtwebkit/Source/WebCore/generated -L$_qtbase/dependencies -L/mingw/lib -lfontconfig -lfreetype -v"
 
         fixQTHeaderPaths "$_projectDir" "qtactiveqt/include"
         fixQTHeaderPaths "$_projectDir" "qtbase/include"
@@ -2401,10 +2439,13 @@ buildInstallQt() {
         ad_mkdir "dependencies"
     
         cp /mingw/lib/libicui18n.dll.a dependencies/libicuin.dll.a || mingleError $? "cp failed, aborting!"
-        cp /mingw/lib/libicui18n.dll dependencies/libicuin.dll || mingleError $? "cp failed, aborting!"
         cp /mingw/lib/libicudata.dll.a dependencies/libicudt.dll.a || mingleError $? "cp failed, aborting!"
         
         mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+
+        ad_cd "$_projectDir"
+        
+        make module-qtwebkit install
     else
         mingleLog "$_projectName Already Installed." true
     fi
@@ -2502,10 +2543,10 @@ buildInstallMiniupnp () {
 
 buildInstallCryptocpp() {
     local _projectName="cryptopp"
-    local _version="master"
-    local _url="https://github.com/mmoss/cryptopp/archive/master.zip"
-    local _target="cryptopp-$_version.zip"
-    local _projectSearchName="cryptopp-*"
+    local _version="562"
+    local _url="http://www.cryptopp.com/cryptopp$_version.zip"
+    local _target="cryptopp$_version.zip"
+    local _projectSearchName="cryptopp*"
     local _cleanEnv=true #true/false
     local _runAutoGenIfExists=true #true/false
     local _runAutoreconf=false #true/false
@@ -2514,7 +2555,7 @@ buildInstallCryptocpp() {
     local _runAutoconf=true #true/false
     local _runConfigure=true #true/false
     local _configureFlags=""
-    local _makeParameters="--prefix=$MINGLE_BASE_MX/mingw64"
+    local _makeParameters="CXXFLAGS=\"-std=c++11 -DNDEBUG -Ofast -msse2 -msse3 -mssse3 -fno-keep-inline-dllexport $CXXFLAGS\" LDFLAGS=\"-Wl,--enable-auto-image-base\" PREFIX=\"/mingw\""
     local _binCheck="libcryptopp.a"
     local _postBuildCommand=""
     local _exeToTest=""
@@ -2524,16 +2565,16 @@ buildInstallCryptocpp() {
          mingleLog "Building $_projectName..." true
     
          mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
-         mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
+         mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName" "$_projectName"
 
          local _projectdir=$(ad_getDirFromWC $_projectSearchName)
         
          ad_cd "$_projectdir"
 
-         if [ ! -e $_projectName-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/$_projectName/$_version/$_projectName-mingw.patch .
-            ad_patch "$_projectName-mingw.patch"
-         fi
+         #if [ ! -e $_projectName-mingw.patch ]; then
+         #   cp $MINGLE_BASE/patches/$_projectName/$_version/$_projectName-mingw.patch .
+         #   ad_patch "$_projectName-mingw.patch"
+         #fi
          
          mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
     else
@@ -2601,7 +2642,7 @@ buildInstallBitcoin() {
     local _aclocalFlags=""
     local _runAutoconf=false #true/false
     local _runConfigure=true #true/false
-    local _configureFlags="--with-gui --with-qrencode --with-miniupnpc --enable-upnp-default --with-qt-incdir=/mingw/include --with-qt-libdir=/mingw/lib --with-boost=/mingw --with-incompatible-bdb --enable-shared --enable-static=no"
+    local _configureFlags="--with-gui --with-qrencode --with-miniupnpc --enable-upnp-default --with-qt-incdir=/mingw/include --with-qt-libdir=/mingw/lib --with-boost=/mingw --with-boost-system=boost_system-48-mt-1_52 --with-boost-filesystem=boost_filesystem-48-mt-1_52 --with-boost-program-options=boost_program_options-48-mt-1_52 --with-boost-thread=boost_thread-48-mt-1_52 --with-boost-chrono=boost_chrono-48-mt-1_52 --with-incompatible-bdb --enable-shared"
     local _makeParameters="USE_QRCODE=1 USE_UPNP=1 USE_IPV6=1"
     local _binCheck="bitcoin-qt"
     local _postBuildCommand=""
@@ -2648,32 +2689,43 @@ buildInstallBitcoin() {
 # WIP
 buildInstallEthereum() {
     local _project="cpp-ethereum"
+    local _url="https://github.com/onepremise/cpp-ethereum/archive/develop.zip"
+    local _projectSearchName="cpp-ethereum*"
     local _version="master"
-    local _binCheck="xxx"
+    local _binCheck="libdevcore.dll"
 
     mingleLog "Checking $_project..." true
     
     if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] ); then
         mingleLog "Building $_project..." true
 
-        mingleCategoryDownload "cpp-ethereum" "$_version" "https://github.com/ethereum/cpp-ethereum/archive/develop.zip" "cpp-ethereum-$_version.zip"
-        mingleCategoryDecompress "cpp-ethereum" "$_version" "$_project"
+        mingleCategoryDownload "cpp-ethereum" "$_version" "$_url" "cpp-ethereum-$_version.zip"
+        mingleCategoryDecompress "cpp-ethereum" "$_version" "$_projectSearchName"
 
-        local _projectdir=$(ad_getDirFromWC $_project)
+        local _projectdir=$(ad_getDirFromWC $_projectSearchName)
         
         ad_cd "$MINGLE_BUILD_DIR"
         
-        mkdir cpp-ethereum-build
-        
-        ad_cd cpp-ethereum-build
+        ad_mkdir cpp-ethereum-build
         
         ad_setDefaultEnv
         
-        export "CFLAGS=$CFLAGS -I\"/mingw/include/boost-1_56\""
+        ad_cd cpp-ethereum-build
         
-        cmake ../cpp-ethereum -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE_MX/mingw64 -DPYTHON_INCLUDE_DIR:PATH=$MINGLE_BASE_MX/mingw64/include/python2.7 -DBOOST_INCLUDEDIR=$MINGLE_BASE_MX/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE_MX/lib -DBoost_COMPILER="-48"
+        ad_mkdir dependencies/jsonrpccpp/server
+        
+        cp -rf /mingw/include/jsonrpc/* dependencies/jsonrpccpp/server
+        cp -rf /mingw/include/jsonrpc/* dependencies/jsonrpccpp
+        
+        export "CFLAGS=$CFLAGS -D_MSC_VER -I\"/mingw/include/boost-1_56\""
+        export "LDFLAGS=$LDFLAGS -Wl,--allow-multiple-definition"
+        
+        #CXX_DEFINES
+        cmake ../cpp-ethereum-develop -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DPYTHON_INCLUDE_DIR:PATH=$MINGLE_BASE/mingw64/include/python2.7 -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCRYPTOPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DCRYPTOPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libcryptopp.a -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DJSON_RPC_CPP_INCLUDE_DIR=./dependencies -DJSON_RPC_CPP_COMMON_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp.a -DJSON_RPC_CPP_SERVER_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp.a -DJSON_RPC_CPP_CLIENT_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp.a -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/ncurses -I./dependencies -DBOOST_USE_WINDOWS_H" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"|| mingleError $? "cmake failed, aborting!"
+        
+        #mingleError $? "cmake stop, aborting!"
 
-        buildInstallGeneric "$_project" true true false false "" false false "" "" "$_binCheck" "" ""
+        buildInstallGeneric "$_project-build" true true false false "" false false "" "" "$_binCheck" "" ""
     else
         mingleLog "Already Installed."  
     fi
@@ -4216,9 +4268,9 @@ buildInstallSwig() {
 
 buildInstallJSONC() {   
     local _projectName="json-c"
-    local _version="master"
-    local _url="https://github.com/json-c/json-c/archive/be002fbb96c484f89aee2c843b89bdd00b0a5e46.zip"
-    local _target="json-c-$_version.zip"
+    local _version="0.12-20140410"
+    local _url="https://github.com/json-c/json-c/archive/json-c-$_version.tar.gz"
+    local _target="json-c-$_version.tar.gz"
     local _projectSearchName="json-c-*"
     local _cleanEnv=true #true/false
     local _runAutoGenIfExists=true #true/false
@@ -4238,6 +4290,60 @@ buildInstallJSONC() {
     if [ ! -e /mingw/include/json ]; then
         ln -s /mingw/include/json-c/ /mingw/include/json || mingleError $? "json-c: ln failed, aborting!"
     fi
+}
+
+buildInstallJSONCPP() {   
+    local _projectName="jsoncpp"
+    local _version="1.0.0"
+    local _url="https://github.com/open-source-parsers/jsoncpp/archive/$_version.tar.gz"
+    local _target="jsoncpp-$_version.tar.gz"
+    local _projectSearchName="jsoncpp*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=false #true/false
+    local _runAutoreconf=false #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=false #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="libjsoncpp.a"
+    local _postBuildCommand=""
+    local _exeToTest=""
+
+    mingleLog "Checking $_projectName..." true
+    
+    if ! ( [ -e "/mingw/lib/$_binCheck" ] || [ -e "/mingw/bin/$_binCheck" ] ); then
+        mingleLog "Building $_project..." true
+
+        mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
+        mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
+
+        local _projectdir=$(ad_getDirFromWC $_projectSearchName)
+        
+        ad_cd "$MINGLE_BUILD_DIR"
+        
+        ad_mkdir jsoncpp-build
+        
+        ad_setDefaultEnv
+        
+        ad_cd jsoncpp-build
+        
+        ad_mkdir jsoncpp/include
+        ad_mkdir jsoncpp/lib
+        
+        #CXX_DEFINES
+        cmake ../$_projectName-$_version -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BUILD_DIR/jsoncpp-build/jsoncpp -DCMAKE_CXX_FLAGS="-std=c++11" || mingleError $? "cmake failed, aborting!"
+
+        buildInstallGeneric "$_projectName-build" true true false false "" false false "" "" "$_binCheck" "" ""
+        
+        ad_mkdir $MINGLE_BASE/mingw64/include/jsoncpp
+        
+        cp -rf jsoncpp/include/json $MINGLE_BASE/mingw64/include/jsoncpp || mingleError $? "jsoncpp: cp failed, aborting!"
+        cp -rf jsoncpp/lib/* $MINGLE_BASE/mingw64/lib || mingleError $? "jsoncpp: cp failed, aborting!"
+    else
+        mingleLog "Already Installed."  
+    fi  
 }
 
 buildInstallPostGIS () {
@@ -4656,6 +4762,7 @@ suiteBase() {
 
     updateFindCommand
 
+    #updateMake
     updateGCC
     
     #experimental
@@ -4699,7 +4806,9 @@ suiteBase() {
     buildInstallTCL
     buildInstallTk
     buildInstallSigc
+    buildInstallNcurses
     buildInstallJSONC
+    buildInstallJSONCPP
 
     #Keep the msys M4 for now due to build issues it causes with autoconf
     #buildInstallM4
@@ -5082,9 +5191,11 @@ suiteCryptoCurrency() {
         buildInstallLibqrencode
         buildInstallScons
         buildInstallCryptocpp
+        buildInstallCurl
     fi
     
     buildInstallBitcoin
+    buildInstallEthereum
     buildInstallCpuMiner
     buildInstallCpuMinerMulti
 }

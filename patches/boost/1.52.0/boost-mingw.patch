@@ -103,7 +103,7 @@ diff -ruN boost_1_52_0/tools/build/v2/tools/python.jam _boost_1_52_0/tools/build
           class.
       */    
 -    class common_config_file_iterator 
-+    class BOOST_PROGRAM_OPTIONS_DECL common_config_file_iterator 
++    class BOOST_PROGRAM_OPTIONS_DECL common_config_file_iterator
          : public eof_iterator<common_config_file_iterator, option>
      {
      public:

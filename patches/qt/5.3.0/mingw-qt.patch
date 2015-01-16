@@ -172,3 +172,111 @@
      dirlist_sep = QLatin1Char(';');
      dir_sep = QLatin1Char('\\');
  #else
+--- qt-everywhere-opensource-src-5.3.0/qtwebkit/Source/WebCore/xml/XSLTProcessorQt.cpp	2014-05-15 13:12:32 -0400
++++ qt-everywhere-opensource-src-5.3.0/qtwebkit/Source/WebCore/xml/XSLTProcessorQt2.cpp	2014-12-03 16:57:05 -0500
+@@ -26,6 +26,7 @@
+ #include "XSLTProcessor.h"
+ 
+ #include "Console.h"
++#include "PageConsole.h"
+ #include "Document.h"
+ #include "DOMWindow.h"
+ #include "Frame.h"
+@@ -83,7 +84,8 @@
+         break;
+     }
+ 
+-    Console* console = m_document->domWindow()->console();
++    //Console* console = m_document->domWindow()->console();
++    PageConsole* console = (PageConsole*)m_document->domWindow()->console();
+     console->addMessage(XMLMessageSource, level, description, sourceLocation.uri().toString(), sourceLocation.line(), sourceLocation.column());
+ }
+ 
+--- qt-everywhere-opensource-src-5.3.0/qtbase/qmake/generators/makefile.cpp	2014-05-15 13:12:10 -0400
++++ qt-everywhere-opensource-src-5.3.0/qtbase/qmake/generators/makefile2.cpp	2014-12-22 11:23:55 -0500
+@@ -1515,10 +1515,21 @@
+         if (project->isActiveConfig("object_parallel_to_source")) {
+             // The source paths are relative to the output dir, but we need source-relative paths
+             QString sourceRelativePath = fileFixify(sfn, qmake_getpwd(), Option::output_dir);
++
+             sourceRelativePath = Option::fixPathToTargetOS(sourceRelativePath, false);
+ 
+-            if (sourceRelativePath.startsWith(".." + Option::dir_sep))
+-                sourceRelativePath = fileFixify(sourceRelativePath, FileFixifyAbsolute);
++            if (sourceRelativePath.startsWith(".." + Option::dir_sep)) {
++                QString process = fileFixify(sourceRelativePath, FileFixifyAbsolute);
++                //Avoid extremely long unnecessary paths.
++                QDir pwd = QDir(qmake_getpwd());
++                while (pwd.cdUp()) {
++					if (process.contains(pwd.absolutePath())) {
++						process=process.remove(pwd.absolutePath());
++						break;
++					}
++				}
++				sourceRelativePath=process;
++			}
+ 
+             if (QDir::isAbsolutePath(sourceRelativePath))
+                 sourceRelativePath.remove(0, sourceRelativePath.indexOf(Option::dir_sep) + 1);
+@@ -1538,6 +1549,7 @@
+         } else {
+             dir = objdir;
+         }
++
+         ret.append(dir + fi.completeBaseName() + Option::obj_ext);
+     }
+     return ret;
+--- qt-everywhere-opensource-src-5.3.0/qtbase/qmake/generators/win32/mingw_make.cpp	2014-05-15 13:12:10 -0400
++++ qt-everywhere-opensource-src-5.3.0/qtbase/qmake/generators/win32/mingw_make2.cpp	2014-12-16 16:53:25 -0500
+@@ -54,10 +54,10 @@
+ 
+ MingwMakefileGenerator::MingwMakefileGenerator() : Win32MakefileGenerator(), init_flag(false)
+ {
+-    if (isWindowsShell())
++    //if (isWindowsShell())
+         quote = "\"";
+-    else
+-        quote = "'";
++    //else
++    //    quote = "'";
+ }
+ 
+ QString MingwMakefileGenerator::escapeDependencyPath(const QString &path) const
+@@ -345,9 +345,34 @@
+     } else {
+         t << "LINKER      =        " << var("QMAKE_LINK") << endl;
+         t << "LFLAGS        =        " << var("QMAKE_LFLAGS") << endl;
+-        t << "LIBS        =        "
+-          << var("QMAKE_LIBS").replace(QRegExp("(\\slib|^lib)")," -l") << ' '
+-          << var("QMAKE_LIBS_PRIVATE").replace(QRegExp("(\\slib|^lib)")," -l") << endl;
++        t << "LIBS        =        ";
++
++        ProStringList &libs = project->values("QMAKE_LIBS");
++		for (ProStringList::ConstIterator libit = libs.begin(); libit != libs.end(); ++libit) {
++            if ((*libit).startsWith("-L")) {
++                QString lib = (*libit).mid(2).toQString();
++		        t << "-L";
++		        t << quote << lib << quote << " ";
++		    } else {
++                t << (*libit).toQString().replace(QRegExp("(\\slib|^lib)")," -l") << " ";
++			}
++        }
++
++        libs = project->values("QMAKE_LIBS_PRIVATE");
++		for (ProStringList::ConstIterator libit = libs.begin(); libit != libs.end(); ++libit) {
++            if ((*libit).startsWith("-L")) {
++                QString lib = (*libit).mid(2).toQString();
++		        t << "-L";
++		        t << quote << lib << quote << " ";
++		    } else {
++                t << (*libit).toQString().replace(QRegExp("(\\slib|^lib)")," -l") << " ";
++			}
++        }
++
++        t << endl;
++//        t << "LIBS        =        "
++//          << var("QMAKE_LIBS").replace(QRegExp("(\\slib|^lib)")," -l") << ' '
++//          << var("QMAKE_LIBS_PRIVATE").replace(QRegExp("(\\slib|^lib)")," -l") << endl;
+     }
+ }
+ 
