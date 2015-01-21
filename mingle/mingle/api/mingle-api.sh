@@ -301,7 +301,7 @@ ad_generateImportLibraryForDLL() {
 ad_clearEnv() {
     mingleLog "Resetting environment flags..." true
 
-    unset PKG_CONFIG_PATH; unset CFLAGS; unset LDFLAGS; unset CPPFLAGS; unset CRYPTO; unset CC; unset CXX; unset LIBS
+    unset PKG_CONFIG_PATH; unset CFLAGS; unset LDFLAGS; unset CXXFLAGS; unset CPPFLAGS; unset CRYPTO; unset CC; unset CXX; unset LIBS
 
     ad_cd $MINGLE_BUILD_DIR
 }

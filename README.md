@@ -26,6 +26,7 @@ The following projects are fully building in the environment setup:
 * pthreads
 * autoconf
 * automake
+* argTable
 * libtool
 * pkgconfig
 * zlib
@@ -45,6 +46,7 @@ The following projects are fully building in the environment setup:
 * libxml2
 * fontconfig
 * textinfo
+* libmicrohttpd
 * curl
 * curl - ca-bundle.crt
 * Google Protobuf
@@ -97,6 +99,8 @@ The following projects are fully building in the environment setup:
 * qrencode
 * Miniupnp
 * Bitcoin-qt
+* Pooler's cpuminer
+* Ethereum
 
 This build includes python27 with the sqlite3 extension:
 

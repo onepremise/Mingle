@@ -2582,10 +2582,58 @@ buildInstallCryptocpp() {
     fi
 }
 
+buildInstallArgTable() {
+    local _projectName="argtable"
+    local _version="2-13"
+    local _url="http://prdownloads.sourceforge.net/argtable/argtable$_version.tar.gz"
+    local _target=""
+    local _projectSearchName="argtable*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=false #true/false
+    local _runAutoreconf=false #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="libargtable2.a"
+    local _postBuildCommand=""
+    local _exeToTest=""
+
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+}
+
+buildInstallLibmicrohttpd() {
+    local _projectName="libmicrohttpd"
+    local _version="0.9.39"
+    local _url="http://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-$_version.tar.gz"
+    local _target="libmicrohttpd-$_version.tar.gz"
+    local _projectSearchName="libmicrohttpd-*"
+    local _cleanEnv=false #true/false
+    local _runAutoGenIfExists=false #true/false
+    local _runAutoreconf=false #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="libmicrohttpd.a"
+    local _postBuildCommand=""
+    local _exeToTest=""
+
+    ad_clearEnv
+    
+    export "CFLAGS=-I/mingw/include"
+    
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+}
+
 buildInstallJSONRPCCPP() {
     local _projectName="libjson-rpc-cpp"
-    local _version="master"
-    local _url="https://github.com/cinemast/libjson-rpc-cpp/archive/eaca2481e2889d5a5b748383fb02b1d395969cd4.zip"
+    local _version="0.3.2"
+    local _url="https://github.com/cinemast/libjson-rpc-cpp/archive/v$_version.zip"
     local _target="libjson-rpc-cpp-$_version.zip"
     local _projectSearchName="libjson-rpc-cpp-*"
     local _cleanEnv=false #true/false
@@ -2597,7 +2645,7 @@ buildInstallJSONRPCCPP() {
     local _runConfigure=true #true/false
     local _configureFlags=""
     local _makeParameters=""
-    local _binCheck="libjsonrpccpp.a"
+    local _binCheck="libjsonrpccpp-common.a"
     local _postBuildCommand=""
     local _exeToTest=""
 
@@ -2606,24 +2654,37 @@ buildInstallJSONRPCCPP() {
          mingleLog "Building $_projectName..." true
          
          ad_setDefaultEnv
-             
-         export "CFLAGS=$CFLAGS -D__MINGW__"
-         export "CPPFLAGS=$CPPFLAGS -D__MINGW__"
-         export "LDFLAGS=$LDFLAGS -luser32"
-    
+         
          mingleCategoryDownload "$_projectName" "$_version" "$_url" "$_target"
          mingleCategoryDecompress "$_projectName" "$_version" "$_projectSearchName"
 
          local _projectdir=$(ad_getDirFromWC $_projectSearchName)
         
          ad_cd "$_projectdir"
-
-         if [ ! -e $_projectName-mingw.patch ]; then
-            cp $MINGLE_BASE/patches/$_projectName/$_version/$_projectName-mingw.patch .
-            ad_patch "$_projectName-mingw.patch"    
-         fi
          
-         mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"
+         ad_mkdir win32-deps/include
+
+         #if [ ! -e $_projectName-mingw.patch ]; then
+         #   cp $MINGLE_BASE/patches/$_projectName/$_version/$_projectName-mingw.patch .
+         #   ad_patch "$_projectName-mingw.patch"    
+         #fi
+         
+         ad_cd "$MINGLE_BUILD_DIR"
+	         
+	 ad_mkdir $_projectName-build
+	         
+         ad_cd $_projectName-build
+         
+         cmake $_projectdir -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include" -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/boost-1_56" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition" -DCMAKE_CXX_STANDARD_LIBRARIES="-lWs2_32"|| mingleError $? "cmake failed, aborting!"
+         
+         buildInstallGeneric "$_projectName-build" true false false false "" false false "" "" "$_binCheck" "" ""
+         
+         ad_cd "$MINGLE_BUILD_DIR"
+         ad_cd $_projectName-build
+         
+         if [ "$_version" == "0.4.1"]; then
+             cp -rf dist/* /mingw || mingleError $? "copy failed, aborting!"
+         fi
     else
         mingleLog "$_projectName Already Installed." true
     fi
@@ -2692,7 +2753,7 @@ buildInstallEthereum() {
     local _url="https://github.com/onepremise/cpp-ethereum/archive/develop.zip"
     local _projectSearchName="cpp-ethereum*"
     local _version="master"
-    local _binCheck="libdevcore.dll"
+    local _binCheck="libethereum.dll.a"
 
     mingleLog "Checking $_project..." true
     
@@ -2712,16 +2773,11 @@ buildInstallEthereum() {
         
         ad_cd cpp-ethereum-build
         
-        ad_mkdir dependencies/jsonrpccpp/server
-        
-        cp -rf /mingw/include/jsonrpc/* dependencies/jsonrpccpp/server
-        cp -rf /mingw/include/jsonrpc/* dependencies/jsonrpccpp
-        
         export "CFLAGS=$CFLAGS -D_MSC_VER -I\"/mingw/include/boost-1_56\""
         export "LDFLAGS=$LDFLAGS -Wl,--allow-multiple-definition"
         
         #CXX_DEFINES
-        cmake ../cpp-ethereum-develop -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DPYTHON_INCLUDE_DIR:PATH=$MINGLE_BASE/mingw64/include/python2.7 -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCRYPTOPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DCRYPTOPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libcryptopp.a -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DJSON_RPC_CPP_INCLUDE_DIR=./dependencies -DJSON_RPC_CPP_COMMON_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp.a -DJSON_RPC_CPP_SERVER_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp.a -DJSON_RPC_CPP_CLIENT_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp.a -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/ncurses -I./dependencies -DBOOST_USE_WINDOWS_H" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"|| mingleError $? "cmake failed, aborting!"
+        cmake ../cpp-ethereum-develop -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DPYTHON_INCLUDE_DIR:PATH=$MINGLE_BASE/mingw64/include/python2.7 -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCRYPTOPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DCRYPTOPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libcryptopp.a -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DJSON_RPC_CPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSON_RPC_CPP_COMMON_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp-common.dll.a -DJSON_RPC_CPP_SERVER_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp-server.dll.a -DJSON_RPC_CPP_CLIENT_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp-client.dll.a -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/ncurses -DBOOST_USE_WINDOWS_H" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"|| mingleError $? "cmake failed, aborting!"
         
         #mingleError $? "cmake stop, aborting!"
 
@@ -4272,7 +4328,7 @@ buildInstallJSONC() {
     local _url="https://github.com/json-c/json-c/archive/json-c-$_version.tar.gz"
     local _target="json-c-$_version.tar.gz"
     local _projectSearchName="json-c-*"
-    local _cleanEnv=true #true/false
+    local _cleanEnv=false #true/false
     local _runAutoGenIfExists=true #true/false
     local _runAutoreconf=false #true/false
     local _runACLocal=false #true/false
@@ -4284,6 +4340,10 @@ buildInstallJSONC() {
     local _binCheck="libjson-c-2.dll"
     local _postBuildCommand=""
     local _exeToTest=""
+    
+    ad_setDefaultEnv
+    
+    export "CFLAGS=$CFLAGS -Werror=unused-but-set-variable"
 
     mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
 
@@ -4809,6 +4869,8 @@ suiteBase() {
     buildInstallNcurses
     buildInstallJSONC
     buildInstallJSONCPP
+    buildInstallLibmicrohttpd
+    buildInstallArgTable
 
     #Keep the msys M4 for now due to build issues it causes with autoconf
     #buildInstallM4
@@ -5187,6 +5249,7 @@ suiteCryptoCurrency() {
     fi
     
     if ! $MINGLE_EXCLUDE_DEP; then
+        suiteEncryption
         suiteUILibraries
         buildInstallLibqrencode
         buildInstallScons
