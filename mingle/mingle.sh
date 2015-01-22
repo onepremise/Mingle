@@ -4324,11 +4324,11 @@ buildInstallSwig() {
 
 buildInstallJSONC() {   
     local _projectName="json-c"
-    local _version="0.12-20140410"
-    local _url="https://github.com/json-c/json-c/archive/json-c-$_version.tar.gz"
+    local _version="ec4879ac5b502ae81f6b73450b960ede11ad2560"
+    local _url="https://github.com/json-c/json-c/archive/$_version.zip"
     local _target="json-c-$_version.tar.gz"
     local _projectSearchName="json-c-*"
-    local _cleanEnv=false #true/false
+    local _cleanEnv=true #true/false
     local _runAutoGenIfExists=true #true/false
     local _runAutoreconf=false #true/false
     local _runACLocal=false #true/false
@@ -4340,10 +4340,6 @@ buildInstallJSONC() {
     local _binCheck="libjson-c-2.dll"
     local _postBuildCommand=""
     local _exeToTest=""
-    
-    ad_setDefaultEnv
-    
-    export "CFLAGS=$CFLAGS -Werror=unused-but-set-variable"
 
     mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"    
 

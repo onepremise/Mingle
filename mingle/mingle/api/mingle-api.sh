@@ -77,10 +77,11 @@ ad_isDateNewerThanFileModTime() {
 
     local _chkdtseconds=`date -d "$_checkdate" +%s`
 
-    local _getfiledate=`stsat -c %y $_filename|sed 's/\..*//'`
+    local _getfiledate=`stat -c %y $_filename|sed 's/\..*//'`
     local _cnvrtfieldate=`date -d "$_getfiledate" +%s`
 
-    mingleLog "comparing provided date ($_checkdate, $_chkdtseconds), with filedate ($_getfiledate, $_cnvrtfieldate)."
+    mingleLog
+    mingleLog "comparing provided date ($_checkdate, $_chkdtseconds), with filedate ($_getfiledate, $_cnvrtfieldate) for $_filename."
 
     if [ "$_chkdtseconds" -gt "$_cnvrtfieldate" ]; then
         return 0
