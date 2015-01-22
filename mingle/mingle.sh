@@ -4326,7 +4326,7 @@ buildInstallJSONC() {
     local _projectName="json-c"
     local _version="ec4879ac5b502ae81f6b73450b960ede11ad2560"
     local _url="https://github.com/json-c/json-c/archive/$_version.zip"
-    local _target="json-c-$_version.tar.gz"
+    local _target="json-c-$_version.zip"
     local _projectSearchName="json-c-*"
     local _cleanEnv=true #true/false
     local _runAutoGenIfExists=true #true/false
