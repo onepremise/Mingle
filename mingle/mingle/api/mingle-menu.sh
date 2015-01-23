@@ -15,6 +15,7 @@ mingleInitSelections() {
     OPTIONS=(\
     "base|Base|suiteBase" \
     "xml|XML Libraries|suiteXML" \
+    "json|JSON Libraries|suiteJSON" \
     "font|Font Libraries|suiteFonts" \
     "enc|Encryption Libraries|suiteEncryption" \
     "net|Networking Libraries|suiteNetworking" \

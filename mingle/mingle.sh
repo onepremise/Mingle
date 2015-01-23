@@ -4864,9 +4864,6 @@ suiteBase() {
     buildInstallSigc
     buildInstallNcurses
     buildInstallCMake
-    buildInstallJSONC
-    buildInstallJSONCPP
-    buildInstallLibmicrohttpd
     buildInstallArgTable
 
     #Keep the msys M4 for now due to build issues it causes with autoconf
@@ -4876,6 +4873,20 @@ suiteBase() {
     
     buildInstallRagel
     buildInstallGperf
+}
+
+suiteJSON() {
+    if suiteHasBuilt 'json'; then
+        return;
+    fi
+
+    if ! $MINGLE_EXCLUDE_DEP; then
+      suiteBase
+    fi
+    
+    buildInstallJSONC
+    buildInstallJSONCPP
+    buildInstallJSONRPCCPP
 }
 
 suiteXML() {
@@ -4931,13 +4942,14 @@ suiteNetworking() {
 
     if ! $MINGLE_EXCLUDE_DEP; then
       suiteEncryption
+      suiteJSON
     fi
 
     buildInstallCurl
     buildInstalProtobuf
     buildInstallProtobufC
     buildInstallMiniupnp
-    buildInstallJSONRPCCPP
+    buildInstallLibmicrohttpd
 }
 
 suiteCABundle() {
@@ -5246,6 +5258,7 @@ suiteCryptoCurrency() {
     
     if ! $MINGLE_EXCLUDE_DEP; then
         suiteEncryption
+        suiteNetworking
         suiteUILibraries
         buildInstallLibqrencode
         buildInstallScons
@@ -5297,6 +5310,7 @@ suiteGeoSpatialLibraries() {
     if ! $MINGLE_EXCLUDE_DEP; then
         suiteBase
         suiteXML
+        suiteJSON
         suiteFonts
         suiteEncryption
         suiteNetworking
