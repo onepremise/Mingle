@@ -4863,6 +4863,7 @@ suiteBase() {
     buildInstallTk
     buildInstallSigc
     buildInstallNcurses
+    buildInstallCMake
     buildInstallJSONC
     buildInstallJSONCPP
     buildInstallLibmicrohttpd
@@ -4874,7 +4875,6 @@ suiteBase() {
     #buildInstallGLibC
     
     buildInstallRagel
-    buildInstallCMake
     buildInstallGperf
 }
 
