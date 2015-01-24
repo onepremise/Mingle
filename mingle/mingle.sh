@@ -4882,6 +4882,7 @@ suiteJSON() {
 
     if ! $MINGLE_EXCLUDE_DEP; then
       suiteBase
+      suitePython
     fi
     
     buildInstallJSONC
@@ -4942,7 +4943,6 @@ suiteNetworking() {
 
     if ! $MINGLE_EXCLUDE_DEP; then
       suiteEncryption
-      suiteJSON
     fi
 
     buildInstallCurl
@@ -5264,6 +5264,7 @@ suiteCryptoCurrency() {
         buildInstallScons
         buildInstallCryptocpp
         buildInstallCurl
+        suiteJSON
     fi
     
     buildInstallBitcoin
