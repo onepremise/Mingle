@@ -4395,6 +4395,9 @@ buildInstallJSONCPP() {
         
         ad_mkdir $MINGLE_BASE/mingw64/include/jsoncpp
         
+        ad_cd "$MINGLE_BUILD_DIR"
+        ad_cd $_projectName-build
+        
         cp -rf jsoncpp/include/json $MINGLE_BASE/mingw64/include/jsoncpp || mingleError $? "jsoncpp: cp failed, aborting!"
         cp -rf jsoncpp/lib/* $MINGLE_BASE/mingw64/lib || mingleError $? "jsoncpp: cp failed, aborting!"
     else
