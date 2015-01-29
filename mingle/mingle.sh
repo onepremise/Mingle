@@ -2664,10 +2664,10 @@ buildInstallJSONRPCCPP() {
          
          ad_mkdir win32-deps/include
 
-         #if [ ! -e $_projectName-mingw.patch ]; then
-         #   cp $MINGLE_BASE/patches/$_projectName/$_version/$_projectName-mingw.patch .
-         #   ad_patch "$_projectName-mingw.patch"    
-         #fi
+         if [ ! -e $_projectName-mingw.patch ]; then
+            cp $MINGLE_BASE/patches/$_projectName/$_version/$_projectName-mingw.patch .
+            ad_patch "$_projectName-mingw.patch"    
+         fi
          
          ad_cd "$MINGLE_BUILD_DIR"
 	         
@@ -2675,14 +2675,14 @@ buildInstallJSONRPCCPP() {
 	         
          ad_cd $_projectName-build
          
-         cmake $_projectdir -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include" -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/boost-1_56" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition" -DCMAKE_CXX_STANDARD_LIBRARIES="-lWs2_32"|| mingleError $? "cmake failed, aborting!"
+         cmake $_projectdir -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include" -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCMAKE_CXX_FLAGS="-DWIN32 -I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/boost-1_56" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition" -DCMAKE_CXX_STANDARD_LIBRARIES="-lWs2_32"|| mingleError $? "cmake failed, aborting!"
          
          buildInstallGeneric "$_projectName-build" true false false false "" false false "" "" "$_binCheck" "" ""
          
          ad_cd "$MINGLE_BUILD_DIR"
          ad_cd $_projectName-build
          
-         if [ "$_version" == "0.4.1"]; then
+         if [ "$_version" == "0.4.1" ]; then
              cp -rf dist/* /mingw || mingleError $? "copy failed, aborting!"
          fi
     else
