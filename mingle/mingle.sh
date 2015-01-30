@@ -4979,6 +4979,7 @@ suiteDatabase() {
         suiteFonts
         suiteEncryption
         suiteNetworking
+        suiteJSON
     fi
 
     buildInstallSQLite
