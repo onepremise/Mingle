@@ -4407,14 +4407,15 @@ buildInstallJSONCPP() {
 
 buildInstallPostGIS () {
     local _project="postgis-*"
-    local _version="2.0.3"
+    local _version="2.0.7SVN"
+    local _url="http://postgis.net/stuff/postgis-$_version.tar.gz"
 
     if [ -e /mingw/lib/postgresql/postgis-2.0.dll ]; then
         mingleLog "$_project Already Installed." true
         return
     fi
-    
-    mingleCategoryDownload "postgis" "$_version" "http://download.osgeo.org/postgis/source/postgis-$_version.tar.gz"
+
+    mingleCategoryDownload "postgis" "$_version" "$_url"
     mingleCategoryDecompress "postgis" "$_version" "$_project"
 
     local _projectdir=$(ad_getDirFromWC $_project)
