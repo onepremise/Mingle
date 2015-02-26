@@ -1,0 +1,10 @@
+--- libjson-rpc-cpp-0.4.2/src/jsonrpccpp/common/procedure.h	2015-01-21 10:56:32 -0500
++++ libjson-rpc-cpp-0.4.2/src/jsonrpccpp/common/procedure2.h	2015-02-26 11:23:01 -0500
+@@ -11,6 +11,7 @@
+ #define JSONRPC_CPP_PROCEDURE_H_
+ 
+ #include <string>
++#include <vector>
+ #include <map>
+ 
+ #include "jsonparser.h"

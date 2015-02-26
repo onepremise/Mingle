@@ -901,6 +901,28 @@ buildInstallGDB() {
     fi
 }
 
+buildInstallBash() {
+    local _projectName="bash"
+    local _version="4.3.30"
+    local _url="http://ftp.gnu.org/gnu/bash/bash-$_version.tar.gz"
+    local _target=""
+    local _projectSearchName="bash-*"
+    local _cleanEnv=true #true/false
+    local _runAutoGenIfExists=false #true/false
+    local _runAutoreconf=false #true/false
+    local _runACLocal=false #true/false
+    local _aclocalFlags=""
+    local _runAutoconf=false #true/false
+    local _runConfigure=true #true/false
+    local _configureFlags=""
+    local _makeParameters=""
+    local _binCheck="xxx"
+    local _postBuildCommand=""
+    local _exeToTest="bash --version"
+
+    mingleAutoBuild "$_projectName" "$_version" "$_url" "$_target" "$_projectSearchName" $_cleanEnv $_runAutoGenIfExists $_runAutoreconf $_runACLocal "$_aclocalFlags" $_runAutoconf $_runConfigure "$_configureFlags" "$_makeParameters" "$_binCheck" "$_postBuildCommand" "$_exeToTest"   
+}
+
 buildInstallCUnit() {    
     local _projectName="CUnit"
     local _version="2.1-2"
@@ -2632,7 +2654,7 @@ buildInstallLibmicrohttpd() {
 
 buildInstallJSONRPCCPP() {
     local _projectName="libjson-rpc-cpp"
-    local _version="0.3.2"
+    local _version="0.4.2"
     local _url="https://github.com/cinemast/libjson-rpc-cpp/archive/v$_version.zip"
     local _target="libjson-rpc-cpp-$_version.zip"
     local _projectSearchName="libjson-rpc-cpp-*"
@@ -2675,14 +2697,14 @@ buildInstallJSONRPCCPP() {
 	         
          ad_cd $_projectName-build
          
-         cmake $_projectdir -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include" -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCMAKE_CXX_FLAGS="-DWIN32 -I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/boost-1_56" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition" -DCMAKE_CXX_STANDARD_LIBRARIES="-lWs2_32"|| mingleError $? "cmake failed, aborting!"
+         cmake $_projectdir -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include/jsoncpp -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include" -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCMAKE_CXX_FLAGS="-DWIN32 -I/mingw/include/jsoncpp -I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/boost-1_56" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition" -DCMAKE_CXX_STANDARD_LIBRARIES="-lWs2_32"|| mingleError $? "cmake failed, aborting!"
          
          buildInstallGeneric "$_projectName-build" true false false false "" false false "" "" "$_binCheck" "" ""
          
          ad_cd "$MINGLE_BUILD_DIR"
          ad_cd $_projectName-build
          
-         if [ "$_version" == "0.4.1" ]; then
+         if [ "$_version" == "0.4.1" ] || [ "$_version" == "0.4.2" ]; then
              cp -rf dist/* /mingw || mingleError $? "copy failed, aborting!"
          fi
     else
@@ -2773,11 +2795,11 @@ buildInstallEthereum() {
         
         ad_cd cpp-ethereum-build
         
-        export "CFLAGS=$CFLAGS -D_MSC_VER -I\"/mingw/include/boost-1_56\""
+        export "CFLAGS=-I/mingw/include/jsoncpp $CFLAGS -D_MSC_VER -I\"/mingw/include/boost-1_56\""
         export "LDFLAGS=$LDFLAGS -Wl,--allow-multiple-definition"
         
         #CXX_DEFINES
-        cmake ../cpp-ethereum-develop -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DPYTHON_INCLUDE_DIR:PATH=$MINGLE_BASE/mingw64/include/python2.7 -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCRYPTOPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DCRYPTOPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libcryptopp.a -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DJSON_RPC_CPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSON_RPC_CPP_COMMON_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp-common.dll.a -DJSON_RPC_CPP_SERVER_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp-server.dll.a -DJSON_RPC_CPP_CLIENT_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp-client.dll.a -DCMAKE_CXX_FLAGS="-I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/ncurses -DBOOST_USE_WINDOWS_H" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"|| mingleError $? "cmake failed, aborting!"
+        cmake ../cpp-ethereum-develop -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=$MINGLE_BASE/mingw64 -DPYTHON_INCLUDE_DIR:PATH=$MINGLE_BASE/mingw64/include/python2.7 -DBOOST_INCLUDEDIR=$MINGLE_BASE/mingw64/include/boost-1_56 -DBOOST_LIBRARYDIR=$MINGLE_BASE/lib -DBoost_COMPILER="-48" -DCRYPTOPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DCRYPTOPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libcryptopp.a -DJSONCPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include/jsoncpp -DJSONCPP_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsoncpp.a -DJSON_RPC_CPP_INCLUDE_DIR=$MINGLE_BASE/mingw64/include -DJSON_RPC_CPP_COMMON_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp-common.dll.a -DJSON_RPC_CPP_SERVER_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp-server.dll.a -DJSON_RPC_CPP_CLIENT_LIBRARY=$MINGLE_BASE/mingw64/lib/libjsonrpccpp-client.dll.a -DCMAKE_CXX_FLAGS="-I/mingw/include/jsoncpp -I$MINGLE_BASE/mingw64/include -I$MINGLE_BASE/mingw64/include/ncurses -DBOOST_USE_WINDOWS_H -DWIN32_LEAN_AND_MEAN" -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"|| mingleError $? "cmake failed, aborting!"
         
         #mingleError $? "cmake stop, aborting!"
 
@@ -4869,6 +4891,7 @@ suiteBase() {
     buildInstallNcurses
     buildInstallCMake
     buildInstallArgTable
+    # buildInstallBash
 
     #Keep the msys M4 for now due to build issues it causes with autoconf
     #buildInstallM4
